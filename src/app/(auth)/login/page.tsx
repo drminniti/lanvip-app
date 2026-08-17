@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { loginWithEmail, loginWithGoogle, handleGoogleRedirectResult } from '@/lib/auth'
+import { useAuth } from '@/context/AuthContext'
 
 // ─── Google Icon ─────────────────────────────────────────────────────────────
 function GoogleIcon() {
@@ -19,22 +20,41 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
-  const router = useRouter()
+  const router                = useRouter()
+  const { user, loading: authLoading } = useAuth()
+
   const [email, setEmail]           = useState('')
   const [password, setPassword]     = useState('')
   const [error, setError]           = useState('')
   const [loading, setLoading]       = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
-  // ── Pick up Google redirect result on page mount ──────────────────────────
+  /**
+   * PRIMARY auth redirect: observe the shared AuthContext.
+   * Firebase processes signInWithRedirect internally during initializeAuth,
+   * fires onAuthStateChanged → AuthContext sets the user → this effect triggers.
+   * This handles BOTH the redirect flow and normal email/password flow.
+   */
+  useEffect(() => {
+    if (!authLoading && user) {
+      document.cookie = '__session=1; path=/; SameSite=Lax'
+      router.push('/dashboard')
+    }
+  }, [user, authLoading, router])
+
+  /**
+   * SECONDARY check: call getRedirectResult explicitly for cases where
+   * Firebase doesn't auto-process the redirect (SDK version differences).
+   * If the primary effect already handled it, this is a no-op.
+   */
   useEffect(() => {
     async function checkRedirect() {
       try {
-        // Show a brief loading state while checking for redirect result
-        const user = await handleGoogleRedirectResult()
-        if (user) {
+        const redirectUser = await handleGoogleRedirectResult()
+        if (redirectUser) {
+          // AuthContext will pick up the state change and the primary effect will fire.
+          // Set the cookie here as a belt-and-suspenders measure.
           document.cookie = '__session=1; path=/; SameSite=Lax'
-          router.push('/dashboard')
         }
       } catch (err: unknown) {
         console.error('[Lanvip] Google redirect result error:', err)
@@ -42,7 +62,7 @@ export default function LoginPage() {
       }
     }
     checkRedirect()
-  }, [router])
+  }, [])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -51,11 +71,10 @@ export default function LoginPage() {
     try {
       await loginWithEmail(email, password)
       document.cookie = '__session=1; path=/; SameSite=Lax'
-      router.push('/dashboard')
+      // router.push is handled by the primary useEffect above
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithEmail UI catch:', err)
       setError(getFirebaseErrorMessage(err))
-    } finally {
       setLoading(false)
     }
   }
@@ -64,14 +83,21 @@ export default function LoginPage() {
     setError('')
     setRedirecting(true)
     try {
-      // This navigates away from the page — no await needed for a result.
-      // handleGoogleRedirectResult() in useEffect will handle the return.
       await loginWithGoogle()
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithGoogle UI catch:', err)
       setError(getFirebaseErrorMessage(err))
       setRedirecting(false)
     }
+  }
+
+  // Avoid rendering the form if auth state is still loading
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -82,7 +108,6 @@ export default function LoginPage() {
       className="w-full max-w-sm"
     >
       <div className="glass-card p-8 space-y-6">
-
         {/* Brand header */}
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold gradient-text tracking-tight">Lanvip</h1>
@@ -185,16 +210,16 @@ function getFirebaseErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null && 'code' in err) {
     const code = (err as { code: string }).code
     const messages: Record<string, string> = {
-      'auth/user-not-found':          'No encontramos una cuenta con ese email.',
-      'auth/wrong-password':          'Contraseña incorrecta. Inténtalo de nuevo.',
-      'auth/invalid-email':           'El formato del email no es válido.',
-      'auth/invalid-credential':      'Credenciales inválidas. Verifica tu email y contraseña.',
-      'auth/too-many-requests':       'Demasiados intentos. Espera unos minutos.',
-      'auth/user-disabled':           'Esta cuenta ha sido deshabilitada.',
-      'auth/network-request-failed':  'Error de red. Verifica tu conexión.',
-      'auth/operation-not-allowed':   'Este método no está habilitado en Firebase.',
-      'auth/unauthorized-domain':     'Dominio no autorizado. Agrega localhost en Firebase Console.',
-      'auth/internal-error':          'Error interno de Firebase. Intenta nuevamente.',
+      'auth/user-not-found':         'No encontramos una cuenta con ese email.',
+      'auth/wrong-password':         'Contraseña incorrecta. Inténtalo de nuevo.',
+      'auth/invalid-email':          'El formato del email no es válido.',
+      'auth/invalid-credential':     'Credenciales inválidas. Verifica tu email y contraseña.',
+      'auth/too-many-requests':      'Demasiados intentos. Espera unos minutos.',
+      'auth/user-disabled':          'Esta cuenta ha sido deshabilitada.',
+      'auth/network-request-failed': 'Error de red. Verifica tu conexión.',
+      'auth/operation-not-allowed':  'Este método no está habilitado en Firebase.',
+      'auth/unauthorized-domain':    'Dominio no autorizado. Agrega localhost en Firebase Console.',
+      'auth/internal-error':         'Error interno de Firebase. Intenta nuevamente.',
     }
     const message = messages[code]
     if (message) return message

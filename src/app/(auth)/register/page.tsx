@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { registerWithEmail, loginWithGoogle, handleGoogleRedirectResult } from '@/lib/auth'
+import { useAuth } from '@/context/AuthContext'
 
 // ─── Google Icon ─────────────────────────────────────────────────────────────
 function GoogleIcon() {
@@ -20,6 +21,8 @@ function GoogleIcon() {
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
+
   const [displayName, setDisplayName] = useState('')
   const [username, setUsername]       = useState('')
   const [email, setEmail]             = useState('')
@@ -28,14 +31,27 @@ export default function RegisterPage() {
   const [loading, setLoading]         = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
-  // ── Pick up Google redirect result on page mount ──────────────────────────
+  /**
+   * PRIMARY auth redirect: observe the shared AuthContext.
+   * Fires for both Google redirect flow (auto-processed by Firebase on init)
+   * and manual email/password registration.
+   */
+  useEffect(() => {
+    if (!authLoading && user) {
+      document.cookie = '__session=1; path=/; SameSite=Lax'
+      router.push('/dashboard')
+    }
+  }, [user, authLoading, router])
+
+  /**
+   * SECONDARY check: explicit getRedirectResult call as belt-and-suspenders.
+   */
   useEffect(() => {
     async function checkRedirect() {
       try {
-        const user = await handleGoogleRedirectResult()
-        if (user) {
+        const redirectUser = await handleGoogleRedirectResult()
+        if (redirectUser) {
           document.cookie = '__session=1; path=/; SameSite=Lax'
-          router.push('/dashboard')
         }
       } catch (err: unknown) {
         console.error('[Lanvip] Google redirect result error (register):', err)
@@ -43,7 +59,7 @@ export default function RegisterPage() {
       }
     }
     checkRedirect()
-  }, [router])
+  }, [])
 
   function handleUsernameChange(val: string) {
     setUsername(val.toLowerCase().replace(/[^a-z0-9_]/g, ''))
@@ -60,11 +76,10 @@ export default function RegisterPage() {
     try {
       await registerWithEmail(email, password, username, displayName)
       document.cookie = '__session=1; path=/; SameSite=Lax'
-      router.push('/dashboard')
+      // redirect handled by primary useEffect
     } catch (err: unknown) {
       console.error('[Lanvip] registerWithEmail UI catch:', err)
       setError(getFirebaseErrorMessage(err))
-    } finally {
       setLoading(false)
     }
   }
@@ -79,6 +94,14 @@ export default function RegisterPage() {
       setError(getFirebaseErrorMessage(err))
       setRedirecting(false)
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -229,13 +252,13 @@ function getFirebaseErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null && 'code' in err) {
     const code = (err as { code: string }).code
     const messages: Record<string, string> = {
-      'auth/email-already-in-use':    'Este email ya está registrado. Inicia sesión.',
-      'auth/invalid-email':           'El formato del email no es válido.',
-      'auth/weak-password':           'La contraseña es muy débil. Usa al menos 8 caracteres.',
-      'auth/network-request-failed':  'Error de red. Verifica tu conexión.',
-      'auth/operation-not-allowed':   'Este método de registro no está habilitado en Firebase.',
-      'auth/unauthorized-domain':     'Dominio no autorizado. Agrega localhost en Firebase Console.',
-      'auth/internal-error':          'Error interno de Firebase. Intenta nuevamente.',
+      'auth/email-already-in-use':   'Este email ya está registrado. Inicia sesión.',
+      'auth/invalid-email':          'El formato del email no es válido.',
+      'auth/weak-password':          'La contraseña es muy débil. Usa al menos 8 caracteres.',
+      'auth/network-request-failed': 'Error de red. Verifica tu conexión.',
+      'auth/operation-not-allowed':  'Este método de registro no está habilitado en Firebase.',
+      'auth/unauthorized-domain':    'Dominio no autorizado. Agrega localhost en Firebase Console.',
+      'auth/internal-error':         'Error interno de Firebase. Intenta nuevamente.',
     }
     const message = messages[code]
     if (message) return message
