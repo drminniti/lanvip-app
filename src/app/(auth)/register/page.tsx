@@ -27,7 +27,6 @@ export default function RegisterPage() {
   const [error, setError]             = useState('')
   const [loading, setLoading]         = useState(false)
 
-  // Sanitize username: lowercase, alphanumeric + underscores only
   function handleUsernameChange(val: string) {
     setUsername(val.toLowerCase().replace(/[^a-z0-9_]/g, ''))
   }
@@ -73,12 +72,12 @@ export default function RegisterPage() {
       className="w-full max-w-sm"
     >
       <div className="glass-card p-8 space-y-6">
-        {/* Brand */}
+        {/* Brand header */}
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold gradient-text tracking-tight">
             Crear cuenta
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm" style={{ color: '#A3A3A3' }}>
             Tu landing VIP te espera — es gratis
           </p>
         </div>
@@ -89,7 +88,7 @@ export default function RegisterPage() {
           onClick={handleGoogleRegister}
           disabled={loading}
           whileTap={{ scale: 0.97 }}
-          className="w-full flex items-center justify-center gap-3 border border-gray-200 dark:border-white/10 rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-colors duration-200 disabled:opacity-50"
+          className="btn-ghost w-full"
         >
           <GoogleIcon />
           Registrarse con Google
@@ -97,16 +96,16 @@ export default function RegisterPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
-          <span className="text-xs text-gray-400">o</span>
-          <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
+          <div className="divider" />
+          <span className="text-xs" style={{ color: '#A3A3A3' }}>o</span>
+          <div className="divider" />
         </div>
 
         {/* Form */}
         <form onSubmit={handleRegister} className="space-y-3">
           {/* Display name */}
           <div className="space-y-1">
-            <label htmlFor="reg-name" className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <label htmlFor="reg-name" className="label-dark">
               Nombre completo
             </label>
             <input
@@ -117,17 +116,21 @@ export default function RegisterPage() {
               value={displayName}
               onChange={e => setDisplayName(e.target.value)}
               placeholder="Tu Nombre"
-              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition"
+              className="input-dark"
             />
           </div>
 
           {/* Username */}
           <div className="space-y-1">
-            <label htmlFor="reg-username" className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <label htmlFor="reg-username" className="label-dark">
               Nombre de usuario
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none select-none">
+              {/* Prefix — #A3A3A3, never darker */}
+              <span
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none select-none"
+                style={{ color: '#A3A3A3' }}
+              >
                 lanvip.app/
               </span>
               <input
@@ -137,14 +140,15 @@ export default function RegisterPage() {
                 value={username}
                 onChange={e => handleUsernameChange(e.target.value)}
                 placeholder="tunombre"
-                className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/60 dark:bg-white/5 pl-[6.5rem] pr-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition"
+                className="input-dark"
+                style={{ paddingLeft: '6.5rem' }}
               />
             </div>
           </div>
 
           {/* Email */}
           <div className="space-y-1">
-            <label htmlFor="reg-email" className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <label htmlFor="reg-email" className="label-dark">
               Correo electrónico
             </label>
             <input
@@ -155,14 +159,17 @@ export default function RegisterPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="tu@email.com"
-              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition"
+              className="input-dark"
             />
           </div>
 
           {/* Password */}
           <div className="space-y-1">
-            <label htmlFor="reg-password" className="text-xs font-medium text-gray-600 dark:text-gray-400">
-              Contraseña <span className="text-gray-400 font-normal">(mín. 8 caracteres)</span>
+            <label htmlFor="reg-password" className="label-dark">
+              Contraseña{' '}
+              <span style={{ color: '#A3A3A3', fontWeight: 400 }}>
+                (mín. 8 caracteres)
+              </span>
             </label>
             <input
               id="reg-password"
@@ -172,7 +179,7 @@ export default function RegisterPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition"
+              className="input-dark"
             />
           </div>
 
@@ -180,7 +187,8 @@ export default function RegisterPage() {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-xs text-red-500 text-center"
+              className="text-xs text-center"
+              style={{ color: '#EF4444' }}
             >
               {error}
             </motion.p>
@@ -191,18 +199,19 @@ export default function RegisterPage() {
             type="submit"
             disabled={loading}
             whileTap={{ scale: 0.97 }}
-            className="w-full rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 text-sm transition-colors duration-200 disabled:opacity-50 shadow-lanvip-glow mt-1"
+            className="btn-accent w-full mt-1"
           >
             {loading ? 'Creando cuenta…' : 'Crear cuenta gratis'}
           </motion.button>
         </form>
 
         {/* Login link */}
-        <p className="text-center text-xs text-gray-500">
+        <p className="text-center text-xs" style={{ color: '#A3A3A3' }}>
           ¿Ya tienes cuenta?{' '}
           <Link
             href="/login"
-            className="font-semibold text-brand-500 hover:text-brand-400 transition-colors"
+            className="font-semibold transition-colors"
+            style={{ color: '#3B82F6' }}
           >
             Iniciar sesión
           </Link>

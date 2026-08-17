@@ -5,8 +5,8 @@ export const metadata: Metadata = {
 }
 
 /**
- * Auth layout: Centers content on a full-screen mesh gradient background.
- * Shared by /login and /register.
+ * Auth layout: full-screen dark mesh gradient, centered card.
+ * Background: #0A0A0A with dark mesh — see globals.css .bg-mesh
  */
 export default function AuthLayout({
   children,

@@ -18,7 +18,6 @@ function GoogleIcon() {
   )
 }
 
-// ─── Login Form ───────────────────────────────────────────────────────────────
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail]       = useState('')
@@ -32,7 +31,6 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await loginWithEmail(email, password)
-      // Set session cookie so middleware can validate the session
       document.cookie = '__session=1; path=/; SameSite=Lax'
       router.push('/dashboard')
     } catch (err: unknown) {
@@ -63,25 +61,27 @@ export default function LoginPage() {
       transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       className="w-full max-w-sm"
     >
-      {/* Card */}
+      {/* Glass Card — #1A1A1A/70, border #333333, shadow 0.4 */}
       <div className="glass-card p-8 space-y-6">
-        {/* Brand */}
+
+        {/* Brand header */}
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold gradient-text tracking-tight">
             Lanvip
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          {/* Text Secondary — #A3A3A3 */}
+          <p className="text-sm" style={{ color: '#A3A3A3' }}>
             Bienvenido de vuelta
           </p>
         </div>
 
-        {/* Google */}
+        {/* Google OAuth button */}
         <motion.button
           id="btn-google-login"
           onClick={handleGoogleLogin}
           disabled={loading}
           whileTap={{ scale: 0.97 }}
-          className="w-full flex items-center justify-center gap-3 border border-gray-200 dark:border-white/10 rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-ghost w-full"
         >
           <GoogleIcon />
           Continuar con Google
@@ -89,15 +89,15 @@ export default function LoginPage() {
 
         {/* Divider */}
         <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
-          <span className="text-xs text-gray-400">o</span>
-          <div className="flex-1 h-px bg-gray-200 dark:bg-white/10" />
+          <div className="divider" />
+          <span className="text-xs" style={{ color: '#A3A3A3' }}>o</span>
+          <div className="divider" />
         </div>
 
-        {/* Email Form */}
+        {/* Email / Password form */}
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div className="space-y-1">
-            <label htmlFor="login-email" className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <label htmlFor="login-email" className="label-dark">
               Correo electrónico
             </label>
             <input
@@ -108,12 +108,12 @@ export default function LoginPage() {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="tu@email.com"
-              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition"
+              className="input-dark"
             />
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="login-password" className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <label htmlFor="login-password" className="label-dark">
               Contraseña
             </label>
             <input
@@ -124,7 +124,7 @@ export default function LoginPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white/60 dark:bg-white/5 px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition"
+              className="input-dark"
             />
           </div>
 
@@ -132,7 +132,8 @@ export default function LoginPage() {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-xs text-red-500 text-center"
+              className="text-xs text-center"
+              style={{ color: '#EF4444' }}
             >
               {error}
             </motion.p>
@@ -143,18 +144,19 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             whileTap={{ scale: 0.97 }}
-            className="w-full rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 text-sm transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lanvip-glow"
+            className="btn-accent w-full"
           >
             {loading ? 'Iniciando sesión…' : 'Iniciar sesión'}
           </motion.button>
         </form>
 
         {/* Register link */}
-        <p className="text-center text-xs text-gray-500">
+        <p className="text-center text-xs" style={{ color: '#A3A3A3' }}>
           ¿Aún no tienes cuenta?{' '}
           <Link
             href="/register"
-            className="font-semibold text-brand-500 hover:text-brand-400 transition-colors"
+            className="font-semibold transition-colors"
+            style={{ color: '#3B82F6' }}
           >
             Crear cuenta gratis
           </Link>
@@ -169,12 +171,12 @@ function getFirebaseErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null && 'code' in err) {
     const code = (err as { code: string }).code
     const messages: Record<string, string> = {
-      'auth/user-not-found':    'No encontramos una cuenta con ese email.',
-      'auth/wrong-password':    'Contraseña incorrecta. Inténtalo de nuevo.',
-      'auth/invalid-email':     'El formato del email no es válido.',
-      'auth/too-many-requests': 'Demasiados intentos. Espera un momento.',
+      'auth/user-not-found':       'No encontramos una cuenta con ese email.',
+      'auth/wrong-password':       'Contraseña incorrecta. Inténtalo de nuevo.',
+      'auth/invalid-email':        'El formato del email no es válido.',
+      'auth/too-many-requests':    'Demasiados intentos. Espera un momento.',
       'auth/popup-closed-by-user': 'Cerraste el popup de Google antes de completar.',
-      'auth/invalid-credential': 'Credenciales inválidas. Verifica tu email y contraseña.',
+      'auth/invalid-credential':   'Credenciales inválidas. Verifica tu email y contraseña.',
     }
     return messages[code] ?? 'Ocurrió un error inesperado. Inténtalo de nuevo.'
   }

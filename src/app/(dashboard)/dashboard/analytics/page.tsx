@@ -6,11 +6,14 @@ export default function AnalyticsPage() {
   return (
     <div className="glass-card p-8 text-center space-y-3">
       <div className="text-3xl">📊</div>
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white">Analíticas</h1>
-      <span className="inline-block text-xs font-bold px-2 py-1 rounded-full bg-brand-500/15 text-brand-500">
+      <h1 className="text-xl font-bold" style={{ color: '#F5F5F5' }}>Analíticas</h1>
+      <span
+        className="inline-block text-xs font-bold px-2 py-1 rounded-full"
+        style={{ background: 'rgba(59,130,246,0.15)', color: '#3B82F6' }}
+      >
         PRO 🔒 — Próximamente
       </span>
-      <p className="text-sm text-gray-400">
+      <p className="text-sm" style={{ color: '#A3A3A3' }}>
         Las métricas avanzadas estarán disponibles en la Fase 5 y se desbloquean con el plan Pro.
       </p>
     </div>

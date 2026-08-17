@@ -6,31 +6,29 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: 'class',
+  // Dark mode is the ONLY mode — no class toggle needed
   theme: {
     extend: {
-      // ── Lanvip Brand Colors ──────────────────────────────────────────────
+      // ── Lanvip Dark Premium Palette (0_Brand.md §3) ──────────────────────
       colors: {
-        brand: {
-          50:  '#f5f0ff',
-          100: '#ede0ff',
-          200: '#d9bfff',
-          300: '#be94ff',
-          400: '#a162ff',
-          500: '#8b3fff',  // Primary violet
-          600: '#7c22f5',
-          700: '#6a18d9',
-          800: '#5a16b3',
-          900: '#4b1590',
-          950: '#2e0a5e',
+        // Application background
+        bg: '#0A0A0A',
+        // Bento box surfaces / glassmorphism base
+        surface: '#1A1A1A',
+        // Card & separator borders
+        border: '#333333',
+        // Text
+        'text-primary':   '#F5F5F5',
+        'text-secondary': '#A3A3A3',
+        // Accent CTA
+        accent: {
+          DEFAULT: '#3B82F6',
+          hover:   '#2563EB',
+          subtle:  'rgba(59,130,246,0.12)',
         },
-        surface: {
-          0:   '#ffffff',
-          50:  '#fafafa',
-          100: '#f5f5f5',
-          200: '#e5e5e5',
-          950: '#0a0a0a',
-        },
+        // Kept for any one-off overrides
+        white: '#ffffff',
+        black: '#000000',
       },
 
       // ── Typography ───────────────────────────────────────────────────────
@@ -52,17 +50,12 @@ const config: Config = {
         '4xl': '2rem',
       },
 
-      // ── Box Shadows (Diffuse, no hard edges) ─────────────────────────────
+      // ── Box Shadows — diffuse, no hard edges (0_Brand.md §4) ─────────────
       boxShadow: {
-        'lanvip-sm':  '0 4px 16px rgb(0 0 0 / 0.04)',
-        'lanvip':     '0 8px 30px rgb(0 0 0 / 0.06)',
-        'lanvip-lg':  '0 16px 48px rgb(0 0 0 / 0.08)',
-        'lanvip-glow':'0 0 40px rgb(139 63 255 / 0.15)',
-      },
-
-      // ── Backdrop Blur ─────────────────────────────────────────────────────
-      backdropBlur: {
-        xs: '2px',
+        'lanvip':    '0 8px 30px rgb(0 0 0 / 0.40)',
+        'lanvip-sm': '0 4px 16px rgb(0 0 0 / 0.30)',
+        'lanvip-lg': '0 16px 48px rgb(0 0 0 / 0.50)',
+        'accent-glow': '0 0 32px rgba(59,130,246,0.20)',
       },
 
       // ── Animations ────────────────────────────────────────────────────────
@@ -81,12 +74,11 @@ const config: Config = {
         },
       },
       animation: {
-        'mesh-drift': 'mesh-drift 8s ease infinite',
+        'mesh-drift': 'mesh-drift 10s ease infinite',
         'fade-up':    'fade-up 0.5s ease forwards',
         'scale-in':   'scale-in 0.3s ease forwards',
       },
 
-      // ── Spacing extras ────────────────────────────────────────────────────
       spacing: {
         '18': '4.5rem',
         '22': '5.5rem',

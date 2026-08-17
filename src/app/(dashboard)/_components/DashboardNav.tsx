@@ -51,65 +51,65 @@ const NAV_ITEMS = [
 function NavItem({
   item,
   isActive,
-  compact = false,
 }: {
   item: typeof NAV_ITEMS[number]
   isActive: boolean
-  compact?: boolean
 }) {
   return (
     <Link
       href={item.href}
-      id={`nav-${item.label.toLowerCase()}`}
-      className={`
-        relative flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200
-        ${compact ? 'justify-center' : ''}
-        ${
-          isActive
-            ? 'bg-brand-500/10 text-brand-600 dark:text-brand-300'
-            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-white/5'
-        }
-      `}
+      id={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+      className="relative flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200"
+      style={{
+        color: isActive ? '#F5F5F5' : '#A3A3A3',
+      }}
     >
-      {/* Active indicator */}
+      {/* Active indicator pill */}
       {isActive && (
         <motion.div
           layoutId="nav-active"
-          className="absolute inset-0 rounded-2xl bg-brand-500/10"
+          className="absolute inset-0 rounded-2xl"
+          style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.20)' }}
           transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
         />
       )}
       <span className="relative z-10">{item.icon}</span>
-      {!compact && (
-        <span className="relative z-10 flex items-center gap-2">
-          {item.label}
-          {item.pro && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-500">
-              PRO 🔒
-            </span>
-          )}
-        </span>
-      )}
+      <span className="relative z-10 flex items-center gap-2">
+        {item.label}
+        {item.pro && (
+          <span
+            className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+            style={{ background: 'rgba(59,130,246,0.15)', color: '#3B82F6' }}
+          >
+            PRO 🔒
+          </span>
+        )}
+      </span>
     </Link>
   )
 }
 
-// ─── Main DashboardNav Component ──────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function DashboardNav() {
   const pathname = usePathname()
   const router   = useRouter()
 
   async function handleLogout() {
     await logout()
-    // Clear session cookie
     document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     router.push('/login')
   }
 
   return (
     <>
-      {/* ── Desktop Sidebar ─────────────────────────────────────────── */}
-      <aside className="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 p-4 gap-2 border-r border-gray-100 dark:border-white/5 bg-white/50 dark:bg-black/20 backdrop-blur-xl">
+      {/* ── Desktop Sidebar ───────────────────────────────────────────── */}
+      <aside
+        className="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 p-4 gap-2 backdrop-blur-xl"
+        style={{
+          background:  'rgba(26,26,26,0.80)',
+          borderRight: '1px solid #333333',
+        }}
+      >
         {/* Logo */}
         <div className="px-3 py-3 mb-2">
           <span className="text-xl font-bold gradient-text tracking-tight">Lanvip</span>
@@ -130,7 +130,16 @@ export default function DashboardNav() {
         <button
           id="btn-logout"
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-200"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200"
+          style={{ color: '#A3A3A3' }}
+          onMouseEnter={e => {
+            e.currentTarget.style.color = '#EF4444'
+            e.currentTarget.style.background = 'rgba(239,68,68,0.08)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.color = '#A3A3A3'
+            e.currentTarget.style.background = 'transparent'
+          }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -140,21 +149,22 @@ export default function DashboardNav() {
       </aside>
 
       {/* ── Mobile Bottom Tab Bar ─────────────────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 safe-area-inset-bottom">
-        <div className="glass-card mx-3 mb-3 px-2 py-2 flex items-center justify-around rounded-3xl border-0 shadow-lanvip-lg">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-50">
+        <div
+          className="mx-3 mb-3 px-2 py-2 flex items-center justify-around rounded-3xl backdrop-blur-2xl"
+          style={{
+            background: 'rgba(26,26,26,0.85)',
+            border:     '1px solid #333333',
+            boxShadow:  '0 8px 30px rgb(0 0 0 / 0.40)',
+          }}
+        >
           {NAV_ITEMS.map(item => (
             <Link
               key={item.href}
               href={item.href}
-              id={`mobile-nav-${item.label.toLowerCase()}`}
-              className={`
-                flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-xs font-medium transition-all duration-200
-                ${
-                  pathname === item.href
-                    ? 'text-brand-500'
-                    : 'text-gray-400 hover:text-gray-700'
-                }
-              `}
+              id={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
+              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-xs font-medium transition-all duration-200"
+              style={{ color: pathname === item.href ? '#F5F5F5' : '#A3A3A3' }}
             >
               <motion.span whileTap={{ scale: 0.85 }} className="block">
                 {item.icon}
