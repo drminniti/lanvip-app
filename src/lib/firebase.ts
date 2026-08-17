@@ -22,25 +22,11 @@ const firebaseConfig = {
 }
 
 /**
- * WHY globalThis instead of module-level `let` variables?
- *
- * In Next.js dev mode, Hot Module Replacement (HMR) re-evaluates modules
- * on every file save. Module-level variables (`let _auth`) are reset to
- * `undefined` on each re-evaluation. This causes `initializeAuth` to be
- * called again on an already-initialized Firebase app, which:
- *   1. Throws `auth/already-initialized` (caught, but auth state is lost)
- *   2. Falls back to `getAuth()` which may return a stale/invalid instance
- *   3. `signInWithPopup` receives this invalid instance → `auth/argument-error`
- *
- * `globalThis` persists across HMR re-evaluations (it is the global object,
- * shared between all module evaluations in the same Node.js/browser process).
- * Firebase is therefore only ever initialized once per runtime session.
- *
- * This is the pattern recommended by Prisma, Firebase, and the Next.js docs
- * for any singleton that must survive HMR.
+ * WHY globalThis?
+ * Next.js HMR re-evaluates modules on every hot-reload, resetting module-level
+ * `let` variables to undefined. globalThis persists across re-evaluations.
+ * This is the pattern used by Prisma, Firebase Admin, and Next.js docs.
  */
-
-// Augment globalThis with typed Lanvip singletons
 declare global {
   // eslint-disable-next-line no-var
   var __lanvip_app:     FirebaseApp     | undefined
@@ -62,16 +48,10 @@ function getFirebaseApp(): FirebaseApp {
 
 // ─── Firebase Auth ────────────────────────────────────────────────────────────
 /**
- * Returns the Auth singleton with `browserLocalPersistence` (localStorage).
- *
- * WHY browserLocalPersistence instead of the default indexedDBLocalPersistence?
- * IndexedDB has an async open/close lifecycle. Under Next.js HMR the page can
- * unmount while an IndexedDB transaction is still in-flight, leaving the DB
- * in a "closing" state. The next signInWithPopup call then fails with:
- *   "Error: Database is closing/hidden"
- *
- * localStorage is synchronous — no open/close lifecycle, immune to HMR races.
- * Auth state still persists across page refreshes as expected.
+ * Initialises Auth with:
+ * - browserLocalPersistence: avoids IndexedDB "closing" errors with HMR
+ * - browserPopupRedirectResolver: required for signInWithRedirect in Next.js
+ *   (Turbopack cannot auto-detect the resolver from the SSR module context)
  */
 export function getFirebaseAuth(): Auth {
   if (globalThis.__lanvip_auth) return globalThis.__lanvip_auth
@@ -80,34 +60,20 @@ export function getFirebaseAuth(): Auth {
 
   try {
     globalThis.__lanvip_auth = initializeAuth(app, {
-      persistence:          browserLocalPersistence,
-      /**
-       * WHY explicit popupRedirectResolver?
-       * Firebase 12 + Next.js Turbopack cannot auto-detect the popup/redirect
-       * resolver because Turbopack's module bundling creates isolation that
-       * prevents Firebase from inspecting `window` at initialisation time.
-       * Without this, signInWithPopup throws auth/argument-error regardless
-       * of whether the Auth instance itself is valid.
-       * Setting it here means every signInWithPopup call inherits it automatically.
-       */
+      persistence:           browserLocalPersistence,
       popupRedirectResolver: browserPopupRedirectResolver,
     })
-    console.info('[Lanvip] Firebase Auth initialized (localStorage + browserPopupRedirectResolver)')
+    console.info('[Lanvip] Firebase Auth initialized')
   } catch (err: unknown) {
-    // auth/already-initialized is expected on HMR re-runs.
-    // Any other error is also recovered by returning the existing instance.
     const code =
       typeof err === 'object' && err !== null && 'code' in err
         ? (err as { code: string }).code
         : 'unknown'
-
     if (code !== 'auth/already-initialized') {
       console.error('[Lanvip] getFirebaseAuth unexpected error:', code, err)
     }
-
-    // getAuth() safely retrieves whatever instance was already configured
     globalThis.__lanvip_auth = getAuth(app)
-    console.info('[Lanvip] Firebase Auth reused existing instance (code:', code, ')')
+    console.info('[Lanvip] Firebase Auth reused existing instance')
   }
 
   return globalThis.__lanvip_auth

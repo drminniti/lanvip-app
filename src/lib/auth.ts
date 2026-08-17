@@ -1,10 +1,10 @@
-// NOTE: No 'use client' directive — this is a utility library, not a component.
-// The 'use client' boundary is owned by the components that import this module.
+// NOTE: No 'use client' directive — library module, not a React component.
 
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -20,18 +20,10 @@ import {
 import { getFirebaseAuth, getFirebaseDb } from './firebase'
 import type { UserProfile } from '@/types'
 
-// ─── Providers ────────────────────────────────────────────────────────────────
-// GoogleAuthProvider is instantiated lazily inside each function to avoid
-// top-level module execution during SSR.
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Creates the initial Firestore user document after registration.
- * Includes all future-proofing fields from Business Model spec.
- */
 async function createUserDocument(user: User, username?: string): Promise<void> {
-  const db     = getFirebaseDb()
+  const db      = getFirebaseDb()
   const userRef = doc(db, 'users', user.uid)
 
   let snapshot
@@ -51,12 +43,11 @@ async function createUserDocument(user: User, username?: string): Promise<void> 
       avatarUrl:   user.photoURL ?? '',
       themeSettings: {
         bgType:    'mesh',
-        colors:    ['#0d0d1a', '#0d1210'],
+        colors:    ['#141208', '#0d0d0a'],
         cardStyle: 'glass',
         darkMode:  true,
       },
-      views: 0,
-      // Business Model fields — default to free tier (5_Business_Model.md)
+      views:          0,
       planId:         'free',
       organizationId: null,
       isNfcEnabled:   false,
@@ -80,7 +71,7 @@ export async function registerWithEmail(
   displayName: string,
 ): Promise<User> {
   const auth = getFirebaseAuth()
-  console.info('[Lanvip] registerWithEmail — attempting registration for:', email)
+  console.info('[Lanvip] registerWithEmail — attempting:', email)
   const { user } = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(user, { displayName })
   await createUserDocument(user, username)
@@ -93,22 +84,55 @@ export async function loginWithEmail(
   password: string,
 ): Promise<User> {
   const auth = getFirebaseAuth()
-  console.info('[Lanvip] loginWithEmail — attempting for:', email)
+  console.info('[Lanvip] loginWithEmail — attempting:', email)
   const { user } = await signInWithEmailAndPassword(auth, email, password)
   console.info('[Lanvip] loginWithEmail — success, uid:', user.uid)
   return user
 }
 
-export async function loginWithGoogle(): Promise<User> {
+/**
+ * Initiates Google Sign-In via REDIRECT (not popup).
+ *
+ * WHY redirect instead of popup?
+ * - signInWithPopup is blocked by the Cross-Origin-Opener-Policy (COOP) header
+ *   that Next.js sets by default. The COOP header prevents the popup from
+ *   calling window.close() / window.closed back to the opener, freezing the flow.
+ * - signInWithRedirect avoids COOP entirely — it navigates the current tab to
+ *   Google, authenticates, then returns to the app via a redirect URL.
+ * - This is Firebase's recommended approach for Next.js and other SSR frameworks.
+ *
+ * NOTE: This function navigates AWAY from the current page.
+ * Call handleGoogleRedirectResult() on page mount to pick up the result.
+ */
+export async function loginWithGoogle(): Promise<void> {
   const auth           = getFirebaseAuth()
   const googleProvider = new GoogleAuthProvider()
   googleProvider.setCustomParameters({ prompt: 'select_account' })
 
-  console.info('[Lanvip] loginWithGoogle — opening popup')
-  const { user } = await signInWithPopup(auth, googleProvider)
-  await createUserDocument(user)
-  console.info('[Lanvip] loginWithGoogle — success, uid:', user.uid)
-  return user
+  console.info('[Lanvip] loginWithGoogle — initiating redirect to Google')
+  await signInWithRedirect(auth, googleProvider)
+  // ← Browser navigates away here. No code after this runs in this page load.
+}
+
+/**
+ * Checks for a pending Google redirect result on page mount.
+ * Must be called in a useEffect in the login/register pages.
+ * Returns the authenticated User if a redirect result is present, or null.
+ */
+export async function handleGoogleRedirectResult(): Promise<User | null> {
+  const auth = getFirebaseAuth()
+  console.info('[Lanvip] handleGoogleRedirectResult — checking for redirect result')
+
+  const result = await getRedirectResult(auth)
+
+  if (result) {
+    console.info('[Lanvip] handleGoogleRedirectResult — user found:', result.user.uid)
+    await createUserDocument(result.user)
+    return result.user
+  }
+
+  console.info('[Lanvip] handleGoogleRedirectResult — no redirect result')
+  return null
 }
 
 export async function logout(): Promise<void> {

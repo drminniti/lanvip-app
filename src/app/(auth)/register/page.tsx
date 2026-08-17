@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { registerWithEmail, loginWithGoogle } from '@/lib/auth'
+import { registerWithEmail, loginWithGoogle, handleGoogleRedirectResult } from '@/lib/auth'
 
 // ─── Google Icon ─────────────────────────────────────────────────────────────
 function GoogleIcon() {
@@ -26,6 +26,24 @@ export default function RegisterPage() {
   const [password, setPassword]       = useState('')
   const [error, setError]             = useState('')
   const [loading, setLoading]         = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
+
+  // ── Pick up Google redirect result on page mount ──────────────────────────
+  useEffect(() => {
+    async function checkRedirect() {
+      try {
+        const user = await handleGoogleRedirectResult()
+        if (user) {
+          document.cookie = '__session=1; path=/; SameSite=Lax'
+          router.push('/dashboard')
+        }
+      } catch (err: unknown) {
+        console.error('[Lanvip] Google redirect result error (register):', err)
+        setError(getFirebaseErrorMessage(err))
+      }
+    }
+    checkRedirect()
+  }, [router])
 
   function handleUsernameChange(val: string) {
     setUsername(val.toLowerCase().replace(/[^a-z0-9_]/g, ''))
@@ -53,16 +71,13 @@ export default function RegisterPage() {
 
   async function handleGoogleRegister() {
     setError('')
-    setLoading(true)
+    setRedirecting(true)
     try {
       await loginWithGoogle()
-      document.cookie = '__session=1; path=/; SameSite=Lax'
-      router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithGoogle UI catch (register):', err)
       setError(getFirebaseErrorMessage(err))
-    } finally {
-      setLoading(false)
+      setRedirecting(false)
     }
   }
 
@@ -76,24 +91,31 @@ export default function RegisterPage() {
       <div className="glass-card p-8 space-y-6">
         {/* Brand header */}
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold gradient-text tracking-tight">
-            Crear cuenta
-          </h1>
+          <h1 className="text-2xl font-bold gradient-text tracking-tight">Crear cuenta</h1>
           <p className="text-sm" style={{ color: '#A3A3A3' }}>
             Tu landing VIP te espera — es gratis
           </p>
         </div>
 
-        {/* Google */}
+        {/* Google redirect button */}
         <motion.button
           id="btn-google-register"
           onClick={handleGoogleRegister}
-          disabled={loading}
+          disabled={loading || redirecting}
           whileTap={{ scale: 0.97 }}
           className="btn-ghost w-full"
         >
-          <GoogleIcon />
-          Registrarse con Google
+          {redirecting ? (
+            <>
+              <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              Redirigiendo a Google…
+            </>
+          ) : (
+            <>
+              <GoogleIcon />
+              Registrarse con Google
+            </>
+          )}
         </motion.button>
 
         {/* Divider */}
@@ -105,11 +127,8 @@ export default function RegisterPage() {
 
         {/* Form */}
         <form onSubmit={handleRegister} className="space-y-3">
-          {/* Display name */}
           <div className="space-y-1">
-            <label htmlFor="reg-name" className="label-dark">
-              Nombre completo
-            </label>
+            <label htmlFor="reg-name" className="label-dark">Nombre completo</label>
             <input
               id="reg-name"
               type="text"
@@ -122,17 +141,10 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Username */}
           <div className="space-y-1">
-            <label htmlFor="reg-username" className="label-dark">
-              Nombre de usuario
-            </label>
+            <label htmlFor="reg-username" className="label-dark">Nombre de usuario</label>
             <div className="relative">
-              {/* Prefix — #A3A3A3, never darker */}
-              <span
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none select-none"
-                style={{ color: '#A3A3A3' }}
-              >
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none select-none" style={{ color: '#A3A3A3' }}>
                 lanvip.app/
               </span>
               <input
@@ -148,11 +160,8 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Email */}
           <div className="space-y-1">
-            <label htmlFor="reg-email" className="label-dark">
-              Correo electrónico
-            </label>
+            <label htmlFor="reg-email" className="label-dark">Correo electrónico</label>
             <input
               id="reg-email"
               type="email"
@@ -165,13 +174,10 @@ export default function RegisterPage() {
             />
           </div>
 
-          {/* Password */}
           <div className="space-y-1">
             <label htmlFor="reg-password" className="label-dark">
               Contraseña{' '}
-              <span style={{ color: '#A3A3A3', fontWeight: 400 }}>
-                (mín. 8 caracteres)
-              </span>
+              <span style={{ color: '#A3A3A3', fontWeight: 400 }}>(mín. 8 caracteres)</span>
             </label>
             <input
               id="reg-password"
@@ -199,7 +205,7 @@ export default function RegisterPage() {
           <motion.button
             id="btn-register-submit"
             type="submit"
-            disabled={loading}
+            disabled={loading || redirecting}
             whileTap={{ scale: 0.97 }}
             className="btn-accent w-full mt-1"
           >
@@ -207,14 +213,9 @@ export default function RegisterPage() {
           </motion.button>
         </form>
 
-        {/* Login link */}
         <p className="text-center text-xs" style={{ color: '#A3A3A3' }}>
           ¿Ya tienes cuenta?{' '}
-          <Link
-            href="/login"
-            className="font-semibold transition-colors"
-            style={{ color: '#D4AF37' }}
-          >
+          <Link href="/login" className="font-semibold transition-colors" style={{ color: '#D4AF37' }}>
             Iniciar sesión
           </Link>
         </p>
@@ -228,30 +229,19 @@ function getFirebaseErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null && 'code' in err) {
     const code = (err as { code: string }).code
     const messages: Record<string, string> = {
-      // Registration errors
-      'auth/email-already-in-use':     'Este email ya está registrado. Inicia sesión.',
-      'auth/invalid-email':            'El formato del email no es válido.',
-      'auth/weak-password':            'La contraseña es muy débil. Usa al menos 8 caracteres.',
-      // Google / popup errors
-      'auth/popup-closed-by-user':     'Cerraste el popup de Google antes de completar.',
-      'auth/popup-blocked':            'Tu navegador bloqueó el popup. Permite popups para este sitio.',
-      'auth/cancelled-popup-request':  'Solicitud de popup cancelada.',
-      // Network & config
-      'auth/network-request-failed':   'Error de red. Verifica tu conexión a internet.',
-      'auth/operation-not-allowed':    'Este método de registro no está habilitado en Firebase.',
-      'auth/configuration-not-found':  'Configuración de Firebase no encontrada. Verifica las variables de entorno.',
-      'auth/invalid-api-key':          'API Key de Firebase inválida. Verifica NEXT_PUBLIC_FIREBASE_API_KEY.',
-      'auth/app-not-authorized':       'App no autorizada. Verifica el dominio en Firebase Console.',
-      'auth/unauthorized-domain':      'Dominio no autorizado en Firebase Console. Agrega localhost a los dominios permitidos.',
-      'auth/internal-error':           'Error interno de Firebase. Intenta nuevamente.',
+      'auth/email-already-in-use':    'Este email ya está registrado. Inicia sesión.',
+      'auth/invalid-email':           'El formato del email no es válido.',
+      'auth/weak-password':           'La contraseña es muy débil. Usa al menos 8 caracteres.',
+      'auth/network-request-failed':  'Error de red. Verifica tu conexión.',
+      'auth/operation-not-allowed':   'Este método de registro no está habilitado en Firebase.',
+      'auth/unauthorized-domain':     'Dominio no autorizado. Agrega localhost en Firebase Console.',
+      'auth/internal-error':          'Error interno de Firebase. Intenta nuevamente.',
     }
     const message = messages[code]
     if (message) return message
     const devHint = process.env.NODE_ENV === 'development' ? ` [código: ${code}]` : ''
-    return `Ocurrió un error inesperado. Inténtalo de nuevo.${devHint}`
+    return `Ocurrió un error inesperado.${devHint}`
   }
-  const devHint = process.env.NODE_ENV === 'development'
-    ? ` [error: ${String(err)}]`
-    : ''
+  const devHint = process.env.NODE_ENV === 'development' ? ` [error: ${String(err)}]` : ''
   return `Ocurrió un error inesperado.${devHint}`
 }

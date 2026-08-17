@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { loginWithEmail, loginWithGoogle } from '@/lib/auth'
+import { loginWithEmail, loginWithGoogle, handleGoogleRedirectResult } from '@/lib/auth'
 
 // ─── Google Icon ─────────────────────────────────────────────────────────────
 function GoogleIcon() {
@@ -20,10 +20,29 @@ function GoogleIcon() {
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [email, setEmail]           = useState('')
+  const [password, setPassword]     = useState('')
+  const [error, setError]           = useState('')
+  const [loading, setLoading]       = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
+
+  // ── Pick up Google redirect result on page mount ──────────────────────────
+  useEffect(() => {
+    async function checkRedirect() {
+      try {
+        // Show a brief loading state while checking for redirect result
+        const user = await handleGoogleRedirectResult()
+        if (user) {
+          document.cookie = '__session=1; path=/; SameSite=Lax'
+          router.push('/dashboard')
+        }
+      } catch (err: unknown) {
+        console.error('[Lanvip] Google redirect result error:', err)
+        setError(getFirebaseErrorMessage(err))
+      }
+    }
+    checkRedirect()
+  }, [router])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -43,16 +62,15 @@ export default function LoginPage() {
 
   async function handleGoogleLogin() {
     setError('')
-    setLoading(true)
+    setRedirecting(true)
     try {
+      // This navigates away from the page — no await needed for a result.
+      // handleGoogleRedirectResult() in useEffect will handle the return.
       await loginWithGoogle()
-      document.cookie = '__session=1; path=/; SameSite=Lax'
-      router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithGoogle UI catch:', err)
       setError(getFirebaseErrorMessage(err))
-    } finally {
-      setLoading(false)
+      setRedirecting(false)
     }
   }
 
@@ -63,30 +81,33 @@ export default function LoginPage() {
       transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       className="w-full max-w-sm"
     >
-      {/* Glass Card — #1A1A1A/70, border #333333, shadow 0.4 */}
       <div className="glass-card p-8 space-y-6">
 
         {/* Brand header */}
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold gradient-text tracking-tight">
-            Lanvip
-          </h1>
-          {/* Text Secondary — #A3A3A3 */}
-          <p className="text-sm" style={{ color: '#A3A3A3' }}>
-            Bienvenido de vuelta
-          </p>
+          <h1 className="text-2xl font-bold gradient-text tracking-tight">Lanvip</h1>
+          <p className="text-sm" style={{ color: '#A3A3A3' }}>Bienvenido de vuelta</p>
         </div>
 
-        {/* Google OAuth button */}
+        {/* Google redirect button */}
         <motion.button
           id="btn-google-login"
           onClick={handleGoogleLogin}
-          disabled={loading}
+          disabled={loading || redirecting}
           whileTap={{ scale: 0.97 }}
           className="btn-ghost w-full"
         >
-          <GoogleIcon />
-          Continuar con Google
+          {redirecting ? (
+            <>
+              <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
+              Redirigiendo a Google…
+            </>
+          ) : (
+            <>
+              <GoogleIcon />
+              Continuar con Google
+            </>
+          )}
         </motion.button>
 
         {/* Divider */}
@@ -99,9 +120,7 @@ export default function LoginPage() {
         {/* Email / Password form */}
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div className="space-y-1">
-            <label htmlFor="login-email" className="label-dark">
-              Correo electrónico
-            </label>
+            <label htmlFor="login-email" className="label-dark">Correo electrónico</label>
             <input
               id="login-email"
               type="email"
@@ -115,9 +134,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-1">
-            <label htmlFor="login-password" className="label-dark">
-              Contraseña
-            </label>
+            <label htmlFor="login-password" className="label-dark">Contraseña</label>
             <input
               id="login-password"
               type="password"
@@ -144,7 +161,7 @@ export default function LoginPage() {
           <motion.button
             id="btn-email-login"
             type="submit"
-            disabled={loading}
+            disabled={loading || redirecting}
             whileTap={{ scale: 0.97 }}
             className="btn-accent w-full"
           >
@@ -152,14 +169,9 @@ export default function LoginPage() {
           </motion.button>
         </form>
 
-        {/* Register link */}
         <p className="text-center text-xs" style={{ color: '#A3A3A3' }}>
           ¿Aún no tienes cuenta?{' '}
-          <Link
-            href="/register"
-            className="font-semibold transition-colors"
-            style={{ color: '#D4AF37' }}
-          >
+          <Link href="/register" className="font-semibold transition-colors" style={{ color: '#D4AF37' }}>
             Crear cuenta gratis
           </Link>
         </p>
@@ -173,33 +185,22 @@ function getFirebaseErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null && 'code' in err) {
     const code = (err as { code: string }).code
     const messages: Record<string, string> = {
-      // Auth errors
-      'auth/user-not-found':           'No encontramos una cuenta con ese email.',
-      'auth/wrong-password':           'Contraseña incorrecta. Inténtalo de nuevo.',
-      'auth/invalid-email':            'El formato del email no es válido.',
-      'auth/invalid-credential':       'Credenciales inválidas. Verifica tu email y contraseña.',
-      'auth/too-many-requests':        'Demasiados intentos. Espera unos minutos.',
-      'auth/user-disabled':            'Esta cuenta ha sido deshabilitada.',
-      'auth/popup-closed-by-user':     'Cerraste el popup de Google antes de completar.',
-      'auth/popup-blocked':            'Tu navegador bloqueó el popup. Permite popups para este sitio.',
-      'auth/cancelled-popup-request':  'Solicitud de popup cancelada.',
-      'auth/network-request-failed':   'Error de red. Verifica tu conexión a internet.',
-      'auth/operation-not-allowed':    'Este método de inicio de sesión no está habilitado en Firebase.',
-      'auth/configuration-not-found':  'Configuración de Firebase no encontrada. Verifica las variables de entorno.',
-      'auth/invalid-api-key':          'API Key de Firebase inválida. Verifica NEXT_PUBLIC_FIREBASE_API_KEY.',
-      'auth/app-not-authorized':       'App no autorizada. Verifica el dominio en Firebase Console.',
-      'auth/unauthorized-domain':      'Dominio no autorizado en Firebase Console. Agrega localhost a los dominios permitidos.',
-      'auth/internal-error':           'Error interno de Firebase. Intenta nuevamente.',
+      'auth/user-not-found':          'No encontramos una cuenta con ese email.',
+      'auth/wrong-password':          'Contraseña incorrecta. Inténtalo de nuevo.',
+      'auth/invalid-email':           'El formato del email no es válido.',
+      'auth/invalid-credential':      'Credenciales inválidas. Verifica tu email y contraseña.',
+      'auth/too-many-requests':       'Demasiados intentos. Espera unos minutos.',
+      'auth/user-disabled':           'Esta cuenta ha sido deshabilitada.',
+      'auth/network-request-failed':  'Error de red. Verifica tu conexión.',
+      'auth/operation-not-allowed':   'Este método no está habilitado en Firebase.',
+      'auth/unauthorized-domain':     'Dominio no autorizado. Agrega localhost en Firebase Console.',
+      'auth/internal-error':          'Error interno de Firebase. Intenta nuevamente.',
     }
-    // In development, also show the raw code to speed up debugging
     const message = messages[code]
     if (message) return message
     const devHint = process.env.NODE_ENV === 'development' ? ` [código: ${code}]` : ''
-    return `Ocurrió un error inesperado. Inténtalo de nuevo.${devHint}`
+    return `Ocurrió un error inesperado.${devHint}`
   }
-  // Log the raw error structure for non-Firebase errors
-  const devHint = process.env.NODE_ENV === 'development'
-    ? ` [error: ${String(err)}]`
-    : ''
+  const devHint = process.env.NODE_ENV === 'development' ? ` [error: ${String(err)}]` : ''
   return `Ocurrió un error inesperado.${devHint}`
 }
