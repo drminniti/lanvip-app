@@ -69,7 +69,7 @@ function NavItem({
         <motion.div
           layoutId="nav-active"
           className="absolute inset-0 rounded-2xl"
-          style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.20)' }}
+          style={{ background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.20)' }}
           transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
         />
       )}
@@ -79,7 +79,7 @@ function NavItem({
         {item.pro && (
           <span
             className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-            style={{ background: 'rgba(59,130,246,0.15)', color: '#3B82F6' }}
+            style={{ background: 'rgba(212,175,55,0.15)', color: '#D4AF37' }}
           >
             PRO 🔒
           </span>

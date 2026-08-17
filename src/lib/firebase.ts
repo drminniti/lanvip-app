@@ -1,5 +1,4 @@
 // NOTE: No 'use client' directive — library module, not a React component.
-// The 'use client' boundary is owned by the components that import this module.
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
 import {
@@ -22,79 +21,99 @@ const firebaseConfig = {
 }
 
 /**
- * Module-level singletons — survive Next.js HMR without re-initialising.
- * These are undefined on the server (SSR) and populated lazily on the client.
+ * WHY globalThis instead of module-level `let` variables?
+ *
+ * In Next.js dev mode, Hot Module Replacement (HMR) re-evaluates modules
+ * on every file save. Module-level variables (`let _auth`) are reset to
+ * `undefined` on each re-evaluation. This causes `initializeAuth` to be
+ * called again on an already-initialized Firebase app, which:
+ *   1. Throws `auth/already-initialized` (caught, but auth state is lost)
+ *   2. Falls back to `getAuth()` which may return a stale/invalid instance
+ *   3. `signInWithPopup` receives this invalid instance → `auth/argument-error`
+ *
+ * `globalThis` persists across HMR re-evaluations (it is the global object,
+ * shared between all module evaluations in the same Node.js/browser process).
+ * Firebase is therefore only ever initialized once per runtime session.
+ *
+ * This is the pattern recommended by Prisma, Firebase, and the Next.js docs
+ * for any singleton that must survive HMR.
  */
-let _app:     FirebaseApp     | undefined
-let _auth:    Auth            | undefined
-let _db:      Firestore       | undefined
-let _storage: FirebaseStorage | undefined
+
+// Augment globalThis with typed Lanvip singletons
+declare global {
+  // eslint-disable-next-line no-var
+  var __lanvip_app:     FirebaseApp     | undefined
+  // eslint-disable-next-line no-var
+  var __lanvip_auth:    Auth            | undefined
+  // eslint-disable-next-line no-var
+  var __lanvip_db:      Firestore       | undefined
+  // eslint-disable-next-line no-var
+  var __lanvip_storage: FirebaseStorage | undefined
+}
 
 // ─── Firebase App ─────────────────────────────────────────────────────────────
 function getFirebaseApp(): FirebaseApp {
-  if (_app) return _app
-  _app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
-  return _app
+  if (globalThis.__lanvip_app) return globalThis.__lanvip_app
+  globalThis.__lanvip_app =
+    getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+  return globalThis.__lanvip_app
 }
 
 // ─── Firebase Auth ────────────────────────────────────────────────────────────
 /**
- * Returns the Auth singleton, configured with `browserLocalPersistence`
- * (localStorage) instead of the default IndexedDB persistence.
+ * Returns the Auth singleton with `browserLocalPersistence` (localStorage).
  *
- * WHY: Firebase Auth's IndexedDB persistence (`indexedDBLocalPersistence`)
- * triggers the "Database is closing/hidden" error in Next.js because:
- *   1. HMR unmounts components while IndexedDB connections are still open.
- *   2. The next hot-reload attempt finds the DB in a closing state and throws.
+ * WHY browserLocalPersistence instead of the default indexedDBLocalPersistence?
+ * IndexedDB has an async open/close lifecycle. Under Next.js HMR the page can
+ * unmount while an IndexedDB transaction is still in-flight, leaving the DB
+ * in a "closing" state. The next signInWithPopup call then fails with:
+ *   "Error: Database is closing/hidden"
  *
- * `browserLocalPersistence` uses `localStorage` which has no async open/close
- * lifecycle, so it is immune to this race condition. Auth state still persists
- * across page refreshes as expected.
- *
- * On HMR re-runs, `initializeAuth` throws "auth/already-initialized"; the
- * catch block returns the existing instance via `getAuth()` — safe to reuse.
+ * localStorage is synchronous — no open/close lifecycle, immune to HMR races.
+ * Auth state still persists across page refreshes as expected.
  */
 export function getFirebaseAuth(): Auth {
-  if (_auth) return _auth
+  if (globalThis.__lanvip_auth) return globalThis.__lanvip_auth
 
   const app = getFirebaseApp()
 
   try {
-    _auth = initializeAuth(app, {
+    globalThis.__lanvip_auth = initializeAuth(app, {
       persistence: browserLocalPersistence,
     })
-    console.info('[Lanvip] Firebase Auth initialized with browserLocalPersistence')
+    console.info('[Lanvip] Firebase Auth initialized (browserLocalPersistence)')
   } catch (err: unknown) {
-    // auth/already-initialized — happens on Next.js HMR hot-reload.
-    // getAuth() safely returns the already-configured instance.
-    if (
-      typeof err === 'object' &&
-      err !== null &&
-      'code' in err &&
-      (err as { code: string }).code === 'auth/already-initialized'
-    ) {
-      console.info('[Lanvip] Firebase Auth already initialized — reusing instance')
-    } else {
-      console.error('[Lanvip] getFirebaseAuth — unexpected error:', err)
+    // auth/already-initialized is expected on HMR re-runs.
+    // Any other error is also recovered by returning the existing instance.
+    const code =
+      typeof err === 'object' && err !== null && 'code' in err
+        ? (err as { code: string }).code
+        : 'unknown'
+
+    if (code !== 'auth/already-initialized') {
+      console.error('[Lanvip] getFirebaseAuth unexpected error:', code, err)
     }
-    _auth = getAuth(app)
+
+    // getAuth() safely retrieves whatever instance was already configured
+    globalThis.__lanvip_auth = getAuth(app)
+    console.info('[Lanvip] Firebase Auth reused existing instance (code:', code, ')')
   }
 
-  return _auth
+  return globalThis.__lanvip_auth
 }
 
 // ─── Firestore ────────────────────────────────────────────────────────────────
 export function getFirebaseDb(): Firestore {
-  if (_db) return _db
-  _db = getFirestore(getFirebaseApp())
-  return _db
+  if (globalThis.__lanvip_db) return globalThis.__lanvip_db
+  globalThis.__lanvip_db = getFirestore(getFirebaseApp())
+  return globalThis.__lanvip_db
 }
 
 // ─── Storage ──────────────────────────────────────────────────────────────────
 export function getFirebaseStorage(): FirebaseStorage {
-  if (_storage) return _storage
-  _storage = getStorage(getFirebaseApp())
-  return _storage
+  if (globalThis.__lanvip_storage) return globalThis.__lanvip_storage
+  globalThis.__lanvip_storage = getStorage(getFirebaseApp())
+  return globalThis.__lanvip_storage
 }
 
 export { getFirebaseApp }

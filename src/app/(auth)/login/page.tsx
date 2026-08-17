@@ -158,7 +158,7 @@ export default function LoginPage() {
           <Link
             href="/register"
             className="font-semibold transition-colors"
-            style={{ color: '#3B82F6' }}
+            style={{ color: '#D4AF37' }}
           >
             Crear cuenta gratis
           </Link>

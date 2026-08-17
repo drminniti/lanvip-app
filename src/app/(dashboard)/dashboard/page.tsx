@@ -32,10 +32,10 @@ function StatCard({
       transition={{ delay, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
       className="glass-card p-5 flex items-center gap-4"
     >
-      {/* Icon container — accent #3B82F6 */}
+      {/* Icon container — accent #D4AF37 */}
       <div
         className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
-        style={{ background: 'rgba(59,130,246,0.12)', color: '#3B82F6' }}
+        style={{ background: 'rgba(212,175,55,0.12)', color: '#D4AF37' }}
       >
         {icon}
       </div>
@@ -139,7 +139,7 @@ export default function DashboardPage() {
       >
         <div
           className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto text-3xl"
-          style={{ background: 'rgba(59,130,246,0.10)' }}
+          style={{ background: 'rgba(212,175,55,0.10)' }}
         >
           ✨
         </div>
@@ -174,8 +174,8 @@ export default function DashboardPage() {
         <QuickAction
           href="/dashboard/profile"
           id="btn-edit-profile"
-          iconBg="rgba(59,130,246,0.12)"
-          iconColor="#3B82F6"
+          iconBg="rgba(212,175,55,0.12)"
+          iconColor="#D4AF37"
           title="Editar perfil"
           subtitle="Nombre, bio, avatar"
           icon={

@@ -213,7 +213,7 @@ export default function RegisterPage() {
           <Link
             href="/login"
             className="font-semibold transition-colors"
-            style={{ color: '#3B82F6' }}
+            style={{ color: '#D4AF37' }}
           >
             Iniciar sesión
           </Link>

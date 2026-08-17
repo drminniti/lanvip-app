@@ -20,11 +20,11 @@ const config: Config = {
         // Text
         'text-primary':   '#F5F5F5',
         'text-secondary': '#A3A3A3',
-        // Accent CTA
+        // Accent CTA — Gold VIP (0_Brand.md §3)
         accent: {
-          DEFAULT: '#3B82F6',
-          hover:   '#2563EB',
-          subtle:  'rgba(59,130,246,0.12)',
+          DEFAULT: '#D4AF37',
+          hover:   '#B8962E',
+          subtle:  'rgba(212,175,55,0.12)',
         },
         // Kept for any one-off overrides
         white: '#ffffff',
@@ -52,10 +52,10 @@ const config: Config = {
 
       // ── Box Shadows — diffuse, no hard edges (0_Brand.md §4) ─────────────
       boxShadow: {
-        'lanvip':    '0 8px 30px rgb(0 0 0 / 0.40)',
-        'lanvip-sm': '0 4px 16px rgb(0 0 0 / 0.30)',
-        'lanvip-lg': '0 16px 48px rgb(0 0 0 / 0.50)',
-        'accent-glow': '0 0 32px rgba(59,130,246,0.20)',
+        'lanvip':      '0 8px 30px rgb(0 0 0 / 0.40)',
+        'lanvip-sm':   '0 4px 16px rgb(0 0 0 / 0.30)',
+        'lanvip-lg':   '0 16px 48px rgb(0 0 0 / 0.50)',
+        'accent-glow': '0 0 32px rgba(212,175,55,0.25)',
       },
 
       // ── Animations ────────────────────────────────────────────────────────

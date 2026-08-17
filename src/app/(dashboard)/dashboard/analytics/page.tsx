@@ -9,7 +9,7 @@ export default function AnalyticsPage() {
       <h1 className="text-xl font-bold" style={{ color: '#F5F5F5' }}>Analíticas</h1>
       <span
         className="inline-block text-xs font-bold px-2 py-1 rounded-full"
-        style={{ background: 'rgba(59,130,246,0.15)', color: '#3B82F6' }}
+        style={{ background: 'rgba(212,175,55,0.15)', color: '#D4AF37' }}
       >
         PRO 🔒 — Próximamente
       </span>
