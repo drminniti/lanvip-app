@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/* ── Lanvip Global CSS ──────────────────────────────────────────────────────── */
+
+@layer base {
+  :root {
+    /* Brand tokens */
+    --brand-primary: #8b3fff;
+    --brand-light: #f5f0ff;
+
+    /* Glass surface */
+    --glass-bg: rgba(255, 255, 255, 0.70);
+    --glass-border: rgba(255, 255, 255, 0.20);
+
+    /* Mesh gradient background */
+    --mesh-1: #f5f0ff;
+    --mesh-2: #e0f0ff;
+    --mesh-3: #fff0f5;
+  }
+
+  .dark {
+    --glass-bg: rgba(10, 10, 10, 0.70);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --mesh-1: #1a0f2e;
+    --mesh-2: #0f1a2e;
+    --mesh-3: #1a0f1a;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--mesh-1);
+  }
+}
+
+@layer utilities {
+  /* ── Mesh Gradient Background ─────────────────────────────────────────── */
+  .bg-mesh {
+    background-color: var(--mesh-1);
+    background-image:
+      radial-gradient(ellipse at 20% 50%, var(--mesh-1) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, var(--mesh-2) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, var(--mesh-3) 0%, transparent 50%);
+    background-size: 200% 200%;
+    animation: mesh-drift 8s ease infinite;
+  }
+
+  /* ── Glassmorphism Card ───────────────────────────────────────────────── */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 30px rgb(0 0 0 / 0.06);
+  }
+
+  /* ── Squircle variants ────────────────────────────────────────────────── */
+  .squircle-sm  { border-radius: 1rem; }
+  .squircle-md  { border-radius: 1.5rem; }
+  .squircle-lg  { border-radius: 2rem; }
+
+  /* ── Tap feedback (complements Framer Motion whileTap) ─────────────────── */
+  .tap-target {
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+  .tap-target:active { opacity: 0.75; }
+
+  /* ── Gradient text ────────────────────────────────────────────────────── */
+  .gradient-text {
+    background: linear-gradient(135deg, var(--brand-primary) 0%, #a162ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* ── Keyframes ────────────────────────────────────────────────────────────── */
+@keyframes mesh-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+@keyframes fade-up {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  0%   { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Scrollbar (minimal, brand-aligned) ──────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(139, 63, 255, 0.25); border-radius: 999px; }
