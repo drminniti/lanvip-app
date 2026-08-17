@@ -44,6 +44,7 @@ export default function RegisterPage() {
       document.cookie = '__session=1; path=/; SameSite=Lax'
       router.push('/dashboard')
     } catch (err: unknown) {
+      console.error('[Lanvip] registerWithEmail UI catch:', err)
       setError(getFirebaseErrorMessage(err))
     } finally {
       setLoading(false)
@@ -58,6 +59,7 @@ export default function RegisterPage() {
       document.cookie = '__session=1; path=/; SameSite=Lax'
       router.push('/dashboard')
     } catch (err: unknown) {
+      console.error('[Lanvip] loginWithGoogle UI catch (register):', err)
       setError(getFirebaseErrorMessage(err))
     } finally {
       setLoading(false)
@@ -226,12 +228,30 @@ function getFirebaseErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null && 'code' in err) {
     const code = (err as { code: string }).code
     const messages: Record<string, string> = {
-      'auth/email-already-in-use': 'Este email ya está registrado. Inicia sesión.',
-      'auth/invalid-email':        'El formato del email no es válido.',
-      'auth/weak-password':        'La contraseña es muy débil. Usa al menos 8 caracteres.',
-      'auth/popup-closed-by-user': 'Cerraste el popup de Google antes de completar.',
+      // Registration errors
+      'auth/email-already-in-use':     'Este email ya está registrado. Inicia sesión.',
+      'auth/invalid-email':            'El formato del email no es válido.',
+      'auth/weak-password':            'La contraseña es muy débil. Usa al menos 8 caracteres.',
+      // Google / popup errors
+      'auth/popup-closed-by-user':     'Cerraste el popup de Google antes de completar.',
+      'auth/popup-blocked':            'Tu navegador bloqueó el popup. Permite popups para este sitio.',
+      'auth/cancelled-popup-request':  'Solicitud de popup cancelada.',
+      // Network & config
+      'auth/network-request-failed':   'Error de red. Verifica tu conexión a internet.',
+      'auth/operation-not-allowed':    'Este método de registro no está habilitado en Firebase.',
+      'auth/configuration-not-found':  'Configuración de Firebase no encontrada. Verifica las variables de entorno.',
+      'auth/invalid-api-key':          'API Key de Firebase inválida. Verifica NEXT_PUBLIC_FIREBASE_API_KEY.',
+      'auth/app-not-authorized':       'App no autorizada. Verifica el dominio en Firebase Console.',
+      'auth/unauthorized-domain':      'Dominio no autorizado en Firebase Console. Agrega localhost a los dominios permitidos.',
+      'auth/internal-error':           'Error interno de Firebase. Intenta nuevamente.',
     }
-    return messages[code] ?? 'Ocurrió un error inesperado. Inténtalo de nuevo.'
+    const message = messages[code]
+    if (message) return message
+    const devHint = process.env.NODE_ENV === 'development' ? ` [código: ${code}]` : ''
+    return `Ocurrió un error inesperado. Inténtalo de nuevo.${devHint}`
   }
-  return 'Ocurrió un error inesperado.'
+  const devHint = process.env.NODE_ENV === 'development'
+    ? ` [error: ${String(err)}]`
+    : ''
+  return `Ocurrió un error inesperado.${devHint}`
 }

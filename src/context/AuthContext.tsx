@@ -10,20 +10,30 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue>({
-  user: null,
+  user:    null,
   loading: true,
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser]       = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthChange((firebaseUser) => {
-      setUser(firebaseUser)
+    let unsubscribe: () => void
+
+    try {
+      unsubscribe = onAuthChange((firebaseUser) => {
+        setUser(firebaseUser)
+        setLoading(false)
+      })
+    } catch (err) {
+      console.error('[Lanvip] AuthProvider — onAuthChange setup failed:', err)
       setLoading(false)
-    })
-    return unsubscribe
+    }
+
+    return () => {
+      if (unsubscribe) unsubscribe()
+    }
   }, [])
 
   return (
