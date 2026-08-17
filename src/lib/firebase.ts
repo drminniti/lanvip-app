@@ -5,6 +5,7 @@ import {
   initializeAuth,
   getAuth,
   browserLocalPersistence,
+  browserPopupRedirectResolver,
   Auth,
 } from 'firebase/auth'
 import { getFirestore, Firestore } from 'firebase/firestore'
@@ -79,9 +80,19 @@ export function getFirebaseAuth(): Auth {
 
   try {
     globalThis.__lanvip_auth = initializeAuth(app, {
-      persistence: browserLocalPersistence,
+      persistence:          browserLocalPersistence,
+      /**
+       * WHY explicit popupRedirectResolver?
+       * Firebase 12 + Next.js Turbopack cannot auto-detect the popup/redirect
+       * resolver because Turbopack's module bundling creates isolation that
+       * prevents Firebase from inspecting `window` at initialisation time.
+       * Without this, signInWithPopup throws auth/argument-error regardless
+       * of whether the Auth instance itself is valid.
+       * Setting it here means every signInWithPopup call inherits it automatically.
+       */
+      popupRedirectResolver: browserPopupRedirectResolver,
     })
-    console.info('[Lanvip] Firebase Auth initialized (browserLocalPersistence)')
+    console.info('[Lanvip] Firebase Auth initialized (localStorage + browserPopupRedirectResolver)')
   } catch (err: unknown) {
     // auth/already-initialized is expected on HMR re-runs.
     // Any other error is also recovered by returning the existing instance.
