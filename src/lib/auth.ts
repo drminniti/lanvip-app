@@ -14,22 +14,32 @@ import {
   doc,
   setDoc,
   getDoc,
+  getDocs,
+  updateDoc,
+  collection,
+  query,
+  where,
   serverTimestamp,
 } from 'firebase/firestore'
 import { getFirebaseAuth, getFirebaseDb, browserPopupRedirectResolver } from './firebase'
-import type { UserProfile } from '@/types'
+import type { UserProfile, ThemeSettings } from '@/types'
+import { VIP_THEMES } from './themes'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
  * Creates the Firestore user document after first login.
- * Retries on transient 'unavailable'/'offline' errors because after page load
- * the Firestore WebSocket hasn't connected yet. Retry loop gives the SDK
- * ~600-1800ms to establish the connection before failing hard.
+ * Retries on transient 'unavailable'/'offline' errors (Firestore WebSocket
+ * hasn't connected yet right after page load).
+ *
+ * @param withExplicitUsername - true for email/password registration (user
+ *   chose a username), false for Google OAuth (auto-assigned from email).
+ *   Controls the hasCompletedOnboarding flag.
  */
 async function createUserDocument(
   user: User,
   username?: string,
+  withExplicitUsername = false,
   attempt = 1,
 ): Promise<void> {
   const MAX_ATTEMPTS  = 4
@@ -42,23 +52,22 @@ async function createUserDocument(
     const snapshot = await getDoc(userRef)
 
     if (!snapshot.exists()) {
+      const defaultTheme = VIP_THEMES[0].settings  // Obsidian
+
       const newUser: Omit<UserProfile, 'createdAt'> & { createdAt: unknown } = {
         uid:         user.uid,
         username:    username ?? user.email?.split('@')[0] ?? user.uid.slice(0, 8),
         displayName: user.displayName ?? username ?? 'Lanvip User',
         bio:         '',
+        // No Firebase Storage: use Google photoURL as default, empty string otherwise
         avatarUrl:   user.photoURL ?? '',
-        themeSettings: {
-          bgType:    'mesh',
-          colors:    ['#141208', '#0d0d0a'],
-          cardStyle: 'glass',
-          darkMode:  true,
-        },
-        views:          0,
-        planId:         'free',
-        organizationId: null,
-        isNfcEnabled:   false,
-        createdAt:      serverTimestamp(),
+        themeSettings:           defaultTheme,
+        views:                   0,
+        planId:                  'free',
+        organizationId:          null,
+        isNfcEnabled:            false,
+        hasCompletedOnboarding:  withExplicitUsername,
+        createdAt:               serverTimestamp(),
       }
       await setDoc(userRef, newUser)
       console.info('[Lanvip] createUserDocument — created for uid:', user.uid)
@@ -80,7 +89,7 @@ async function createUserDocument(
       const delay = RETRY_BASE_MS * attempt
       console.warn(`[Lanvip] Firestore not ready (attempt ${attempt}/${MAX_ATTEMPTS - 1}), retrying in ${delay}ms…`)
       await new Promise(resolve => setTimeout(resolve, delay))
-      return createUserDocument(user, username, attempt + 1)
+      return createUserDocument(user, username, withExplicitUsername, attempt + 1)
     }
 
     console.error('[Lanvip] createUserDocument — failed after all retries:', err)
@@ -100,7 +109,8 @@ export async function registerWithEmail(
   console.info('[Lanvip] registerWithEmail —', email)
   const { user } = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(user, { displayName })
-  await createUserDocument(user, username)
+  // Email registration: user explicitly chose username → hasCompletedOnboarding = true
+  await createUserDocument(user, username, true)
   console.info('[Lanvip] registerWithEmail — success, uid:', user.uid)
   return user
 }
@@ -115,17 +125,10 @@ export async function loginWithEmail(email: string, password: string): Promise<U
 
 /**
  * Google Sign-In via POPUP with explicit browserPopupRedirectResolver.
+ * COOP: unsafe-none is set on /login and /register routes (next.config.ts)
+ * to allow the Firebase popup to postMessage back after OAuth.
  *
- * WHY popup (not redirect)?
- * signInWithRedirect relies on cross-domain sessionStorage state that is
- * inaccessible when Firebase redirects back to localhost, so getRedirectResult()
- * always returns null in development.
- *
- * WHY unsafe-none COOP on auth routes?
- * Firebase's popup (lanvip-app.firebaseapp.com) needs to postMessage back to
- * our window after OAuth. This cross-origin postMessage is blocked unless our
- * page sets COOP: unsafe-none (configured in next.config.ts for /login and
- * /register routes only — safe since no sensitive data is on those pages).
+ * New Google users get hasCompletedOnboarding = false → redirected to /onboarding.
  */
 export async function loginWithGoogle(): Promise<User> {
   const auth           = getFirebaseAuth()
@@ -134,10 +137,101 @@ export async function loginWithGoogle(): Promise<User> {
 
   console.info('[Lanvip] loginWithGoogle — opening popup')
   const { user } = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver)
-  await createUserDocument(user)
+
+  try {
+    // Google users: withExplicitUsername = false → onboarding required
+    await createUserDocument(user, undefined, false)
+  } catch (firestoreErr) {
+    console.error('[Lanvip] loginWithGoogle — Firestore doc creation failed (user authenticated):', firestoreErr)
+  }
+
   console.info('[Lanvip] loginWithGoogle — success, uid:', user.uid)
   return user
 }
+
+// ─── Profile Update Operations ────────────────────────────────────────────────
+
+export interface UpdateProfileData {
+  displayName?:    string
+  username?:       string
+  bio?:            string
+  avatarUrl?:      string
+  themeSettings?:  ThemeSettings
+}
+
+/**
+ * Updates the user's Firestore document with the provided fields.
+ * Also updates Firebase Auth displayName if provided.
+ */
+export async function updateUserProfile(
+  uid: string,
+  data: UpdateProfileData,
+): Promise<void> {
+  const db      = getFirebaseDb()
+  const userRef = doc(db, 'users', uid)
+
+  await updateDoc(userRef, { ...data })
+  console.info('[Lanvip] updateUserProfile — updated fields:', Object.keys(data))
+
+  // Keep Firebase Auth profile in sync
+  const auth = getFirebaseAuth()
+  if (auth.currentUser && data.displayName) {
+    await updateProfile(auth.currentUser, {
+      displayName: data.displayName,
+      ...(data.avatarUrl ? { photoURL: data.avatarUrl } : {}),
+    })
+  }
+}
+
+/**
+ * Completes the onboarding flow: sets the chosen username, displayName,
+ * and marks hasCompletedOnboarding = true.
+ */
+export async function completeOnboarding(
+  uid: string,
+  username: string,
+  displayName: string,
+): Promise<void> {
+  const db      = getFirebaseDb()
+  const userRef = doc(db, 'users', uid)
+
+  await updateDoc(userRef, {
+    username,
+    displayName,
+    hasCompletedOnboarding: true,
+  })
+
+  const auth = getFirebaseAuth()
+  if (auth.currentUser) {
+    await updateProfile(auth.currentUser, { displayName })
+  }
+
+  console.info('[Lanvip] completeOnboarding — uid:', uid, 'username:', username)
+}
+
+/**
+ * Checks whether a username is already taken in Firestore.
+ * Returns true if available, false if taken.
+ * Excludes the current user's own uid to allow re-saving the same username.
+ */
+export async function checkUsernameAvailable(
+  username: string,
+  currentUid: string,
+): Promise<boolean> {
+  if (!username || username.length < 3) return false
+
+  const db      = getFirebaseDb()
+  const usersCol = collection(db, 'users')
+  const q        = query(usersCol, where('username', '==', username))
+  const snap     = await getDocs(q)
+
+  if (snap.empty) return true
+
+  // Allow if the only match is the current user (re-saving same username)
+  return snap.docs.every(d => d.id === currentUid)
+}
+
+// ─── Auth Listeners ───────────────────────────────────────────────────────────
 
 export async function logout(): Promise<void> {
   const auth = getFirebaseAuth()
