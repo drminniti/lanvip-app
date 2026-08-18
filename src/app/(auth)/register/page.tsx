@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { registerWithEmail, loginWithGoogle, handleGoogleRedirectResult } from '@/lib/auth'
+import { registerWithEmail, loginWithGoogle } from '@/lib/auth'
 import { useAuth } from '@/context/AuthContext'
 
-// ─── Google Icon ─────────────────────────────────────────────────────────────
 function GoogleIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -29,37 +28,13 @@ export default function RegisterPage() {
   const [password, setPassword]       = useState('')
   const [error, setError]             = useState('')
   const [loading, setLoading]         = useState(false)
-  const [redirecting, setRedirecting] = useState(false)
 
-  /**
-   * PRIMARY auth redirect: observe the shared AuthContext.
-   * Fires for both Google redirect flow (auto-processed by Firebase on init)
-   * and manual email/password registration.
-   */
   useEffect(() => {
     if (!authLoading && user) {
       document.cookie = '__session=1; path=/; SameSite=Lax'
       router.push('/dashboard')
     }
   }, [user, authLoading, router])
-
-  /**
-   * SECONDARY check: explicit getRedirectResult call as belt-and-suspenders.
-   */
-  useEffect(() => {
-    async function checkRedirect() {
-      try {
-        const redirectUser = await handleGoogleRedirectResult()
-        if (redirectUser) {
-          document.cookie = '__session=1; path=/; SameSite=Lax'
-        }
-      } catch (err: unknown) {
-        console.error('[Lanvip] Google redirect result error (register):', err)
-        setError(getFirebaseErrorMessage(err))
-      }
-    }
-    checkRedirect()
-  }, [])
 
   function handleUsernameChange(val: string) {
     setUsername(val.toLowerCase().replace(/[^a-z0-9_]/g, ''))
@@ -76,30 +51,34 @@ export default function RegisterPage() {
     try {
       await registerWithEmail(email, password, username, displayName)
       document.cookie = '__session=1; path=/; SameSite=Lax'
-      // redirect handled by primary useEffect
+      router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[Lanvip] registerWithEmail UI catch:', err)
       setError(getFirebaseErrorMessage(err))
+    } finally {
       setLoading(false)
     }
   }
 
   async function handleGoogleRegister() {
     setError('')
-    setRedirecting(true)
+    setLoading(true)
     try {
       await loginWithGoogle()
+      document.cookie = '__session=1; path=/; SameSite=Lax'
+      router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithGoogle UI catch (register):', err)
       setError(getFirebaseErrorMessage(err))
-      setRedirecting(false)
+    } finally {
+      setLoading(false)
     }
   }
 
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <span className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+        <span className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#D4AF37', borderTopColor: 'transparent' }} />
       </div>
     )
   }
@@ -112,26 +91,22 @@ export default function RegisterPage() {
       className="w-full max-w-sm"
     >
       <div className="glass-card p-8 space-y-6">
-        {/* Brand header */}
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold gradient-text tracking-tight">Crear cuenta</h1>
-          <p className="text-sm" style={{ color: '#A3A3A3' }}>
-            Tu landing VIP te espera — es gratis
-          </p>
+          <p className="text-sm" style={{ color: '#A3A3A3' }}>Tu landing VIP te espera — es gratis</p>
         </div>
 
-        {/* Google redirect button */}
         <motion.button
           id="btn-google-register"
           onClick={handleGoogleRegister}
-          disabled={loading || redirecting}
+          disabled={loading}
           whileTap={{ scale: 0.97 }}
           className="btn-ghost w-full"
         >
-          {redirecting ? (
+          {loading ? (
             <>
               <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-              Redirigiendo a Google…
+              Conectando con Google…
             </>
           ) : (
             <>
@@ -141,27 +116,17 @@ export default function RegisterPage() {
           )}
         </motion.button>
 
-        {/* Divider */}
         <div className="flex items-center gap-3">
           <div className="divider" />
           <span className="text-xs" style={{ color: '#A3A3A3' }}>o</span>
           <div className="divider" />
         </div>
 
-        {/* Form */}
         <form onSubmit={handleRegister} className="space-y-3">
           <div className="space-y-1">
             <label htmlFor="reg-name" className="label-dark">Nombre completo</label>
-            <input
-              id="reg-name"
-              type="text"
-              required
-              autoComplete="name"
-              value={displayName}
-              onChange={e => setDisplayName(e.target.value)}
-              placeholder="Tu Nombre"
-              className="input-dark"
-            />
+            <input id="reg-name" type="text" required autoComplete="name" value={displayName}
+              onChange={e => setDisplayName(e.target.value)} placeholder="Tu Nombre" className="input-dark" />
           </div>
 
           <div className="space-y-1">
@@ -170,101 +135,64 @@ export default function RegisterPage() {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none select-none" style={{ color: '#A3A3A3' }}>
                 lanvip.app/
               </span>
-              <input
-                id="reg-username"
-                type="text"
-                required
-                value={username}
+              <input id="reg-username" type="text" required value={username}
                 onChange={e => handleUsernameChange(e.target.value)}
-                placeholder="tunombre"
-                className="input-dark"
-                style={{ paddingLeft: '6.5rem' }}
-              />
+                placeholder="tunombre" className="input-dark" style={{ paddingLeft: '6.5rem' }} />
             </div>
           </div>
 
           <div className="space-y-1">
             <label htmlFor="reg-email" className="label-dark">Correo electrónico</label>
-            <input
-              id="reg-email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="tu@email.com"
-              className="input-dark"
-            />
+            <input id="reg-email" type="email" required autoComplete="email" value={email}
+              onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" className="input-dark" />
           </div>
 
           <div className="space-y-1">
             <label htmlFor="reg-password" className="label-dark">
-              Contraseña{' '}
-              <span style={{ color: '#A3A3A3', fontWeight: 400 }}>(mín. 8 caracteres)</span>
+              Contraseña <span style={{ color: '#A3A3A3', fontWeight: 400 }}>(mín. 8 caracteres)</span>
             </label>
-            <input
-              id="reg-password"
-              type="password"
-              required
-              autoComplete="new-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="input-dark"
-            />
+            <input id="reg-password" type="password" required autoComplete="new-password" value={password}
+              onChange={e => setPassword(e.target.value)} placeholder="••••••••" className="input-dark" />
           </div>
 
           {error && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-xs text-center"
-              style={{ color: '#EF4444' }}
-            >
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-center" style={{ color: '#EF4444' }}>
               {error}
             </motion.p>
           )}
 
-          <motion.button
-            id="btn-register-submit"
-            type="submit"
-            disabled={loading || redirecting}
-            whileTap={{ scale: 0.97 }}
-            className="btn-accent w-full mt-1"
-          >
+          <motion.button id="btn-register-submit" type="submit" disabled={loading}
+            whileTap={{ scale: 0.97 }} className="btn-accent w-full mt-1">
             {loading ? 'Creando cuenta…' : 'Crear cuenta gratis'}
           </motion.button>
         </form>
 
         <p className="text-center text-xs" style={{ color: '#A3A3A3' }}>
           ¿Ya tienes cuenta?{' '}
-          <Link href="/login" className="font-semibold transition-colors" style={{ color: '#D4AF37' }}>
-            Iniciar sesión
-          </Link>
+          <Link href="/login" className="font-semibold" style={{ color: '#D4AF37' }}>Iniciar sesión</Link>
         </p>
       </div>
     </motion.div>
   )
 }
 
-// ─── Error Helper ─────────────────────────────────────────────────────────────
 function getFirebaseErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null && 'code' in err) {
     const code = (err as { code: string }).code
-    const messages: Record<string, string> = {
-      'auth/email-already-in-use':   'Este email ya está registrado. Inicia sesión.',
+    const map: Record<string, string> = {
+      'auth/email-already-in-use':   'Este email ya está registrado.',
       'auth/invalid-email':          'El formato del email no es válido.',
-      'auth/weak-password':          'La contraseña es muy débil. Usa al menos 8 caracteres.',
-      'auth/network-request-failed': 'Error de red. Verifica tu conexión.',
-      'auth/operation-not-allowed':  'Este método de registro no está habilitado en Firebase.',
-      'auth/unauthorized-domain':    'Dominio no autorizado. Agrega localhost en Firebase Console.',
-      'auth/internal-error':         'Error interno de Firebase. Intenta nuevamente.',
+      'auth/weak-password':          'La contraseña es muy débil.',
+      'auth/network-request-failed': 'Error de red.',
+      'auth/popup-closed-by-user':   'Cerraste el popup de Google antes de completar.',
+      'auth/cancelled-popup-request':'Solicitud de popup cancelada.',
+      'auth/popup-blocked':          'El popup fue bloqueado. Permite los popups en tu navegador.',
+      'auth/unauthorized-domain':    'Dominio no autorizado en Firebase Console.',
     }
-    const message = messages[code]
-    if (message) return message
-    const devHint = process.env.NODE_ENV === 'development' ? ` [código: ${code}]` : ''
-    return `Ocurrió un error inesperado.${devHint}`
+    if (map[code]) return map[code]
+    return process.env.NODE_ENV === 'development'
+      ? `Error Firebase [${code}]`
+      : 'Ocurrió un error inesperado.'
   }
-  const devHint = process.env.NODE_ENV === 'development' ? ` [error: ${String(err)}]` : ''
-  return `Ocurrió un error inesperado.${devHint}`
+  return 'Ocurrió un error inesperado.'
 }

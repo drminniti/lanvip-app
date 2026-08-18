@@ -2,8 +2,8 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
 import {
-  initializeAuth,
   getAuth,
+  setPersistence,
   browserLocalPersistence,
   browserPopupRedirectResolver,
   Auth,
@@ -21,12 +21,6 @@ const firebaseConfig = {
   measurementId:     process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 }
 
-/**
- * WHY globalThis?
- * Next.js HMR re-evaluates modules on every hot-reload, resetting module-level
- * `let` variables to undefined. globalThis persists across re-evaluations.
- * This is the pattern used by Prisma, Firebase Admin, and Next.js docs.
- */
 declare global {
   // eslint-disable-next-line no-var
   var __lanvip_app:     FirebaseApp     | undefined
@@ -48,36 +42,33 @@ function getFirebaseApp(): FirebaseApp {
 
 // ─── Firebase Auth ────────────────────────────────────────────────────────────
 /**
- * Initialises Auth with:
- * - browserLocalPersistence: avoids IndexedDB "closing" errors with HMR
- * - browserPopupRedirectResolver: required for signInWithRedirect in Next.js
- *   (Turbopack cannot auto-detect the resolver from the SSR module context)
+ * Uses getAuth() (simplest initialization) instead of initializeAuth()
+ * to avoid any custom-option interference with the redirect flow.
+ * Persistence is set async via setPersistence() — non-blocking.
  */
 export function getFirebaseAuth(): Auth {
   if (globalThis.__lanvip_auth) return globalThis.__lanvip_auth
 
-  const app = getFirebaseApp()
+  const app  = getFirebaseApp()
+  const auth = getAuth(app)
 
-  try {
-    globalThis.__lanvip_auth = initializeAuth(app, {
-      persistence:           browserLocalPersistence,
-      popupRedirectResolver: browserPopupRedirectResolver,
-    })
-    console.info('[Lanvip] Firebase Auth initialized')
-  } catch (err: unknown) {
-    const code =
-      typeof err === 'object' && err !== null && 'code' in err
-        ? (err as { code: string }).code
-        : 'unknown'
-    if (code !== 'auth/already-initialized') {
-      console.error('[Lanvip] getFirebaseAuth unexpected error:', code, err)
-    }
-    globalThis.__lanvip_auth = getAuth(app)
-    console.info('[Lanvip] Firebase Auth reused existing instance')
-  }
+  // Set localStorage persistence asynchronously — avoids blocking auth init
+  // and avoids IndexedDB HMR issues without interfering with redirect state.
+  setPersistence(auth, browserLocalPersistence).catch(err => {
+    console.warn('[Lanvip] setPersistence failed (non-critical):', err)
+  })
 
+  globalThis.__lanvip_auth = auth
+  console.info(
+    '[Lanvip] Firebase Auth initialized — apiKey prefix:',
+    firebaseConfig.apiKey?.slice(0, 8),
+    '— authDomain:', firebaseConfig.authDomain,
+  )
   return globalThis.__lanvip_auth
 }
+
+// Re-export resolver so auth.ts can import from one place
+export { browserPopupRedirectResolver }
 
 // ─── Firestore ────────────────────────────────────────────────────────────────
 export function getFirebaseDb(): Firestore {

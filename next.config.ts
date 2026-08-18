@@ -4,27 +4,28 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Apply to all routes
-        source: '/(.*)',
+        /**
+         * Auth routes (/login, /register) need COOP: unsafe-none
+         * so that the Firebase Auth popup (which opens lanvip-app.firebaseapp.com)
+         * can postMessage back to the opener window after Google OAuth.
+         *
+         * WHY: With `same-origin-allow-popups`, cross-origin popups that have
+         * their own COOP header lose the opener reference and can't communicate
+         * back. Firebase's auth handler at firebaseapp.com has its own COOP
+         * policy. `unsafe-none` fully removes COOP from these routes, allowing
+         * all popup communication — acceptable on auth pages since no sensitive
+         * data is rendered there.
+         */
+        source: '/(login|register)',
         headers: [
-          /**
-           * Cross-Origin-Opener-Policy fix for Firebase Auth Google popup.
-           *
-           * Next.js sets COOP to 'same-origin' by default, which blocks the
-           * Google OAuth popup from calling window.close() and postMessage()
-           * back to the opener. Symptom: popup freezes after account selection,
-           * console shows: "COOP policy would block the window.close call".
-           *
-           * 'same-origin-allow-popups' keeps cross-origin navigation protection
-           * while allowing popup windows opened from the same origin (our app)
-           * to communicate back — which is exactly what Firebase Auth requires.
-           *
-           * Reference: https://firebase.google.com/docs/auth/web/google-signin
-           */
-          {
-            key:   'Cross-Origin-Opener-Policy',
-            value: 'same-origin-allow-popups',
-          },
+          { key: 'Cross-Origin-Opener-Policy', value: 'unsafe-none' },
+        ],
+      },
+      {
+        // All other routes: keep reasonable COOP protection
+        source: '/((?!login|register).*)',
+        headers: [
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
         ],
       },
     ]

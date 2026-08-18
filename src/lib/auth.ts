@@ -3,8 +3,7 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -17,16 +16,16 @@ import {
   getDoc,
   serverTimestamp,
 } from 'firebase/firestore'
-import { getFirebaseAuth, getFirebaseDb } from './firebase'
+import { getFirebaseAuth, getFirebaseDb, browserPopupRedirectResolver } from './firebase'
 import type { UserProfile } from '@/types'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
  * Creates the Firestore user document after first login.
- * Retries on 'unavailable' / 'offline' errors because after signInWithRedirect
- * the Firestore WebSocket hasn't connected when this is called. The retry loop
- * gives the SDK time to establish the connection (~200-800ms typically).
+ * Retries on transient 'unavailable'/'offline' errors because after page load
+ * the Firestore WebSocket hasn't connected yet. Retry loop gives the SDK
+ * ~600-1800ms to establish the connection before failing hard.
  */
 async function createUserDocument(
   user: User,
@@ -34,7 +33,7 @@ async function createUserDocument(
   attempt = 1,
 ): Promise<void> {
   const MAX_ATTEMPTS  = 4
-  const RETRY_BASE_MS = 600   // 600 → 1200 → 1800ms
+  const RETRY_BASE_MS = 600
 
   const db      = getFirebaseDb()
   const userRef = doc(db, 'users', user.uid)
@@ -62,18 +61,16 @@ async function createUserDocument(
         createdAt:      serverTimestamp(),
       }
       await setDoc(userRef, newUser)
-      console.info('[Lanvip] createUserDocument — doc created for uid:', user.uid)
+      console.info('[Lanvip] createUserDocument — created for uid:', user.uid)
     } else {
-      console.info('[Lanvip] createUserDocument — doc already exists for uid:', user.uid)
+      console.info('[Lanvip] createUserDocument — already exists for uid:', user.uid)
     }
   } catch (err: unknown) {
-    // Determine if the error is a transient connectivity issue
     const code = typeof err === 'object' && err !== null && 'code' in err
-      ? (err as { code: string }).code
-      : ''
-    const msg = typeof err === 'object' && err !== null && 'message' in err
-      ? String((err as { message: unknown }).message)
-      : ''
+      ? (err as { code: string }).code : ''
+    const msg  = typeof err === 'object' && err !== null && 'message' in err
+      ? String((err as { message: unknown }).message) : ''
+
     const isTransient =
       code === 'unavailable' ||
       msg.includes('offline') ||
@@ -81,15 +78,11 @@ async function createUserDocument(
 
     if (isTransient && attempt < MAX_ATTEMPTS) {
       const delay = RETRY_BASE_MS * attempt
-      console.warn(
-        `[Lanvip] Firestore not ready (attempt ${attempt}/${MAX_ATTEMPTS - 1}),` +
-        ` retrying in ${delay}ms…`,
-      )
+      console.warn(`[Lanvip] Firestore not ready (attempt ${attempt}/${MAX_ATTEMPTS - 1}), retrying in ${delay}ms…`)
       await new Promise(resolve => setTimeout(resolve, delay))
       return createUserDocument(user, username, attempt + 1)
     }
 
-    // Non-transient error or max retries reached
     console.error('[Lanvip] createUserDocument — failed after all retries:', err)
     throw err
   }
@@ -104,7 +97,7 @@ export async function registerWithEmail(
   displayName: string,
 ): Promise<User> {
   const auth = getFirebaseAuth()
-  console.info('[Lanvip] registerWithEmail — attempting:', email)
+  console.info('[Lanvip] registerWithEmail —', email)
   const { user } = await createUserWithEmailAndPassword(auth, email, password)
   await updateProfile(user, { displayName })
   await createUserDocument(user, username)
@@ -112,69 +105,38 @@ export async function registerWithEmail(
   return user
 }
 
-export async function loginWithEmail(
-  email: string,
-  password: string,
-): Promise<User> {
+export async function loginWithEmail(email: string, password: string): Promise<User> {
   const auth = getFirebaseAuth()
-  console.info('[Lanvip] loginWithEmail — attempting:', email)
+  console.info('[Lanvip] loginWithEmail —', email)
   const { user } = await signInWithEmailAndPassword(auth, email, password)
   console.info('[Lanvip] loginWithEmail — success, uid:', user.uid)
   return user
 }
 
 /**
- * Initiates Google Sign-In via REDIRECT (not popup).
+ * Google Sign-In via POPUP with explicit browserPopupRedirectResolver.
  *
- * WHY redirect instead of popup?
- * - signInWithPopup is blocked by the Cross-Origin-Opener-Policy (COOP) header
- *   that Next.js sets by default. The COOP header prevents the popup from
- *   calling window.close() / window.closed back to the opener, freezing the flow.
- * - signInWithRedirect avoids COOP entirely — it navigates the current tab to
- *   Google, authenticates, then returns to the app via a redirect URL.
- * - This is Firebase's recommended approach for Next.js and other SSR frameworks.
+ * WHY popup (not redirect)?
+ * signInWithRedirect relies on cross-domain sessionStorage state that is
+ * inaccessible when Firebase redirects back to localhost, so getRedirectResult()
+ * always returns null in development.
  *
- * NOTE: This function navigates AWAY from the current page.
- * Call handleGoogleRedirectResult() on page mount to pick up the result.
+ * WHY unsafe-none COOP on auth routes?
+ * Firebase's popup (lanvip-app.firebaseapp.com) needs to postMessage back to
+ * our window after OAuth. This cross-origin postMessage is blocked unless our
+ * page sets COOP: unsafe-none (configured in next.config.ts for /login and
+ * /register routes only — safe since no sensitive data is on those pages).
  */
-export async function loginWithGoogle(): Promise<void> {
+export async function loginWithGoogle(): Promise<User> {
   const auth           = getFirebaseAuth()
   const googleProvider = new GoogleAuthProvider()
   googleProvider.setCustomParameters({ prompt: 'select_account' })
 
-  console.info('[Lanvip] loginWithGoogle — initiating redirect to Google')
-  await signInWithRedirect(auth, googleProvider)
-  // ← Browser navigates away here. No code after this runs in this page load.
-}
-
-/**
- * Checks for a pending Google redirect result on page mount.
- * Must be called in a useEffect in the login/register pages.
- * Returns the authenticated User if a redirect result is present, or null.
- */
-export async function handleGoogleRedirectResult(): Promise<User | null> {
-  const auth = getFirebaseAuth()
-  console.info('[Lanvip] handleGoogleRedirectResult — checking for redirect result')
-
-  const result = await getRedirectResult(auth)
-
-  if (result) {
-    console.info('[Lanvip] handleGoogleRedirectResult — user found:', result.user.uid)
-    try {
-      await createUserDocument(result.user)
-    } catch (firestoreErr) {
-      // Auth succeeded — don't block the user from entering the app.
-      // The user document can be created on next login or via a background task.
-      console.error(
-        '[Lanvip] handleGoogleRedirectResult — Firestore doc creation failed' +
-        ' (user still authenticated):', firestoreErr,
-      )
-    }
-    return result.user
-  }
-
-  console.info('[Lanvip] handleGoogleRedirectResult — no redirect result')
-  return null
+  console.info('[Lanvip] loginWithGoogle — opening popup')
+  const { user } = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver)
+  await createUserDocument(user)
+  console.info('[Lanvip] loginWithGoogle — success, uid:', user.uid)
+  return user
 }
 
 export async function logout(): Promise<void> {

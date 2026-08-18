@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { loginWithEmail, loginWithGoogle, handleGoogleRedirectResult } from '@/lib/auth'
+import { loginWithEmail, loginWithGoogle } from '@/lib/auth'
 import { useAuth } from '@/context/AuthContext'
 
-// ─── Google Icon ─────────────────────────────────────────────────────────────
 function GoogleIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -20,49 +19,21 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
-  const router                = useRouter()
+  const router = useRouter()
   const { user, loading: authLoading } = useAuth()
 
-  const [email, setEmail]           = useState('')
-  const [password, setPassword]     = useState('')
-  const [error, setError]           = useState('')
-  const [loading, setLoading]       = useState(false)
-  const [redirecting, setRedirecting] = useState(false)
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError]       = useState('')
+  const [loading, setLoading]   = useState(false)
 
-  /**
-   * PRIMARY auth redirect: observe the shared AuthContext.
-   * Firebase processes signInWithRedirect internally during initializeAuth,
-   * fires onAuthStateChanged → AuthContext sets the user → this effect triggers.
-   * This handles BOTH the redirect flow and normal email/password flow.
-   */
+  // Redirect already-authenticated users (handles session restore on page load)
   useEffect(() => {
     if (!authLoading && user) {
       document.cookie = '__session=1; path=/; SameSite=Lax'
       router.push('/dashboard')
     }
   }, [user, authLoading, router])
-
-  /**
-   * SECONDARY check: call getRedirectResult explicitly for cases where
-   * Firebase doesn't auto-process the redirect (SDK version differences).
-   * If the primary effect already handled it, this is a no-op.
-   */
-  useEffect(() => {
-    async function checkRedirect() {
-      try {
-        const redirectUser = await handleGoogleRedirectResult()
-        if (redirectUser) {
-          // AuthContext will pick up the state change and the primary effect will fire.
-          // Set the cookie here as a belt-and-suspenders measure.
-          document.cookie = '__session=1; path=/; SameSite=Lax'
-        }
-      } catch (err: unknown) {
-        console.error('[Lanvip] Google redirect result error:', err)
-        setError(getFirebaseErrorMessage(err))
-      }
-    }
-    checkRedirect()
-  }, [])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -71,31 +42,34 @@ export default function LoginPage() {
     try {
       await loginWithEmail(email, password)
       document.cookie = '__session=1; path=/; SameSite=Lax'
-      // router.push is handled by the primary useEffect above
+      router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithEmail UI catch:', err)
       setError(getFirebaseErrorMessage(err))
+    } finally {
       setLoading(false)
     }
   }
 
   async function handleGoogleLogin() {
     setError('')
-    setRedirecting(true)
+    setLoading(true)
     try {
       await loginWithGoogle()
+      document.cookie = '__session=1; path=/; SameSite=Lax'
+      router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithGoogle UI catch:', err)
       setError(getFirebaseErrorMessage(err))
-      setRedirecting(false)
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Avoid rendering the form if auth state is still loading
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <span className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+        <span className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#D4AF37', borderTopColor: 'transparent' }} />
       </div>
     )
   }
@@ -108,24 +82,22 @@ export default function LoginPage() {
       className="w-full max-w-sm"
     >
       <div className="glass-card p-8 space-y-6">
-        {/* Brand header */}
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold gradient-text tracking-tight">Lanvip</h1>
           <p className="text-sm" style={{ color: '#A3A3A3' }}>Bienvenido de vuelta</p>
         </div>
 
-        {/* Google redirect button */}
         <motion.button
           id="btn-google-login"
           onClick={handleGoogleLogin}
-          disabled={loading || redirecting}
+          disabled={loading}
           whileTap={{ scale: 0.97 }}
           className="btn-ghost w-full"
         >
-          {redirecting ? (
+          {loading ? (
             <>
               <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-              Redirigiendo a Google…
+              Conectando con Google…
             </>
           ) : (
             <>
@@ -135,14 +107,12 @@ export default function LoginPage() {
           )}
         </motion.button>
 
-        {/* Divider */}
         <div className="flex items-center gap-3">
           <div className="divider" />
           <span className="text-xs" style={{ color: '#A3A3A3' }}>o</span>
           <div className="divider" />
         </div>
 
-        {/* Email / Password form */}
         <form onSubmit={handleEmailLogin} className="space-y-4">
           <div className="space-y-1">
             <label htmlFor="login-email" className="label-dark">Correo electrónico</label>
@@ -157,7 +127,6 @@ export default function LoginPage() {
               className="input-dark"
             />
           </div>
-
           <div className="space-y-1">
             <label htmlFor="login-password" className="label-dark">Contraseña</label>
             <input
@@ -173,12 +142,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-xs text-center"
-              style={{ color: '#EF4444' }}
-            >
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-center" style={{ color: '#EF4444' }}>
               {error}
             </motion.p>
           )}
@@ -186,7 +150,7 @@ export default function LoginPage() {
           <motion.button
             id="btn-email-login"
             type="submit"
-            disabled={loading || redirecting}
+            disabled={loading}
             whileTap={{ scale: 0.97 }}
             className="btn-accent w-full"
           >
@@ -196,7 +160,7 @@ export default function LoginPage() {
 
         <p className="text-center text-xs" style={{ color: '#A3A3A3' }}>
           ¿Aún no tienes cuenta?{' '}
-          <Link href="/register" className="font-semibold transition-colors" style={{ color: '#D4AF37' }}>
+          <Link href="/register" className="font-semibold" style={{ color: '#D4AF37' }}>
             Crear cuenta gratis
           </Link>
         </p>
@@ -205,27 +169,26 @@ export default function LoginPage() {
   )
 }
 
-// ─── Error Helper ─────────────────────────────────────────────────────────────
 function getFirebaseErrorMessage(err: unknown): string {
   if (typeof err === 'object' && err !== null && 'code' in err) {
     const code = (err as { code: string }).code
-    const messages: Record<string, string> = {
+    const map: Record<string, string> = {
       'auth/user-not-found':         'No encontramos una cuenta con ese email.',
-      'auth/wrong-password':         'Contraseña incorrecta. Inténtalo de nuevo.',
+      'auth/wrong-password':         'Contraseña incorrecta.',
       'auth/invalid-email':          'El formato del email no es válido.',
-      'auth/invalid-credential':     'Credenciales inválidas. Verifica tu email y contraseña.',
+      'auth/invalid-credential':     'Credenciales inválidas.',
       'auth/too-many-requests':      'Demasiados intentos. Espera unos minutos.',
       'auth/user-disabled':          'Esta cuenta ha sido deshabilitada.',
       'auth/network-request-failed': 'Error de red. Verifica tu conexión.',
-      'auth/operation-not-allowed':  'Este método no está habilitado en Firebase.',
+      'auth/popup-closed-by-user':   'Cerraste el popup de Google antes de completar.',
+      'auth/cancelled-popup-request':'Solicitud de popup cancelada.',
+      'auth/popup-blocked':          'El popup fue bloqueado. Permite los popups en tu navegador.',
       'auth/unauthorized-domain':    'Dominio no autorizado. Agrega localhost en Firebase Console.',
-      'auth/internal-error':         'Error interno de Firebase. Intenta nuevamente.',
     }
-    const message = messages[code]
-    if (message) return message
-    const devHint = process.env.NODE_ENV === 'development' ? ` [código: ${code}]` : ''
-    return `Ocurrió un error inesperado.${devHint}`
+    if (map[code]) return map[code]
+    return process.env.NODE_ENV === 'development'
+      ? `Error Firebase [${code}]`
+      : 'Ocurrió un error inesperado.'
   }
-  const devHint = process.env.NODE_ENV === 'development' ? ` [error: ${String(err)}]` : ''
-  return `Ocurrió un error inesperado.${devHint}`
+  return 'Ocurrió un error inesperado.'
 }
