@@ -10,7 +10,7 @@
 ### 2. Patrones de Arquitectura
 - **Specification-Driven Development (SDD):** Código generado estrictamente sobre specs.
 - **Componentes Server/Client:** Las vistas públicas priorizan Server Components (SSR/SSG) para SEO. El dashboard usa Client Components para interactividad.
-- **Auth Strategy:** Firebase Auth con `signInWithRedirect` + `getRedirectResult` (en lugar de `signInWithPopup`) para compatibilidad con el header `Cross-Origin-Opener-Policy` de Next.js. La persistencia usa `browserLocalPersistence` (localStorage) para evitar conflictos de IndexedDB con el HMR de Next.js.
+- **Auth Strategy:** Firebase Auth con `signInWithPopup` + `browserPopupRedirectResolver` explícito. Las rutas `/login` y `/register` usan `COOP: unsafe-none` (en `next.config.ts`) para permitir la comunicación del popup cross-origin de Firebase. `signInWithRedirect` fue descartado porque en localhost los resultados se almacenan en sessionStorage de `firebaseapp.com`, inaccesible por Same-Origin Policy. La persistencia usa `browserLocalPersistence` (localStorage) para evitar conflictos de IndexedDB con HMR de Next.js.
 - **Singleton Pattern:** Las instancias de Firebase (App, Auth, Firestore, Storage) se almacenan en `globalThis` para sobrevivir los re-renderizados del Hot Module Replacement sin re-inicializar el SDK.
 
 ### 3. Configuración de Firebase Console (Pre-requisitos obligatorios)
