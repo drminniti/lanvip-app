@@ -4,7 +4,7 @@
 - **Frontend:** Next.js (App Router) + React.
 - **Estilos:** Tailwind CSS.
 - **Animaciones:** Framer Motion.
-- **Base de Datos & Auth:** Firebase (Firestore para DB NoSQL, Storage para media, Auth para sesiones).
+- **Base de Datos & Auth:** Firebase (Firestore para DB NoSQL, Auth para sesiones). **No se usa Firebase Storage** — ver §Media Strategy.
 - **Hosting y CI/CD:** Vercel (con soporte para dominios personalizados a futuro).
 
 ### 2. Patrones de Arquitectura
@@ -13,7 +13,15 @@
 - **Auth Strategy:** Firebase Auth con `signInWithPopup` + `browserPopupRedirectResolver` explícito. Las rutas `/login` y `/register` usan `COOP: unsafe-none` (en `next.config.ts`) para permitir la comunicación del popup cross-origin de Firebase. `signInWithRedirect` fue descartado porque en localhost los resultados se almacenan en sessionStorage de `firebaseapp.com`, inaccesible por Same-Origin Policy. La persistencia usa `browserLocalPersistence` (localStorage) para evitar conflictos de IndexedDB con HMR de Next.js.
 - **Singleton Pattern:** Las instancias de Firebase (App, Auth, Firestore, Storage) se almacenan en `globalThis` para sobrevivir los re-renderizados del Hot Module Replacement sin re-inicializar el SDK.
 
-### 3. Configuración de Firebase Console (Pre-requisitos obligatorios)
+### 2.5 Media Strategy (Avatar — MVP sin Storage)
+Para mantener el plan gratuito estricto de Firebase, **no se usa Firebase Storage**.
+- `avatarUrl` en Firestore es una URL pública de imagen (string).
+- Fuente por defecto: `user.photoURL` de Google Auth (si existe).
+- En la UI: campo de texto donde el usuario pega su URL pública de imagen.
+- Validación: formato URL válido. No se valida el contenido de la imagen.
+- Migración futura: cuando se habilite Storage en un plan pago, solo cambia
+  el componente de upload; el campo `avatarUrl` en Firestore no cambia.
+
 
 > ⚠️ Estos pasos deben completarse ANTES de ejecutar la aplicación. Sin ellos, la auth y la DB fallan silenciosamente.
 
