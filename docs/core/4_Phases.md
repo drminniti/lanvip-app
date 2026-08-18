@@ -21,15 +21,24 @@
 
 ---
 
-### Fase 2: Gestión de Perfil y Motor Temático
-1. Desarrollar CRUD completo de la colección `users` en Firestore.
-2. Construir formulario de edición de perfil:
-   - Subida de avatar a Firebase Storage.
-   - Edición de `displayName`, `bio`, `username`.
-3. Desarrollar el selector de "Temas VIP":
-   - Paleta de colores con preview en tiempo real.
-   - Toggle `cardStyle`: glass / solid / outlined.
-   - Aplicación dinámica de variables CSS al Live Preview.
+### Fase 2: Gestión de Perfil y Motor Temático ✅
+
+1. ✅ CRUD completo de la colección `users` en Firestore:
+   - `updateUserProfile()`, `checkUsernameAvailable()`, `completeOnboarding()`.
+   - Hook reactivo `useUserProfile()` con `onSnapshot`.
+2. ✅ Flujo de Onboarding obligatorio (`/onboarding`):
+   - Redirige a usuarios Google OAuth sin username elegido.
+   - Verificación de disponibilidad de username en tiempo real.
+   - `completeOnboarding()` → marca `hasCompletedOnboarding: true`.
+3. ✅ Página de Edición de Perfil (`/dashboard/profile`):
+   - Avatar: campo URL pública (no Firebase Storage — ver `2_Architecture.md §2.5`).
+     Fuente por defecto: `photoURL` de Google Auth.
+   - Edición de `displayName`, `username`, `bio`.
+4. ✅ Motor Temático VIP — 4 temas predefinidos:
+   - Obsidian (default), Midnight Blue, Forest, Rose Gold.
+   - `ThemePicker` guarda en Firestore al instante (sin submit).
+   - `LandingPreview` reactivo muestra la micro-landing en tiempo real.
+5. ✅ Layout dividido desktop (formulario | preview sticky) / stacked mobile.
 
 ---
 
