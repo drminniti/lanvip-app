@@ -54,19 +54,21 @@ export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
     try { await onDelete(block.id) } finally { setBusy(false) }
   }
 
+  const mergedStyle = {
+    ...style,
+    background: '#1A1A1A',
+    border: `1px solid ${block.isActive ? accentColor + '33' : '#2A2A2A'}`,
+  }
+
   return (
     <motion.div
       ref={setNodeRef}
-      style={style}
+      style={mergedStyle}
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       className="flex items-center gap-3 p-3 rounded-2xl"
-      style={{
-        background: '#1A1A1A',
-        border: `1px solid ${block.isActive ? accentColor + '33' : '#2A2A2A'}`,
-      }}
     >
       {/* Drag handle */}
       <button

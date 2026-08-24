@@ -17,7 +17,7 @@ import {
   serverTimestamp,
   type Unsubscribe,
 } from 'firebase/firestore'
-import { db } from './firebase'
+import { getFirebaseDb } from './firebase'
 import type { Block, BlockType, BlockContent, SpanSize } from '@/types'
 
 const COL = 'blocks'
@@ -33,7 +33,7 @@ export function subscribeToBlocks(
   callback: (blocks: Block[]) => void,
 ): Unsubscribe {
   const q = query(
-    collection(db, COL),
+    collection(getFirebaseDb(), COL),
     where('userId', '==', userId),
     orderBy('order', 'asc'),
   )
@@ -57,7 +57,7 @@ export async function addBlock(
   userId: string,
   { type, content, spanSize, currentCount }: AddBlockPayload,
 ): Promise<string> {
-  const ref = await addDoc(collection(db, COL), {
+  const ref = await addDoc(collection(getFirebaseDb(), COL), {
     userId,
     type,
     content,
@@ -76,13 +76,13 @@ export async function updateBlock(
   blockId: string,
   data: Partial<Pick<Block, 'content' | 'layout' | 'isActive'>>,
 ): Promise<void> {
-  await updateDoc(doc(db, COL, blockId), data)
+  await updateDoc(doc(getFirebaseDb(), COL, blockId), data)
 }
 
 // ─── Delete ───────────────────────────────────────────────────────────────────
 
 export async function deleteBlock(blockId: string): Promise<void> {
-  await deleteDoc(doc(db, COL, blockId))
+  await deleteDoc(doc(getFirebaseDb(), COL, blockId))
 }
 
 // ─── Reorder (batch write) ────────────────────────────────────────────────────
@@ -92,9 +92,9 @@ export async function deleteBlock(blockId: string): Promise<void> {
  * Uses a Firestore batch write so all updates are atomic.
  */
 export async function reorderBlocks(blocks: Block[]): Promise<void> {
-  const batch = writeBatch(db)
+  const batch = writeBatch(getFirebaseDb())
   blocks.forEach((block, idx) => {
-    batch.update(doc(db, COL, block.id), { order: idx })
+    batch.update(doc(getFirebaseDb(), COL, block.id), { order: idx })
   })
   await batch.commit()
 }
