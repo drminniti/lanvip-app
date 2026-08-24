@@ -49,7 +49,6 @@ export function LandingPreview({ profile }: LandingPreviewProps) {
         >
           {/* Avatar */}
           <motion.div
-            key={profile.avatarUrl}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 300 }}
@@ -65,14 +64,21 @@ export function LandingPreview({ profile }: LandingPreviewProps) {
                 src={profile.avatarUrl}
                 alt={profile.displayName}
                 className="w-full h-full object-cover"
-                onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
               />
             ) : (
               <div
-                className="w-full h-full flex items-center justify-center text-2xl font-bold"
+                className="w-full h-full flex items-center justify-center"
                 style={{ background: `${accent}22`, color: accent }}
               >
-                {profile.displayName?.[0]?.toUpperCase() ?? '?'}
+                {profile.displayName?.[0] ? (
+                  <span className="text-2xl font-bold">
+                    {profile.displayName[0].toUpperCase()}
+                  </span>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10" style={{ opacity: 0.6 }}>
+                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" />
+                  </svg>
+                )}
               </div>
             )}
           </motion.div>

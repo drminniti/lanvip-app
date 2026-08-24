@@ -27,14 +27,16 @@ export default function ProfilePage() {
   const [saving, setSaving]   = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
 
-  // Sync form from Firestore on first load
+  // Sync form from Firestore on first load.
+  // Fallback chain for avatarUrl: Firestore doc → Google photoURL → ''
+  // This ensures Google users see their photo pre-filled without pasting a URL.
   useEffect(() => {
     if (!profile) return
     setDisplayName(profile.displayName ?? '')
     setUsername(profile.username ?? '')
     setBio(profile.bio ?? '')
-    setAvatarUrl(profile.avatarUrl ?? '')
-  }, [profile?.uid]) // only on uid change (not every snapshot) to avoid overwriting edits
+    setAvatarUrl(profile.avatarUrl || user?.photoURL || '')
+  }, [profile?.uid]) // only on uid change to avoid overwriting in-progress edits
 
   // Username availability check (debounced)
   const checkUsername = useCallback(
@@ -181,7 +183,7 @@ export default function ProfilePage() {
                     className="w-full h-full flex items-center justify-center text-xl font-bold"
                     style={{ background: 'rgba(212,175,55,0.15)', color: '#D4AF37' }}
                   >
-                    {displayName?.[0]?.toUpperCase() ?? '?'}
+                    {(displayName || user?.displayName || '?')[0].toUpperCase()}
                   </div>
                 )}
               </div>
