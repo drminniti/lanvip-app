@@ -10,8 +10,11 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const session = request.cookies.get('__session')?.value
 
-  // ── Protect all /dashboard routes ────────────────────────────────────────
-  if (pathname.startsWith('/dashboard') && !session) {
+  // ── Protect /dashboard and /onboarding: require session ──────────────────
+  const isProtected =
+    pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')
+
+  if (isProtected && !session) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)

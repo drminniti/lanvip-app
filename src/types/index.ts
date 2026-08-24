@@ -20,10 +20,18 @@ export interface UserProfile {
   username: string
   displayName: string
   bio: string
+  /** Public image URL. No Firebase Storage — see 2_Architecture.md §2.5 */
   avatarUrl: string
   themeSettings: ThemeSettings
   views: number
   createdAt: Timestamp
+  /**
+   * Tracks whether the user has completed the onboarding flow (chosen their
+   * username explicitly). False for new Google OAuth users (auto-assigned
+   * username from email prefix). True after /onboarding completion or for
+   * email/password users who chose their username at registration.
+   */
+  hasCompletedOnboarding: boolean
 
   // Business Model – Future-proofing fields (docs/core/5_Business_Model.md)
   planId: PlanId
