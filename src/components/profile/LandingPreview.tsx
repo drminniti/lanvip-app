@@ -35,19 +35,19 @@ function BentoTile({
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
   const tileColor   = isSocial ? (SOCIAL_COLORS[platformKey] ?? accent) : accent
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06, type: 'spring', stiffness: 260 }}
-      className={`${span[block.layout.spanSize]} rounded-xl flex items-center gap-2 px-3`}
-      style={{
-        height:     block.layout.spanSize === '2x2' ? '7rem' : '3.5rem',
-        background: `${tileColor}14`,
-        border:     `1px solid ${tileColor}33`,
-        overflow:   'hidden',
-      }}
-    >
+  const tileStyle = {
+    height:     block.layout.spanSize === '2x2' ? '7rem' : '3.5rem',
+    background: `${tileColor}14`,
+    border:     `1px solid ${tileColor}33`,
+    overflow:   'hidden',
+    textDecoration: 'none',
+    cursor:     block.content.url ? 'pointer' : 'default',
+  }
+
+  const tileClass = `${span[block.layout.spanSize]} rounded-xl flex items-center gap-2 px-3 transition-opacity hover:opacity-80`
+
+  const inner = (
+    <>
       {/* Icon / emoji */}
       {block.content.icon && (
         <span className="text-base flex-shrink-0">{block.content.icon}</span>
@@ -59,7 +59,23 @@ function BentoTile({
       >
         {block.content.title}
       </span>
-    </motion.div>
+    </>
+  )
+
+  return (
+    <motion.a
+      href={block.content.url || undefined}
+      target={block.content.url ? '_blank' : undefined}
+      rel="noopener noreferrer"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.06, type: 'spring', stiffness: 260 }}
+      whileTap={{ scale: 0.96 }}
+      className={tileClass}
+      style={tileStyle}
+    >
+      {inner}
+    </motion.a>
   )
 }
 

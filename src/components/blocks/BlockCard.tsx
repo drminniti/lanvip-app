@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -45,8 +45,8 @@ export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
     ? (SOCIAL_COLORS[block.content.icon ?? ''] ?? '#D4AF37')
     : '#D4AF37'
 
-  // Keep in sync when Firestore confirms (e.g. after a reorder or external update)
-  if (block.isActive !== isActive && !busy) setIsActive(block.isActive)
+  // Sync from Firestore when external update arrives (onSnapshot)
+  useEffect(() => { setIsActive(block.isActive) }, [block.isActive])
 
   async function handleToggle() {
     setIsActive(prev => !prev)   // optimistic
