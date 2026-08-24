@@ -24,33 +24,42 @@ interface BlocksGridProps {
   blocks: Block[]
 }
 
-export function BlocksGrid({ blocks: initialBlocks }: BlocksGridProps) {
-  // Local copy for optimistic drag & drop reorder
-  const [blocks, setBlocks] = useState<Block[]>(initialBlocks)
+export function BlocksGrid({ blocks: liveBlocks }: BlocksGridProps) {
+  // During an active drag we work on a local snapshot so the UI stays snappy.
+  // Outside of a drag we always use liveBlocks directly (Firestore source of truth).
+  const [dragSnapshot, setDragSnapshot] = useState<Block[] | null>(null)
+  const isDragging = dragSnapshot !== null
 
-  // Keep in sync when Firestore updates arrive (from parent via onSnapshot)
-  // We only update if we're not mid-drag
-  const [isDragging, setIsDragging] = useState(false)
-  if (!isDragging && JSON.stringify(blocks.map(b => b.id)) !== JSON.stringify(initialBlocks.map(b => b.id))) {
-    setBlocks(initialBlocks)
-  }
+  // What gets rendered: snapshot during drag, live data otherwise
+  const displayBlocks = isDragging ? dragSnapshot! : liveBlocks
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 8 } }),
   )
 
+  function handleDragStart() {
+    // Capture a snapshot of current live blocks at drag start
+    setDragSnapshot(liveBlocks)
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
-    setIsDragging(false)
     const { active, over } = event
-    if (!over || active.id === over.id) return
 
-    const oldIndex = blocks.findIndex(b => b.id === active.id)
-    const newIndex = blocks.findIndex(b => b.id === over.id)
-    const reordered = arrayMove(blocks, oldIndex, newIndex)
+    if (over && active.id !== over.id && dragSnapshot) {
+      const oldIndex  = dragSnapshot.findIndex(b => b.id === active.id)
+      const newIndex  = dragSnapshot.findIndex(b => b.id === over.id)
+      const reordered = arrayMove(dragSnapshot, oldIndex, newIndex)
+      setDragSnapshot(reordered) // keep showing reordered while Firestore writes
+      await reorderBlocks(reordered)
+    }
 
-    setBlocks(reordered) // optimistic
-    await reorderBlocks(reordered)
+    // Release snapshot — Firestore onSnapshot will deliver the confirmed order
+    setDragSnapshot(null)
+  }
+
+  function handleDragCancel() {
+    setDragSnapshot(null)
   }
 
   async function handleToggle(block: Block) {
@@ -61,7 +70,7 @@ export function BlocksGrid({ blocks: initialBlocks }: BlocksGridProps) {
     await deleteBlock(blockId)
   }
 
-  if (blocks.length === 0) {
+  if (liveBlocks.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -80,14 +89,14 @@ export function BlocksGrid({ blocks: initialBlocks }: BlocksGridProps) {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={() => setIsDragging(true)}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onDragCancel={() => setIsDragging(false)}
+      onDragCancel={handleDragCancel}
     >
-      <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext items={displayBlocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
           <AnimatePresence>
-            {blocks.map(block => (
+            {displayBlocks.map(block => (
               <BlockCard
                 key={block.id}
                 block={block}
