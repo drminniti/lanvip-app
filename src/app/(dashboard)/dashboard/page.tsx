@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/context/AuthContext'
+import { useUserBlocks } from '@/hooks/useUserBlocks'
 import { motion } from 'framer-motion'
 
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
@@ -91,8 +92,9 @@ function QuickAction({
 // ─── Dashboard Home ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user, loading } = useAuth()
+  const { blocks, loading: blocksLoading } = useUserBlocks(user?.uid)
 
-  if (loading) {
+  if (loading || blocksLoading) {
     return (
       <div className="space-y-4">
         <SkeletonCard className="h-24" />
@@ -104,7 +106,9 @@ export default function DashboardPage() {
     )
   }
 
-  const displayName = user?.displayName ?? 'Usuario'
+  const displayName  = user?.displayName ?? 'Usuario'
+  const activeBlocks = blocks.filter(b => b.isActive).length
+  const hasBlocks    = blocks.length > 0
 
   return (
     <div className="space-y-8">
@@ -124,45 +128,47 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Visitas totales"  value="—"    delay={0.10} icon={<EyeIcon />} />
-        <StatCard label="Clics totales"    value="—"    delay={0.15} icon={<ClickIcon />} />
-        <StatCard label="Bloques activos"  value="0"    delay={0.20} icon={<GridIcon />} />
-        <StatCard label="Plan actual"      value="Free" delay={0.25} icon={<BadgeIcon />} />
+        <StatCard label="Visitas totales"  value="—"           delay={0.10} icon={<EyeIcon />} />
+        <StatCard label="Clics totales"    value="—"           delay={0.15} icon={<ClickIcon />} />
+        <StatCard label="Bloques activos"  value={activeBlocks} delay={0.20} icon={<GridIcon />} />
+        <StatCard label="Plan actual"      value="Free"        delay={0.25} icon={<BadgeIcon />} />
       </div>
 
-      {/* Empty State */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.30, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-        className="glass-card p-8 text-center space-y-4"
-      >
-        <div
-          className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto text-3xl"
-          style={{ background: 'rgba(212,175,55,0.10)' }}
+      {/* Empty State — solo si no hay bloques */}
+      {!hasBlocks && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.30, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+          className="glass-card p-8 text-center space-y-4"
         >
-          ✨
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold" style={{ color: '#F5F5F5' }}>
-            Tu landing está en blanco
-          </h2>
-          <p className="text-sm mt-1 max-w-xs mx-auto" style={{ color: '#A3A3A3' }}>
-            Agreguemos tu primer bloque para empezar a destacar.
-          </p>
-        </div>
-        <motion.a
-          href="/dashboard/blocks"
-          id="btn-add-first-block"
-          whileTap={{ scale: 0.97 }}
-          className="btn-accent inline-flex"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Añadir primer bloque
-        </motion.a>
-      </motion.div>
+          <div
+            className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto text-3xl"
+            style={{ background: 'rgba(212,175,55,0.10)' }}
+          >
+            ✨
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold" style={{ color: '#F5F5F5' }}>
+              Tu landing está en blanco
+            </h2>
+            <p className="text-sm mt-1 max-w-xs mx-auto" style={{ color: '#A3A3A3' }}>
+              Agreguemos tu primer bloque para empezar a destacar.
+            </p>
+          </div>
+          <motion.a
+            href="/dashboard/blocks"
+            id="btn-add-first-block"
+            whileTap={{ scale: 0.97 }}
+            className="btn-accent inline-flex"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Añadir primer bloque
+          </motion.a>
+        </motion.div>
+      )}
 
       {/* Quick Actions */}
       <motion.div

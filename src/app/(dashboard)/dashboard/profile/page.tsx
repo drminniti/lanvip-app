@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
+import { useUserBlocks } from '@/hooks/useUserBlocks'
 import { updateUserProfile, checkUsernameAvailable } from '@/lib/auth'
 import { ThemePicker } from '@/components/profile/ThemePicker'
 import { LandingPreview } from '@/components/profile/LandingPreview'
@@ -14,6 +15,7 @@ const DEBOUNCE_MS = 600
 export default function ProfilePage() {
   const { user } = useAuth()
   const { profile, loading } = useUserProfile(user?.uid)
+  const { blocks }           = useUserBlocks(user?.uid)
 
   // Form state — mirrors profile, editable locally before save
   const [displayName, setDisplayName] = useState('')
@@ -334,7 +336,7 @@ export default function ProfilePage() {
           className="lg:sticky lg:top-8"
         >
           {previewProfile && (
-            <LandingPreview profile={previewProfile} />
+            <LandingPreview profile={previewProfile} blocks={blocks} />
           )}
         </motion.div>
 

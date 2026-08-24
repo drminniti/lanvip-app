@@ -53,6 +53,17 @@ service cloud.firestore {
 
 > ⚠️ Las reglas de Test mode expiran a las 30 días. Las reglas manuales de arriba no expiran.
 
+#### 3.3 Índices Compuestos Requeridos
+La query de bloques combina `where('userId')` + `orderBy('order')` en campos distintos.
+Firestore exige un índice compuesto para esto — **debe crearse manualmente en Firebase Console**:
+
+| Colección | Campo 1 | Campo 2 | Estado |
+|-----------|---------|---------|--------|
+| `blocks` | `userId` (Asc) | `order` (Asc) | ✅ Creado (Fase 3) |
+
+> Ir a Firebase Console → Firestore → Indexes → Add index si el proyecto se migra a un nuevo proyecto Firebase.
+
+
 #### 3.3 Variables de entorno (`.env.local`)
 Copiar las credenciales desde Firebase Console → Project Settings → General → Your apps:
 ```
