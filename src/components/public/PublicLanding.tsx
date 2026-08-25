@@ -33,8 +33,8 @@ function BentoTile({
   const isSocial    = block.type === 'social'
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
   const tileColor   = isSocial ? (SOCIAL_COLORS[platformKey] ?? accent) : accent
-  const isWide      = block.layout.spanSize === '2x1' || block.layout.spanSize === '2x2'
-  const isTall      = block.layout.spanSize === '2x2'
+  const isLarge     = block.layout.spanSize === '2x2'
+  const isWide      = block.layout.spanSize === '2x1'
 
   return (
     <motion.a
@@ -50,23 +50,43 @@ function BentoTile({
         damping: 22,
       }}
       whileTap={{ scale: 0.95 }}
-      className={`${SPAN_CLASS[block.layout.spanSize]} rounded-2xl flex items-center gap-3 px-4 overflow-hidden`}
+      className={`${SPAN_CLASS[block.layout.spanSize]} rounded-2xl flex items-center gap-3 px-4`}
       style={{
-        height:          isTall ? '8rem' : isWide ? '4rem' : '4rem',
+        height:          isLarge ? '8rem' : isWide ? '4rem' : '4rem',
         background:      `${tileColor}12`,
         border:          `1px solid ${tileColor}30`,
         textDecoration:  'none',
         cursor:          block.content.url ? 'pointer' : 'default',
         backdropFilter:  'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
+        overflow:        'hidden',
+        position:        'relative',
         transition:      'background 0.2s, border-color 0.2s',
       }}
       aria-label={block.content.title}
     >
-      {/* Accent glow dot */}
+      {/* VIP Glow — solo en bloques 2x2 (3_UX_UI.md §Regla Especial) */}
+      {isLarge && (
+        <span
+          aria-hidden="true"
+          style={{
+            position:      'absolute',
+            top:           '-20%',
+            right:         '-10%',
+            width:         '65%',
+            height:        '130%',
+            background:    `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
+            filter:        'blur(16px)',
+            pointerEvents: 'none',
+            zIndex:        0,
+          }}
+        />
+      )}
+
+      {/* Accent glow bar */}
       <div
         className="w-1 self-stretch rounded-full flex-shrink-0"
-        style={{ background: `${tileColor}80` }}
+        style={{ background: `${tileColor}80`, position: 'relative', zIndex: 1 }}
       />
 
       {/* Icon */}
@@ -74,6 +94,7 @@ function BentoTile({
         <span
           className="text-xl flex-shrink-0 leading-none"
           aria-hidden="true"
+          style={{ position: 'relative', zIndex: 1 }}
         >
           {block.content.icon}
         </span>
@@ -82,7 +103,7 @@ function BentoTile({
       {/* Title */}
       <span
         className="text-sm font-semibold truncate leading-tight"
-        style={{ color: '#F0F0F0' }}
+        style={{ color: '#F0F0F0', position: 'relative', zIndex: 1 }}
       >
         {block.content.title}
       </span>
@@ -96,7 +117,7 @@ function BentoTile({
           strokeWidth={2}
           viewBox="0 0 24 24"
           aria-hidden="true"
-          style={{ color: tileColor }}
+          style={{ color: tileColor, position: 'relative', zIndex: 1 }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg>
@@ -114,8 +135,9 @@ interface PublicLandingProps {
 
 /**
  * Full-page public Micro-Landing VIP.
- * Rendered by the SSR route /[username] — always gets fresh data from Firestore.
+ * Rendered by the SSR route /[username].
  * Applies the user's chosen VIP theme, avatar, bio and Bento grid.
+ * 2x2 blocks include the VIP Glow effect per 3_UX_UI.md §Regla Especial.
  */
 export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)
@@ -131,10 +153,9 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
       className="min-h-screen flex flex-col items-center"
       style={{ background: bg }}
     >
-      {/* ── Content container ─────────────────────────────────────────────── */}
       <div className="w-full max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6">
 
-        {/* ── Avatar ────────────────────────────────────────────────────── */}
+        {/* Avatar */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -144,8 +165,8 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           <div
             className="w-24 h-24 rounded-full overflow-hidden"
             style={{
-              border:     `3px solid ${accent}`,
-              boxShadow:  `0 0 32px ${accent}55, 0 0 64px ${accent}22`,
+              border:    `3px solid ${accent}`,
+              boxShadow: `0 0 32px ${accent}55, 0 0 64px ${accent}22`,
             }}
           >
             {profile.avatarUrl ? (
@@ -164,15 +185,13 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
               </div>
             )}
           </div>
-
-          {/* Subtle glow ring */}
           <div
             className="absolute inset-0 rounded-full pointer-events-none"
             style={{ boxShadow: `0 0 0 1px ${accent}33` }}
           />
         </motion.div>
 
-        {/* ── Name ──────────────────────────────────────────────────────── */}
+        {/* Name */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -190,7 +209,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           </p>
         </motion.div>
 
-        {/* ── Bio ───────────────────────────────────────────────────────── */}
+        {/* Bio */}
         {profile.bio && (
           <motion.p
             initial={{ opacity: 0 }}
@@ -203,7 +222,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           </motion.p>
         )}
 
-        {/* ── Bento grid ────────────────────────────────────────────────── */}
+        {/* Bento grid */}
         {blocks.length > 0 && (
           <div className="w-full grid grid-cols-2 gap-3 mt-2">
             {blocks.map((block, i) => (
@@ -212,7 +231,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           </div>
         )}
 
-        {/* ── Lanvip badge ──────────────────────────────────────────────── */}
+        {/* Lanvip badge */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
