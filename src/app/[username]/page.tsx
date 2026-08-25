@@ -1,22 +1,34 @@
-/**
- * Public Micro-Landing VIP — /[username]
- *
- * Server Component. Reads Firestore server-side (SSR) for:
- *  - SEO-ready HTML with correct title / Open Graph on first load
- *  - Instant rendering — no loading spinner visible to visitors
- *  - No auth required — public route
- *
- * Per 2_Architecture.md §2: public views prioritize Server Components for SEO.
- * Per Next.js 16: `params` is a Promise — must be awaited.
- */
-
 import { notFound }                   from 'next/navigation'
 import type { Metadata }              from 'next'
 import { getPublicProfileByUsername } from '@/lib/auth'
 import { getActiveBlocksByUserId }    from '@/lib/blocks'
 import { PublicLanding }             from '@/components/public/PublicLanding'
+import type { UserProfile, Block }   from '@/types'
 
 type Params = { username: string }
+
+// ─── Serialization helpers ────────────────────────────────────────────────────
+// Firestore Timestamp objects have toJSON() methods and cannot be passed
+// from Server Components to Client Components. We convert them to ISO strings.
+
+type Serialized<T> = Omit<T, 'createdAt'> & { createdAt?: string | null }
+
+function serializeProfile(p: UserProfile): Serialized<UserProfile> {
+  const { createdAt, ...rest } = p
+  return {
+    ...rest,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createdAt: (createdAt as any)?.toDate?.()?.toISOString() ?? null,
+  }
+}
+
+function serializeBlocks(blocks: Block[]): Serialized<Block>[] {
+  return blocks.map(({ createdAt, ...rest }) => ({
+    ...rest,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createdAt: (createdAt as any)?.toDate?.()?.toISOString() ?? null,
+  }))
+}
 
 // ─── SEO — dynamic metadata ───────────────────────────────────────────────────
 
@@ -67,13 +79,15 @@ export default async function UserPublicPage({
 }) {
   const { username } = await params
 
-  // Fetch profile — 404 if username doesn't exist
   const profile = await getPublicProfileByUsername(username)
   if (!profile) notFound()
 
-  // Fetch active blocks (ordered by `order` asc)
-  // Note: may require Firestore composite index — see 2_Architecture.md §3.3
   const blocks = await getActiveBlocksByUserId(profile.uid)
 
-  return <PublicLanding profile={profile} blocks={blocks} />
+  // Serialize Timestamps → plain objects before crossing the Server→Client boundary
+  const safeProfile = serializeProfile(profile)
+  const safeBlocks  = serializeBlocks(blocks)
+
+  return <PublicLanding profile={safeProfile as unknown as UserProfile} blocks={safeBlocks as unknown as Block[]} />
 }
+
