@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { logout } from '@/lib/auth'
+import { useAuth } from '@/context/AuthContext'
+import { useUserProfile } from '@/hooks/useUserProfile'
 
 // ─── Nav Items ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
@@ -93,6 +95,9 @@ function NavItem({
 export default function DashboardNav() {
   const pathname = usePathname()
   const router   = useRouter()
+  const { user } = useAuth()
+  const { profile } = useUserProfile(user?.uid)
+  const username = profile?.username ?? null
 
   async function handleLogout() {
     await logout()
@@ -125,6 +130,25 @@ export default function DashboardNav() {
             />
           ))}
         </nav>
+
+        {/* Ver mi landing */}
+        {username && (
+          <a
+            id="btn-view-public-profile-sidebar"
+            href={`/${username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 group"
+            style={{ color: '#D4AF37', background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.18)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(212,175,55,0.14)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(212,175,55,0.07)' }}
+          >
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            <span className="flex-1 truncate">/{username}</span>
+          </a>
+        )}
 
         {/* Logout */}
         <button
@@ -172,6 +196,24 @@ export default function DashboardNav() {
               <span>{item.label}</span>
             </Link>
           ))}
+          {/* Ver landing pública — mobile */}
+          {username && (
+            <a
+              id="btn-view-public-profile-mobile"
+              href={`/${username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-xs font-medium transition-all duration-200"
+              style={{ color: '#D4AF37' }}
+            >
+              <motion.span whileTap={{ scale: 0.85 }} className="block">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </motion.span>
+              <span>Mi link</span>
+            </a>
+          )}
         </div>
       </nav>
     </>
