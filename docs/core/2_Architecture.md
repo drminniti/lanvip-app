@@ -57,9 +57,10 @@ service cloud.firestore {
 La query de bloques combina `where('userId')` + `orderBy('order')` en campos distintos.
 Firestore exige un índice compuesto para esto — **debe crearse manualmente en Firebase Console**:
 
-| Colección | Campo 1 | Campo 2 | Estado |
-|-----------|---------|---------|--------|
-| `blocks` | `userId` (Asc) | `order` (Asc) | ✅ Creado (Fase 3) |
+| Colección | Campo 1 | Campo 2 | Campo 3 | Estado |
+|-----------|---------|---------|---------|--------|
+| `blocks` | `userId` (Asc) | `order` (Asc) | — | ✅ Creado (Fase 3) |
+| `blocks` | `isActive` (Asc) | `userId` (Asc) | `order` (Asc) | ✅ Creado (Fase 4) |
 
 > Ir a Firebase Console → Firestore → Indexes → Add index si el proyecto se migra a un nuevo proyecto Firebase.
 
