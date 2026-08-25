@@ -1,0 +1,235 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { getThemeById, matchThemeId } from '@/lib/themes'
+import type { UserProfile, Block, SpanSize } from '@/types'
+
+// ─── Social brand colors ──────────────────────────────────────────────────────
+const SOCIAL_COLORS: Record<string, string> = {
+  instagram: '#E1306C',
+  linkedin:  '#0A66C2',
+  x:         '#888888',
+  whatsapp:  '#25D366',
+}
+
+// ─── Span mapping ─────────────────────────────────────────────────────────────
+const SPAN_CLASS: Record<SpanSize, string> = {
+  '1x1': 'col-span-1',
+  '2x1': 'col-span-2',
+  '1x2': 'col-span-1 row-span-2',
+  '2x2': 'col-span-2',
+}
+
+// ─── Individual Bento tile ────────────────────────────────────────────────────
+function BentoTile({
+  block,
+  accent,
+  index,
+}: {
+  block: Block
+  accent: string
+  index: number
+}) {
+  const isSocial    = block.type === 'social'
+  const platformKey = isSocial ? (block.content.icon ?? '') : ''
+  const tileColor   = isSocial ? (SOCIAL_COLORS[platformKey] ?? accent) : accent
+  const isWide      = block.layout.spanSize === '2x1' || block.layout.spanSize === '2x2'
+  const isTall      = block.layout.spanSize === '2x2'
+
+  return (
+    <motion.a
+      href={block.content.url || undefined}
+      target={block.content.url ? '_blank' : undefined}
+      rel="noopener noreferrer"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        delay: index * 0.07,
+        type: 'spring',
+        stiffness: 260,
+        damping: 22,
+      }}
+      whileTap={{ scale: 0.95 }}
+      className={`${SPAN_CLASS[block.layout.spanSize]} rounded-2xl flex items-center gap-3 px-4 overflow-hidden`}
+      style={{
+        height:          isTall ? '8rem' : isWide ? '4rem' : '4rem',
+        background:      `${tileColor}12`,
+        border:          `1px solid ${tileColor}30`,
+        textDecoration:  'none',
+        cursor:          block.content.url ? 'pointer' : 'default',
+        backdropFilter:  'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        transition:      'background 0.2s, border-color 0.2s',
+      }}
+      aria-label={block.content.title}
+    >
+      {/* Accent glow dot */}
+      <div
+        className="w-1 self-stretch rounded-full flex-shrink-0"
+        style={{ background: `${tileColor}80` }}
+      />
+
+      {/* Icon */}
+      {block.content.icon && (
+        <span
+          className="text-xl flex-shrink-0 leading-none"
+          aria-hidden="true"
+        >
+          {block.content.icon}
+        </span>
+      )}
+
+      {/* Title */}
+      <span
+        className="text-sm font-semibold truncate leading-tight"
+        style={{ color: '#F0F0F0' }}
+      >
+        {block.content.title}
+      </span>
+
+      {/* External link chevron */}
+      {block.content.url && (
+        <svg
+          className="w-3.5 h-3.5 flex-shrink-0 ml-auto opacity-40"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          style={{ color: tileColor }}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
+      )}
+    </motion.a>
+  )
+}
+
+// ─── Main Public Landing ──────────────────────────────────────────────────────
+
+interface PublicLandingProps {
+  profile: UserProfile
+  blocks:  Block[]
+}
+
+/**
+ * Full-page public Micro-Landing VIP.
+ * Rendered by the SSR route /[username] — always gets fresh data from Firestore.
+ * Applies the user's chosen VIP theme, avatar, bio and Bento grid.
+ */
+export function PublicLanding({ profile, blocks }: PublicLandingProps) {
+  const themeId = matchThemeId(profile.themeSettings)
+  const theme   = getThemeById(themeId)
+  const accent  = theme?.accent ?? '#D4AF37'
+
+  const bg = profile.themeSettings.bgType === 'solid'
+    ? profile.themeSettings.colors[0]
+    : `linear-gradient(145deg, ${profile.themeSettings.colors[0]} 0%, ${profile.themeSettings.colors[1] ?? profile.themeSettings.colors[0]} 100%)`
+
+  return (
+    <main
+      className="min-h-screen flex flex-col items-center"
+      style={{ background: bg }}
+    >
+      {/* ── Content container ─────────────────────────────────────────────── */}
+      <div className="w-full max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6">
+
+        {/* ── Avatar ────────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+          className="relative"
+        >
+          <div
+            className="w-24 h-24 rounded-full overflow-hidden"
+            style={{
+              border:     `3px solid ${accent}`,
+              boxShadow:  `0 0 32px ${accent}55, 0 0 64px ${accent}22`,
+            }}
+          >
+            {profile.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatarUrl}
+                alt={`Foto de ${profile.displayName}`}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center text-3xl font-bold"
+                style={{ background: `${accent}22`, color: accent }}
+              >
+                {profile.displayName?.[0]?.toUpperCase() ?? '?'}
+              </div>
+            )}
+          </div>
+
+          {/* Subtle glow ring */}
+          <div
+            className="absolute inset-0 rounded-full pointer-events-none"
+            style={{ boxShadow: `0 0 0 1px ${accent}33` }}
+          />
+        </motion.div>
+
+        {/* ── Name ──────────────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08, type: 'spring', stiffness: 260 }}
+          className="text-center"
+        >
+          <h1
+            className="text-2xl font-bold tracking-tight"
+            style={{ color: '#F5F5F5' }}
+          >
+            {profile.displayName}
+          </h1>
+          <p className="text-sm mt-0.5" style={{ color: `${accent}99` }}>
+            @{profile.username}
+          </p>
+        </motion.div>
+
+        {/* ── Bio ───────────────────────────────────────────────────────── */}
+        {profile.bio && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.14 }}
+            className="text-sm text-center leading-relaxed max-w-xs"
+            style={{ color: '#A3A3A3' }}
+          >
+            {profile.bio}
+          </motion.p>
+        )}
+
+        {/* ── Bento grid ────────────────────────────────────────────────── */}
+        {blocks.length > 0 && (
+          <div className="w-full grid grid-cols-2 gap-3 mt-2">
+            {blocks.map((block, i) => (
+              <BentoTile key={block.id} block={block} accent={accent} index={i} />
+            ))}
+          </div>
+        )}
+
+        {/* ── Lanvip badge ──────────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8 flex items-center gap-1.5"
+        >
+          <a
+            href="/"
+            className="text-xs flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+            style={{ color: 'rgba(255,255,255,0.2)', textDecoration: 'none' }}
+          >
+            <span>Creado con</span>
+            <span style={{ color: `${accent}66`, fontWeight: 600 }}>Lanvip</span>
+          </a>
+        </motion.div>
+
+      </div>
+    </main>
+  )
+}
