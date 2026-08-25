@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { getThemeById, matchThemeId } from '@/lib/themes'
+import { incrementClickCount } from '@/lib/analytics'
 import type { UserProfile, Block, SpanSize } from '@/types'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
@@ -50,6 +51,9 @@ function BentoTile({
         damping: 22,
       }}
       whileTap={{ scale: 0.95 }}
+      onClick={() => {
+        if (block.content.url) void incrementClickCount(block.id)
+      }}
       className={`${SPAN_CLASS[block.layout.spanSize]} rounded-2xl flex items-center gap-3 px-4`}
       style={{
         height:          isLarge ? '8rem' : isWide ? '4rem' : '4rem',
