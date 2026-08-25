@@ -251,3 +251,20 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, 'users', uid))
   return snap.exists() ? (snap.data() as UserProfile) : null
 }
+
+/**
+ * Looks up a user profile by their public username slug.
+ * Used by the SSR public route /[username] — no auth required.
+ * Returns null if no user with that username exists.
+ */
+export async function getPublicProfileByUsername(
+  username: string,
+): Promise<UserProfile | null> {
+  const db       = getFirebaseDb()
+  const usersCol = collection(db, 'users')
+  const q        = query(usersCol, where('username', '==', username))
+  const snap     = await getDocs(q)
+
+  if (snap.empty) return null
+  return snap.docs[0].data() as UserProfile
+}
