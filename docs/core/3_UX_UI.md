@@ -17,3 +17,8 @@
 ### 3. Animaciones Core (Framer Motion)
 - **Staggered Fade In:** Al cargar la landing pública, las tarjetas de la grilla deben aparecer en cascada (stagger) de arriba hacia abajo con un sutil desplazamiento vertical (`y: 20` a `y: 0`).
 - **Tap Feedback:** Todos los bloques interactivos deben encogerse sutilmente al presionar (`whileTap={{ scale: 0.95 }}`) para confirmar la acción táctil al usuario de forma nativa.
+
+### Regla Especial: Bloques Grandes (2x2) y Estética VIP
+Para evitar el desequilibrio de densidad visual en los bloques grandes (`size: "large"`), estos deben incluir obligatoriamente un efecto "Light & Atmosphere":
+- **Glow VIP:** Implementar un gradiente radial muy suave y difuminado en el fondo del bloque usando el color de acento dorado (`#D4AF37`).
+- **Implementación Tailwind:** Utilizar un elemento absoluto con clases como `bg-gradient-radial from-[#D4AF37]/15 to-transparent blur-2xl` posicionado en una de las esquinas (ej. `top-0 right-0`), asegurando que no interfiera con la legibilidad del texto principal mediante `z-index` y `overflow-hidden`.

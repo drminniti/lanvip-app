@@ -30,32 +30,52 @@ function BentoTile({
     '2x2': 'col-span-2',
   }
 
-  const isSocial = block.type === 'social'
-  // For social: icon field stores the platform id (e.g. 'instagram')
+  const isSocial   = block.type === 'social'
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
   const tileColor   = isSocial ? (SOCIAL_COLORS[platformKey] ?? accent) : accent
+  const isLarge     = block.layout.spanSize === '2x2'
 
   const tileStyle = {
-    height:     block.layout.spanSize === '2x2' ? '7rem' : '3.5rem',
-    background: `${tileColor}14`,
-    border:     `1px solid ${tileColor}33`,
-    overflow:   'hidden',
+    height:         isLarge ? '8rem' : '3.5rem',
+    background:     `${tileColor}14`,
+    border:         `1px solid ${tileColor}33`,
+    overflow:       'hidden',
     textDecoration: 'none',
-    cursor:     block.content.url ? 'pointer' : 'default',
+    cursor:         block.content.url ? 'pointer' : 'default',
+    position:       'relative' as const,
   }
 
   const tileClass = `${span[block.layout.spanSize]} rounded-xl flex items-center gap-2 px-3 transition-opacity hover:opacity-80`
 
   const inner = (
     <>
+      {/* VIP Glow — solo en bloques 2x2 */}
+      {isLarge && (
+        <span
+          aria-hidden="true"
+          style={{
+            position:    'absolute',
+            top:         '-20%',
+            right:       '-10%',
+            width:       '60%',
+            height:      '120%',
+            background:  `radial-gradient(circle, ${tileColor}26 0%, transparent 70%)`,
+            filter:      'blur(12px)',
+            pointerEvents: 'none',
+            zIndex:      0,
+          }}
+        />
+      )}
       {/* Icon / emoji */}
       {block.content.icon && (
-        <span className="text-base flex-shrink-0">{block.content.icon}</span>
+        <span className="text-base flex-shrink-0" style={{ position: 'relative', zIndex: 1 }}>
+          {block.content.icon}
+        </span>
       )}
       {/* Title */}
       <span
         className="text-xs font-semibold truncate"
-        style={{ color: '#F5F5F5' }}
+        style={{ color: '#F5F5F5', position: 'relative', zIndex: 1 }}
       >
         {block.content.title}
       </span>
