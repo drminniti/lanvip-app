@@ -128,23 +128,29 @@ service cloud.firestore {
 **Colección `blocks`** (modelo Bento — reemplaza listas de links)
 ```typescript
 {
-  id:       string,
-  userId:   string,
-  type:     string,            // 'link' | 'vcard' | 'calendly' | 'video' | ...
+  id:          string,
+  userId:      string,
+  type:        string,           // 'link' | 'social' | 'vcard' | 'calendly' | ...
   content: {
-    title:  string,
-    url:    string,
-    icon:   string,
-    // campos adicionales según el type
+    title:       string,
+    url:         string,
+    icon:        string,         // emoji elegido por el usuario
+    description: string?,        // subtítulo opcional bajo el título
+    thumbnailUrl: string?,
+    embedId:     string?,        // para YouTube / Spotify
   },
   layout: {
-    spanSize: '1x1' | '2x1' | '2x2',
+    spanSize: '1x1' | '2x1' | '2x2',  // reservado para uso futuro / row-span
   },
-  order:      number,
-  clickCount: number,
-  isActive:   boolean,
+  isFeatured:  boolean,          // true → col-span-2 (ancho completo de grilla)
+  order:       number,
+  clickCount:  number,
+  isActive:    boolean,
 }
 ```
+
+> **Regla de grilla:** `isFeatured` es el campo canónico que controla el span horizontal del bloque.
+> `layout.spanSize` queda como legado para soporte de row-span futuro y migración de datos viejos.
 
 ### 6. Guía de Despliegue en Vercel (Fase 5)
 
