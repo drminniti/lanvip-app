@@ -146,6 +146,53 @@ service cloud.firestore {
 }
 ```
 
-### 6. Flujo de Despliegue
-- Repositorio GitHub conectado a Vercel para despliegues automáticos (`main` → Producción).
-- Variables de entorno de producción deben configurarse en Vercel → Project → Settings → Environment Variables (mismas keys que `.env.local`).
+### 6. Guía de Despliegue en Vercel (Fase 5)
+
+> Esta guía documenta el proceso completo de deploy. El repositorio GitHub ya está conectado a Vercel para CI/CD automático (`main` → Producción).
+
+#### Paso 1 — Importar el proyecto en Vercel
+1. Ir a [vercel.com/new](https://vercel.com/new) e iniciar sesión con tu cuenta GitHub.
+2. Hacer clic en **"Import"** sobre el repo `drminniti/lanvip-app`.
+3. Framework: Next.js (detectado automáticamente).
+4. Root Directory: `.` (raíz del repo).
+5. **No hacer clic en Deploy todavía** — primero configurar las variables de entorno.
+
+#### Paso 2 — Variables de entorno en Vercel
+En la pantalla de configuración del proyecto (o en Settings → Environment Variables), agregar **todas** las variables de `.env.local`:
+
+| Variable | Valor |
+|----------|-------|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Desde Firebase Console → Project Settings |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Desde Firebase Console → Project Settings |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | `lanvip-app` |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Desde Firebase Console → Project Settings |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Desde Firebase Console → Project Settings |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Desde Firebase Console → Project Settings |
+| `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` | Desde Firebase Console → Project Settings |
+
+> ⚠️ Asegurarse de seleccionar los tres entornos: **Production**, **Preview** y **Development**.
+
+#### Paso 3 — Primer deploy
+Hacer clic en **Deploy**. Vercel construirá y desplegará la app. El primer deploy toma ~2 minutos.
+
+#### Paso 4 — Agregar dominio de producción a Firebase Auth
+Una vez que Vercel asigna la URL de producción (ej. `lanvip-app.vercel.app` o dominio propio):
+1. Ir a Firebase Console → Authentication → Settings → **Authorized domains**.
+2. Agregar el dominio de Vercel (ej. `lanvip-app.vercel.app`).
+3. Si tenés dominio propio (ej. `lanvip.app`), agregarlo también.
+
+> Sin este paso, el login con Google fallará en producción.
+
+#### Paso 5 — Verificar Firestore rules y dominio en COOP header
+En `next.config.ts`, el header COOP `unsafe-none` solo aplica a `/login` y `/register`.
+No requiere cambios para Vercel.
+
+#### Paso 6 — Checklist post-deploy ✅
+- [ ] `https://tu-dominio.vercel.app/login` — login con email y Google funciona
+- [ ] `https://tu-dominio.vercel.app/tu-username` — landing pública visible sin login
+- [ ] Visitar la landing pública → verificar que `views` incrementa en Firestore Console
+- [ ] Hacer clic en un bloque → verificar que `clickCount` incrementa
+- [ ] `/dashboard/analytics` → métricas visibles en el dashboard
+
+#### CI/CD continuo
+A partir del primer deploy, **cada merge a `main` en GitHub triggerea un re-deploy automático** en Vercel. No se requiere ninguna acción manual para futuros releases.

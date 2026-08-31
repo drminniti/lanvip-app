@@ -14,12 +14,13 @@ const SOCIAL_COLORS: Record<string, string> = {
 }
 
 interface BlockCardProps {
-  block: Block
+  block:    Block
+  colSpan?: 'col-span-1' | 'col-span-2'
   onToggle: (block: Block) => Promise<void>
   onDelete: (blockId: string) => Promise<void>
 }
 
-export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
+export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }: BlockCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy]                   = useState(false)
   // Optimistic: flip locally immediately, Firestore confirms in background
@@ -35,10 +36,12 @@ export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
     isDragging,
   } = useSortable({ id: block.id })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
+  // DnD transform/transition kept separate from Framer Motion props
+  const dndStyle = {
+    transform:  CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity:    isDragging ? 0.35 : 1,
+    gridColumn: colSpan === 'col-span-2' ? 'span 2' : 'span 1',
   }
 
   const accentColor = block.type === 'social'
@@ -59,27 +62,47 @@ export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
     try { await onDelete(block.id) } finally { setBusy(false) }
   }
 
-  const mergedStyle = {
-    ...style,
-    background: '#1A1A1A',
-    border: `1px solid ${isActive ? accentColor + '33' : '#2A2A2A'}`,
-  }
-
   return (
     <motion.div
       ref={setNodeRef}
-      style={mergedStyle}
+      style={{
+        ...dndStyle,
+        // Active state: hairline gold border instead of opaque colored border
+        borderColor: isActive ? 'rgba(212,175,55,0.22)' : undefined,
+      }}
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      className="flex items-center gap-3 p-3 rounded-2xl"
+      exit={{ opacity: 0, y: -8, scale: 0.97 }}
+      // ── Spring hover scale — VIP micro-interaction ──────────────────────
+      whileHover={isDragging ? {} : { scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+      className="bento-tile flex items-center gap-3 p-3 relative overflow-hidden"
     >
+      {/* VIP Glow — radial gradient, shown on hover via motion */}
+      <motion.span
+        aria-hidden="true"
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        style={{
+          position:      'absolute',
+          top:           '-30%',
+          right:         '-10%',
+          width:         '60%',
+          height:        '140%',
+          background:    `radial-gradient(circle, ${accentColor}18 0%, transparent 70%)`,
+          filter:        'blur(20px)',
+          pointerEvents: 'none',
+          zIndex:        0,
+        }}
+      />
+
       {/* Drag handle */}
       <button
         {...attributes}
         {...listeners}
-        className="cursor-grab active:cursor-grabbing p-1 rounded-lg flex-shrink-0"
+        className="cursor-grab active:cursor-grabbing p-1 rounded-lg flex-shrink-0 relative z-10"
         style={{ color: '#444', touchAction: 'none' }}
         aria-label="Arrastrar"
       >
@@ -95,14 +118,14 @@ export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
 
       {/* Icon */}
       <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0"
-        style={{ background: `${accentColor}18`, fontSize: '1.1rem' }}
+        className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 relative z-10"
+        style={{ background: `${accentColor}15`, fontSize: '1.1rem' }}
       >
         {block.content.icon}
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 relative z-10">
         <p className="text-sm font-semibold truncate" style={{ color: '#F5F5F5' }}>
           {block.content.title}
         </p>
@@ -115,12 +138,12 @@ export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
       <button
         onClick={handleToggle}
         disabled={busy}
-        className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all"
+        className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all relative z-10"
         style={{
-          background:  isActive ? `${accentColor}18` : 'rgba(255,255,255,0.05)',
-          color:       isActive ? accentColor : '#666',
-          border:      `1px solid ${isActive ? accentColor + '44' : 'transparent'}`,
-          minWidth:    '4.5rem',
+          background:     isActive ? `${accentColor}18` : 'rgba(255,255,255,0.05)',
+          color:          isActive ? accentColor : '#666',
+          border:         `1px solid ${isActive ? accentColor + '44' : 'transparent'}`,
+          minWidth:       '4.5rem',
           justifyContent: 'center',
         }}
         aria-label={isActive ? 'Ocultar bloque' : 'Mostrar bloque'}
@@ -147,7 +170,7 @@ export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
       <button
         onClick={handleDelete}
         disabled={busy}
-        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors relative z-10"
         style={{ background: confirmDelete ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.04)' }}
         aria-label={confirmDelete ? 'Confirmar eliminación' : 'Eliminar'}
         onBlur={() => setConfirmDelete(false)}

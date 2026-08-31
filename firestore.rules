@@ -10,9 +10,13 @@ service cloud.firestore {
 
     // Bloques Bento: lectura pública, escritura solo del dueño del bloque
     match /blocks/{blockId} {
-      allow read:  if true;
-      allow write: if request.auth != null
-                   && request.auth.uid == resource.data.userId;
+      allow read:   if true;
+      // CREATE: el doc no existe aún — se usa request.resource.data (el nuevo doc)
+      allow create: if request.auth != null
+                    && request.auth.uid == request.resource.data.userId;
+      // UPDATE / DELETE: el doc ya existe — se usa resource.data (el doc actual)
+      allow update, delete: if request.auth != null
+                            && request.auth.uid == resource.data.userId;
     }
   }
 }

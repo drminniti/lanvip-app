@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { getThemeById, matchThemeId } from '@/lib/themes'
+import { incrementClickCount } from '@/lib/analytics'
 import type { UserProfile, Block, SpanSize } from '@/types'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
@@ -49,44 +50,39 @@ function BentoTile({
         stiffness: 260,
         damping: 22,
       }}
-      whileTap={{ scale: 0.95 }}
-      className={`${SPAN_CLASS[block.layout.spanSize]} rounded-2xl flex items-center gap-3 px-4`}
+      // ── Spring hover scale — VIP micro-interaction ──────────────────────
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.96 }}
+      onClick={() => {
+        if (block.content.url) void incrementClickCount(block.id)
+      }}
+      className={`${SPAN_CLASS[block.layout.spanSize]} bento-tile flex items-center gap-3 px-4 relative overflow-hidden`}
       style={{
-        height:          isLarge ? '8rem' : isWide ? '4rem' : '4rem',
-        background:      `${tileColor}12`,
-        border:          `1px solid ${tileColor}30`,
-        textDecoration:  'none',
-        cursor:          block.content.url ? 'pointer' : 'default',
-        backdropFilter:  'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        overflow:        'hidden',
-        position:        'relative',
-        transition:      'background 0.2s, border-color 0.2s',
+        height:         isLarge ? '10rem' : isWide ? '4.5rem' : '4.5rem',
+        textDecoration: 'none',
+        cursor:         block.content.url ? 'pointer' : 'default',
+        // Active border tint from tile color — hairline
+        borderColor:    `${tileColor}28`,
       }}
       aria-label={block.content.title}
     >
-      {/* VIP Glow — solo en bloques 2x2 (3_UX_UI.md §Regla Especial) */}
-      {isLarge && (
-        <span
-          aria-hidden="true"
-          style={{
-            position:      'absolute',
-            top:           '-20%',
-            right:         '-10%',
-            width:         '65%',
-            height:        '130%',
-            background:    `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
-            filter:        'blur(16px)',
-            pointerEvents: 'none',
-            zIndex:        0,
-          }}
-        />
-      )}
-
-      {/* Accent glow bar */}
-      <div
-        className="w-1 self-stretch rounded-full flex-shrink-0"
-        style={{ background: `${tileColor}80`, position: 'relative', zIndex: 1 }}
+      {/* VIP Glow — always present on large tiles; appears on hover for all */}
+      <motion.span
+        aria-hidden="true"
+        initial={{ opacity: isLarge ? 0.5 : 0 }}
+        whileHover={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        style={{
+          position:      'absolute',
+          top:           '-20%',
+          right:         '-10%',
+          width:         '65%',
+          height:        '140%',
+          background:    `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
+          filter:        'blur(18px)',
+          pointerEvents: 'none',
+          zIndex:        0,
+        }}
       />
 
       {/* Icon */}
@@ -137,7 +133,8 @@ interface PublicLandingProps {
  * Full-page public Micro-Landing VIP.
  * Rendered by the SSR route /[username].
  * Applies the user's chosen VIP theme, avatar, bio and Bento grid.
- * 2x2 blocks include the VIP Glow effect per 3_UX_UI.md §Regla Especial.
+ * All tiles: pure glassmorphism (bento-tile class), hairline border, glow on hover.
+ * Large (2x2) tiles: glow always visible at low intensity.
  */
 export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)

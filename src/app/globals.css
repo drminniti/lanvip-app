@@ -6,21 +6,21 @@
   :root {
     /* ── Dark Premium Palette tokens ─────────────────────────────────── */
     --color-bg:             #0A0A0A;
-    --color-surface:        #1A1A1A;
-    --color-border:         #333333;
+    --color-surface:        #111111;
+    --color-border:         rgba(255, 255, 255, 0.08); /* hairline */
     --color-text-primary:   #F5F5F5;
     --color-text-secondary: #A3A3A3;
     --color-accent:         #D4AF37;
     --color-accent-hover:   #B8962E;
 
-    /* ── Glass surface (0_Brand.md §4 Glassmorphism) ─────────────────── */
-    --glass-bg:     rgba(26, 26, 26, 0.70);   /* #1A1A1A at 70% */
-    --glass-border: #333333;
+    /* ── Glass surface — pure dark crystal (0_Brand.md §4 Glassmorphism) */
+    --glass-bg:     rgba(0, 0, 0, 0.40);       /* black at 40% — no brown */
+    --glass-border: rgba(255, 255, 255, 0.08); /* hairline white */
 
-    /* ── Dark mesh gradient stops ────────────────────────────────────── */
+    /* ── Dark mesh gradient stops — neutral, no olive/gold tints ─────── */
     --mesh-1: #0A0A0A;
-    --mesh-2: #141208;   /* very subtle gold tint */
-    --mesh-3: #0d0d0a;   /* near-black warm tint */
+    --mesh-2: #0D0D0D;
+    --mesh-3: #080808;
   }
 
   * { box-sizing: border-box; }
@@ -55,22 +55,40 @@
   .bg-mesh {
     background-color: var(--color-bg);
     background-image:
-      radial-gradient(ellipse at 20% 50%, rgba(20,18,8,0.9)    0%, transparent 60%),
-      radial-gradient(ellipse at 80% 20%, rgba(13,12,6,0.8)    0%, transparent 60%),
-      radial-gradient(ellipse at 50% 80%, rgba(212,175,55,0.04) 0%, transparent 50%);
+      radial-gradient(ellipse at 20% 50%, rgba(8,8,8,0.95)      0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(6,6,6,0.90)       0%, transparent 60%),
+      radial-gradient(ellipse at 50% 85%, rgba(212,175,55,0.03)  0%, transparent 50%);
     background-size: 200% 200%;
     animation: mesh-drift 10s ease infinite;
   }
 
   /* ── Glassmorphism Card — spec exact values (0_Brand.md §4) ───────────── */
   .glass-card {
-    background: var(--glass-bg);              /* #1A1A1A at 70% */
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-border);    /* #333333 */
+    background: var(--glass-bg);                   /* black at 40% */
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid var(--glass-border);         /* hairline white */
     border-radius: 1.5rem;
-    box-shadow: 0 8px 30px rgb(0 0 0 / 0.40); /* spec shadow */
+    box-shadow: 0 8px 40px rgb(0 0 0 / 0.55), inset 0 1px 0 rgba(255,255,255,0.05);
     color: var(--color-text-primary);
+  }
+
+  /* ── Bento Tile — shared dark crystal base for BlockCard & BentoTile ─── */
+  /* Single source of truth for the VIP glassmorphism card aesthetic.        */
+  .bento-tile {
+    background:            rgba(0, 0, 0, 0.40);
+    backdrop-filter:       blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border:                1px solid rgba(255, 255, 255, 0.08); /* hairline */
+    border-radius:         1.25rem;
+    position:              relative;
+    overflow:              hidden;
+    transition:            border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .bento-tile:hover {
+    border-color: rgba(212, 175, 55, 0.20); /* hairline gold on hover */
+    box-shadow:   0 0 0 0 transparent,
+                  0 4px 24px rgba(0, 0, 0, 0.50);
   }
 
   /* ── Input fields — dark premium style ────────────────────────────────── */
