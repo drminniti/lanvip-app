@@ -56,7 +56,7 @@ export interface BlockContent {
   title: string
   url?: string
   icon?: string       // emoji or icon identifier
-  description?: string
+  description?: string  // optional subtitle shown below the title
   thumbnailUrl?: string
   embedId?: string    // for YouTube / Spotify
 }
@@ -72,6 +72,12 @@ export interface Block {
   order: number
   clickCount: number
   isActive: boolean
+  /**
+   * When true the block occupies the full grid width (col-span-2).
+   * Replaces the previous spanSize-based col-span logic.
+   * Default: false (compact 1-column square).
+   */
+  isFeatured: boolean
   createdAt?: Timestamp
 }
 
