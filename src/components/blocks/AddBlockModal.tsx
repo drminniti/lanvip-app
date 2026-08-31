@@ -7,11 +7,13 @@ import type { BlockType, SpanSize } from '@/types'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface AddBlockFormData {
-  type: BlockType
-  title: string
-  url: string
-  icon: string
-  spanSize: SpanSize
+  type:        BlockType
+  title:       string
+  url:         string
+  icon:        string
+  spanSize:    SpanSize
+  description: string
+  isFeatured:  boolean
   // social-only
   platform?: SocialPlatform
 }
@@ -33,6 +35,30 @@ const SPAN_OPTIONS: { value: SpanSize; label: string; desc: string }[] = [
   { value: '2x2', label: '2×2', desc: 'Grande' },
 ]
 
+// ─── Emoji palette — curated for professional micro-landings ─────────────────
+const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
+  {
+    label: 'Links & Web',
+    emojis: ['🔗', '🌐', '🖥️', '📱', '💻', '🔌', '📡', '🛰️'],
+  },
+  {
+    label: 'Negocio',
+    emojis: ['💼', '📊', '📈', '🤝', '🏢', '💰', '🎯', '🏆'],
+  },
+  {
+    label: 'Creativo',
+    emojis: ['🎨', '✏️', '📸', '🎬', '🎵', '🎤', '🖌️', '✨'],
+  },
+  {
+    label: 'Contacto',
+    emojis: ['💬', '📩', '📞', '📧', '👋', '🙌', '❤️', '⭐'],
+  },
+  {
+    label: 'Varios',
+    emojis: ['🚀', '🌟', '💡', '🔑', '🎁', '📌', '🗂️', '📋'],
+  },
+]
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function socialUrl(platform: SocialPlatform, handle: string): string {
@@ -45,11 +71,145 @@ function socialUrl(platform: SocialPlatform, handle: string): string {
   }
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+/** Compact toggle switch */
+function Toggle({
+  id,
+  checked,
+  onChange,
+  label,
+  hint,
+}: {
+  id:       string
+  checked:  boolean
+  onChange: (v: boolean) => void
+  label:    string
+  hint?:    string
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <label htmlFor={id} className="text-sm font-medium cursor-pointer" style={{ color: '#F5F5F5' }}>
+          {label}
+        </label>
+        {hint && <p className="text-xs mt-0.5" style={{ color: '#666' }}>{hint}</p>}
+      </div>
+      <button
+        id={id}
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className="flex-shrink-0 w-11 h-6 rounded-full relative transition-all duration-200"
+        style={{
+          background: checked ? '#D4AF37' : 'rgba(255,255,255,0.1)',
+          boxShadow:  checked ? '0 0 12px rgba(212,175,55,0.40)' : 'none',
+        }}
+      >
+        <span
+          className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-transform duration-200"
+          style={{
+            background: checked ? '#0A0A0A' : '#555',
+            transform:  checked ? 'translateX(20px)' : 'translateX(0)',
+          }}
+        />
+      </button>
+    </div>
+  )
+}
+
+/** Inline emoji picker grid */
+function EmojiPicker({
+  value,
+  onChange,
+}: {
+  value:    string
+  onChange: (emoji: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="space-y-1">
+      <label className="label-dark">Ícono / Emoji</label>
+      <div className="flex items-center gap-2">
+        {/* Current emoji button */}
+        <button
+          id="btn-emoji-trigger"
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="w-12 h-12 rounded-xl text-2xl flex items-center justify-center transition-all flex-shrink-0"
+          style={{
+            background: open ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.06)',
+            border:     `1.5px solid ${open ? '#D4AF37' : 'transparent'}`,
+          }}
+          aria-label="Elegir emoji"
+          title="Elegir emoji"
+        >
+          {value}
+        </button>
+        <p className="text-xs" style={{ color: '#666' }}>
+          {open ? 'Elegí un emoji ↓' : 'Tocá para cambiar el ícono'}
+        </p>
+      </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="emoji-panel"
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+            className="rounded-2xl p-3 space-y-3"
+            style={{
+              background:   'rgba(0,0,0,0.60)',
+              backdropFilter: 'blur(20px)',
+              border:       '1px solid rgba(255,255,255,0.08)',
+              maxHeight:    '220px',
+              overflowY:    'auto',
+            }}
+          >
+            {EMOJI_GROUPS.map(group => (
+              <div key={group.label}>
+                <p className="text-xs font-medium mb-1.5" style={{ color: '#555' }}>
+                  {group.label}
+                </p>
+                <div className="grid grid-cols-8 gap-1">
+                  {group.emojis.map(emoji => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => { onChange(emoji); setOpen(false) }}
+                      className="w-9 h-9 rounded-lg text-xl flex items-center justify-center transition-all"
+                      style={{
+                        background: value === emoji
+                          ? 'rgba(212,175,55,0.20)'
+                          : 'rgba(255,255,255,0.04)',
+                        border: value === emoji
+                          ? '1.5px solid rgba(212,175,55,0.50)'
+                          : '1.5px solid transparent',
+                      }}
+                      aria-label={emoji}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ─── Main Modal ───────────────────────────────────────────────────────────────
 
 interface AddBlockModalProps {
-  open: boolean
-  onClose: () => void
+  open:     boolean
+  onClose:  () => void
   onSubmit: (data: AddBlockFormData) => Promise<void>
 }
 
@@ -61,6 +221,8 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
   const [handle, setHandle]       = useState('')  // social
   const [url, setUrl]             = useState('')   // link
   const [icon, setIcon]           = useState('🔗')
+  const [description, setDescription] = useState('')
+  const [isFeatured, setIsFeatured]   = useState(false)
   const [spanSize, setSpanSize]   = useState<SpanSize>('1x1')
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState('')
@@ -73,6 +235,8 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
     setHandle('')
     setUrl('')
     setIcon('🔗')
+    setDescription('')
+    setIsFeatured(false)
     setSpanSize('1x1')
     setError('')
   }
@@ -105,12 +269,14 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
     setSaving(true)
     try {
       await onSubmit({
-        type:     blockType,
-        title:    resolvedTitle,
-        url:      resolvedUrl,
-        icon:     resolvedIcon,
+        type:        blockType,
+        title:       resolvedTitle,
+        url:         resolvedUrl,
+        icon:        resolvedIcon,
         spanSize,
-        platform: blockType === 'social' ? platform : undefined,
+        description: description.trim(),
+        isFeatured,
+        platform:    blockType === 'social' ? platform : undefined,
       })
       handleClose()
     } catch {
@@ -145,11 +311,13 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
             className="fixed bottom-0 left-0 right-0 z-50 md:inset-0 md:flex md:items-center md:justify-center"
           >
             <div
-              className="w-full md:w-full md:max-w-md mx-auto rounded-t-3xl md:rounded-2xl p-6 space-y-5"
+              className="w-full md:max-w-md mx-auto rounded-t-3xl md:rounded-2xl p-6 space-y-5"
               style={{
-                background: '#141414',
-                border: '1px solid #2A2A2A',
-                boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+                background:   '#141414',
+                border:       '1px solid rgba(255,255,255,0.08)',
+                boxShadow:    '0 -8px 40px rgba(0,0,0,0.6)',
+                maxHeight:    '92dvh',
+                overflowY:    'auto',
               }}
             >
               {/* Header */}
@@ -288,45 +456,60 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
                       </div>
                     </div>
 
-                    {/* Emoji (link only) */}
+                    {/* Description */}
+                    <div className="space-y-1">
+                      <label className="label-dark">Descripción (opcional)</label>
+                      <textarea
+                        id="block-description"
+                        value={description}
+                        onChange={e => setDescription(e.target.value)}
+                        placeholder="Subtítulo o descripción breve del enlace"
+                        className="input-dark"
+                        style={{ resize: 'none', minHeight: '3.5rem' }}
+                        maxLength={120}
+                        rows={2}
+                      />
+                    </div>
+
+                    {/* Emoji picker — link only */}
                     {blockType === 'link' && (
-                      <div className="space-y-1">
-                        <label className="label-dark">Emoji / Ícono</label>
-                        <input
-                          id="block-icon"
-                          type="text"
-                          value={icon}
-                          onChange={e => setIcon(e.target.value)}
-                          placeholder="🔗"
-                          className="input-dark"
-                          maxLength={4}
-                        />
-                      </div>
+                      <EmojiPicker value={icon} onChange={setIcon} />
                     )}
 
-                    {/* Span size */}
-                    <div className="space-y-2">
-                      <label className="label-dark">Tamaño</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {SPAN_OPTIONS.map(opt => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => setSpanSize(opt.value)}
-                            className="flex flex-col items-center gap-1 p-3 rounded-xl transition-all"
-                            style={{
-                              background: spanSize === opt.value ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.04)',
-                              border: spanSize === opt.value ? '1.5px solid #D4AF37' : '1.5px solid transparent',
-                            }}
-                          >
-                            <span className="text-sm font-bold" style={{ color: spanSize === opt.value ? '#D4AF37' : '#F5F5F5' }}>
-                              {opt.label}
-                            </span>
-                            <span className="text-xs" style={{ color: '#A3A3A3' }}>{opt.desc}</span>
-                          </button>
-                        ))}
+                    {/* isFeatured toggle */}
+                    <Toggle
+                      id="toggle-featured"
+                      checked={isFeatured}
+                      onChange={setIsFeatured}
+                      label="Bloque destacado"
+                      hint="Ocupa el ancho completo de la grilla (2 columnas)"
+                    />
+
+                    {/* Span size — only relevant when not featured */}
+                    {!isFeatured && (
+                      <div className="space-y-2">
+                        <label className="label-dark">Tamaño base</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {SPAN_OPTIONS.map(opt => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => setSpanSize(opt.value)}
+                              className="flex flex-col items-center gap-1 p-3 rounded-xl transition-all"
+                              style={{
+                                background: spanSize === opt.value ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.04)',
+                                border: spanSize === opt.value ? '1.5px solid #D4AF37' : '1.5px solid transparent',
+                              }}
+                            >
+                              <span className="text-sm font-bold" style={{ color: spanSize === opt.value ? '#D4AF37' : '#F5F5F5' }}>
+                                {opt.label}
+                              </span>
+                              <span className="text-xs" style={{ color: '#A3A3A3' }}>{opt.desc}</span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Error */}
                     {error && (
