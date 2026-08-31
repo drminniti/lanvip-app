@@ -20,14 +20,6 @@ import { updateBlock, deleteBlock, reorderBlocks } from '@/lib/blocks'
 import { BlockCard } from './BlockCard'
 import type { Block } from '@/types'
 
-// ─── Span helpers ─────────────────────────────────────────────────────────────
-// Social blocks are always compact squares (1x1).
-// Link blocks with spanSize 2x1 or 2x2 take full width (col-span-2).
-function getColSpan(block: Block): 'col-span-1' | 'col-span-2' {
-  if (block.type === 'social') return 'col-span-1'
-  if (block.layout.spanSize === '2x1' || block.layout.spanSize === '2x2') return 'col-span-2'
-  return 'col-span-1'
-}
 
 interface BlocksGridProps {
   blocks: Block[]
@@ -110,7 +102,6 @@ export function BlocksGrid({ blocks: liveBlocks }: BlocksGridProps) {
               <BlockCard
                 key={block.id}
                 block={block}
-                colSpan={getColSpan(block)}
                 onToggle={handleToggle}
                 onDelete={handleDelete}
               />

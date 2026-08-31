@@ -13,7 +13,7 @@ const SOCIAL_COLORS: Record<string, string> = {
   whatsapp:  '#25D366',
 }
 
-// ─── Span mapping ─────────────────────────────────────────────────────────────
+// ─── Span mapping (retains spanSize for row-span support) ─────────────────────
 const SPAN_CLASS: Record<SpanSize, string> = {
   '1x1': 'col-span-1',
   '2x1': 'col-span-2',
@@ -22,6 +22,13 @@ const SPAN_CLASS: Record<SpanSize, string> = {
 }
 
 // ─── Individual Bento tile ────────────────────────────────────────────────────
+/**
+ * Layout rules (3_UX_UI.md §Bento Grid):
+ *   - isFeatured=true  → col-span-2, generous padding, description shown.
+ *   - isFeatured=false → col-span-1, compact horizontal row.
+ *   - All tiles: .bento-tile glassmorphism, VIP glow on hover, spring scale.
+ *   - Heights: content-driven via padding — no fixed heights.
+ */
 function BentoTile({
   block,
   accent,
@@ -34,10 +41,12 @@ function BentoTile({
   const isSocial    = block.type === 'social'
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
   const tileColor   = isSocial ? (SOCIAL_COLORS[platformKey] ?? accent) : accent
-  const isLarge     = block.layout.spanSize === '2x2'
-  const isWide      = block.layout.spanSize === '2x1'
-  // "Big" tiles have enough height to warrant the edge-pinned layout
-  const isBig       = isLarge || isWide
+
+  // isFeatured drives the grid span; fallback to spanSize for legacy blocks
+  const isFeatured  = block.isFeatured ?? (block.layout.spanSize !== '1x1')
+  const colClass    = isFeatured
+    ? 'col-span-2'
+    : SPAN_CLASS[block.layout.spanSize] ?? 'col-span-1'
 
   return (
     <motion.a
@@ -52,30 +61,23 @@ function BentoTile({
         stiffness: 260,
         damping: 22,
       }}
-      // ── Spring hover scale — VIP micro-interaction ──────────────────────
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.96 }}
       onClick={() => {
         if (block.content.url) void incrementClickCount(block.id)
       }}
-      className={[
-        SPAN_CLASS[block.layout.spanSize],
-        'bento-tile relative overflow-hidden',
-        // Big tiles: content pinned top-left / bottom-left (no dead center space)
-        isBig ? 'flex flex-col justify-between p-4' : 'flex items-center gap-3 px-4',
-      ].join(' ')}
+      className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4`}
       style={{
-        height:         isLarge ? '11rem' : isBig ? '5.5rem' : '4.5rem',
         textDecoration: 'none',
         cursor:         block.content.url ? 'pointer' : 'default',
         borderColor:    `${tileColor}28`,
       }}
       aria-label={block.content.title}
     >
-      {/* VIP Glow — always present on large tiles; fades in on hover for all */}
+      {/* VIP Glow — fades in on hover; slightly visible for featured tiles */}
       <motion.span
         aria-hidden="true"
-        initial={{ opacity: isLarge ? 0.5 : 0 }}
+        initial={{ opacity: isFeatured ? 0.4 : 0 }}
         whileHover={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
         style={{
@@ -91,105 +93,45 @@ function BentoTile({
         }}
       />
 
-      {isBig ? (
-        // ── LARGE / WIDE TILE: edge-pinned layout ─────────────────────────
-        <>
-          {/* Icon — top-left anchor */}
-          {block.content.icon && (
-            <span
-              className="text-2xl leading-none self-start"
-              aria-hidden="true"
-              style={{ position: 'relative', zIndex: 1 }}
-            >
-              {block.content.icon}
-            </span>
-          )}
+      {/* Icon */}
+      {block.content.icon && (
+        <span
+          className="text-xl flex-shrink-0 leading-none"
+          aria-hidden="true"
+          style={{ position: 'relative', zIndex: 1 }}
+        >
+          {block.content.icon}
+        </span>
+      )}
 
-          {/* Text group — bottom-left anchor */}
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <p className="text-sm font-bold leading-tight" style={{ color: '#F0F0F0' }}>
-              {block.content.title}
-            </p>
-            {block.content.description && (
-              <p
-                className="text-xs mt-0.5 leading-snug"
-                style={{ color: 'rgba(163,163,163,0.80)' }}
-              >
-                {block.content.description}
-              </p>
-            )}
-          </div>
-
-          {/* Watermark icon — oversized, ghosted, bottom-right */}
-          {block.content.icon && (
-            <span
-              aria-hidden="true"
-              style={{
-                position:      'absolute',
-                bottom:        '-12px',
-                right:         '-6px',
-                fontSize:      isLarge ? '8.5rem' : '5.5rem',
-                lineHeight:    1,
-                opacity:       0.07,
-                transform:     'rotate(-12deg)',
-                pointerEvents: 'none',
-                userSelect:    'none',
-                zIndex:        0,
-              }}
-            >
-              {block.content.icon}
-            </span>
-          )}
-
-          {/* External link indicator — top-right corner */}
-          {block.content.url && (
-            <svg
-              className="w-3 h-3 absolute top-4 right-4 opacity-30"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              style={{ color: tileColor, zIndex: 1 }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          )}
-        </>
-      ) : (
-        // ── COMPACT TILE (1x1): horizontal row layout ─────────────────────
-        <>
-          {block.content.icon && (
-            <span
-              className="text-xl flex-shrink-0 leading-none"
-              aria-hidden="true"
-              style={{ position: 'relative', zIndex: 1 }}
-            >
-              {block.content.icon}
-            </span>
-          )}
-
-          <span
-            className="text-sm font-semibold truncate leading-tight flex-1 min-w-0"
-            style={{ color: '#F0F0F0', position: 'relative', zIndex: 1 }}
+      {/* Text group — title + optional description */}
+      <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
+        <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+          {block.content.title}
+        </p>
+        {block.content.description && (
+          <p
+            className="text-xs mt-0.5 leading-snug"
+            style={{ color: 'rgba(163,163,163,0.85)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
-            {block.content.title}
-          </span>
+            {block.content.description}
+          </p>
+        )}
+      </div>
 
-          {block.content.url && (
-            <svg
-              className="w-3.5 h-3.5 flex-shrink-0 ml-auto opacity-40"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              style={{ color: tileColor, position: 'relative', zIndex: 1 }}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          )}
-        </>
+      {/* External link chevron */}
+      {block.content.url && (
+        <svg
+          className="w-3.5 h-3.5 flex-shrink-0 ml-auto opacity-40"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          style={{ color: tileColor, position: 'relative', zIndex: 1 }}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        </svg>
       )}
     </motion.a>
   )
@@ -207,10 +149,10 @@ interface PublicLandingProps {
  * Rendered by the SSR route /[username].
  * Applies the user's chosen VIP theme, avatar, bio and Bento grid.
  *
- * Layout rules (3_UX_UI.md):
- *   - Big tiles (2x1, 2x2): icon top-left, text bottom-left, watermark ghost icon bottom-right.
- *   - Small tiles (1x1): compact horizontal row — icon | title | chevron.
- *   - All tiles: glassmorphism (.bento-tile), VIP glow radial on hover.
+ * Grid rules (3_UX_UI.md §Bento Grid Adaptativo):
+ *   - block.isFeatured = true  → col-span-2 (highlighted link with description)
+ *   - block.isFeatured = false → col-span-1 (compact tile)
+ *   - Heights: content-driven via py-4 padding — no fixed heights.
  */
 export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)
