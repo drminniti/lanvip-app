@@ -42,7 +42,7 @@ export default function BlocksPage() {
         icon:        data.icon,
         description: data.description || undefined,
       },
-      spanSize:     data.spanSize,
+      spanSize:     '1x1',   // width controlled by isFeatured; spanSize kept for legacy
       isFeatured:   data.isFeatured,
       currentCount: blocks.length,
     })

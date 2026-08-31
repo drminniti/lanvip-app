@@ -74,10 +74,10 @@ function BentoTile({
       }}
       aria-label={block.content.title}
     >
-      {/* VIP Glow — fades in on hover; slightly visible for featured tiles */}
+      {/* VIP Glow — stronger on featured tiles, appears on hover for compact */}
       <motion.span
         aria-hidden="true"
-        initial={{ opacity: isFeatured ? 0.4 : 0 }}
+        initial={{ opacity: isFeatured ? 0.55 : 0 }}
         whileHover={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
         style={{
@@ -86,12 +86,31 @@ function BentoTile({
           right:         '-10%',
           width:         '65%',
           height:        '140%',
-          background:    `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
+          background:    `radial-gradient(circle, ${tileColor}${isFeatured ? '38' : '28'} 0%, transparent 70%)`,
           filter:        'blur(18px)',
           pointerEvents: 'none',
           zIndex:        0,
         }}
       />
+
+      {/* Featured badge — gold star top-right */}
+      {isFeatured && (
+        <span
+          aria-hidden="true"
+          style={{
+            position:  'absolute',
+            top:       '0.5rem',
+            right:     '0.5rem',
+            fontSize:  '0.65rem',
+            opacity:   0.55,
+            zIndex:    1,
+            lineHeight: 1,
+          }}
+        >
+          ⭐
+        </span>
+      )}
+
 
       {/* Icon */}
       {block.content.icon && (

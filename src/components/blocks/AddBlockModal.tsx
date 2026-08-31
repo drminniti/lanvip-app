@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { BlockType, SpanSize } from '@/types'
+import type { BlockType } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -11,7 +11,6 @@ export interface AddBlockFormData {
   title:       string
   url:         string
   icon:        string
-  spanSize:    SpanSize
   description: string
   isFeatured:  boolean
   // social-only
@@ -29,11 +28,6 @@ const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon
   { id: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', icon: '💬' },
 ]
 
-const SPAN_OPTIONS: { value: SpanSize; label: string; desc: string }[] = [
-  { value: '1x1', label: '1×1', desc: 'Cuadrado' },
-  { value: '2x1', label: '2×1', desc: 'Ancho' },
-  { value: '2x2', label: '2×2', desc: 'Grande' },
-]
 
 // ─── Emoji palette — curated for professional micro-landings ─────────────────
 const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
@@ -223,7 +217,6 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
   const [icon, setIcon]           = useState('🔗')
   const [description, setDescription] = useState('')
   const [isFeatured, setIsFeatured]   = useState(false)
-  const [spanSize, setSpanSize]   = useState<SpanSize>('1x1')
   const [saving, setSaving]       = useState(false)
   const [error, setError]         = useState('')
 
@@ -237,7 +230,6 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
     setIcon('🔗')
     setDescription('')
     setIsFeatured(false)
-    setSpanSize('1x1')
     setError('')
   }
 
@@ -273,7 +265,6 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
         title:       resolvedTitle,
         url:         resolvedUrl,
         icon:        resolvedIcon,
-        spanSize,
         description: description.trim(),
         isFeatured,
         platform:    blockType === 'social' ? platform : undefined,
@@ -476,40 +467,56 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
                       <EmojiPicker value={icon} onChange={setIcon} />
                     )}
 
-                    {/* isFeatured toggle */}
-                    <Toggle
-                      id="toggle-featured"
-                      checked={isFeatured}
-                      onChange={setIsFeatured}
-                      label="Bloque destacado"
-                      hint="Ocupa el ancho completo de la grilla (2 columnas)"
-                    />
+                    {/* Width selector — half vs full, single decision */}
+                    <div className="space-y-2">
+                      <label className="label-dark">Ancho en la grilla</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* Half width */}
+                        <button
+                          id="btn-width-half"
+                          type="button"
+                          onClick={() => setIsFeatured(false)}
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
+                          style={{
+                            background: !isFeatured ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+                            border: !isFeatured ? '1.5px solid rgba(255,255,255,0.20)' : '1.5px solid transparent',
+                          }}
+                        >
+                          {/* Visual metaphor: half-width block */}
+                          <div className="w-full flex gap-1">
+                            <div className="h-5 rounded flex-1" style={{ background: !isFeatured ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)' }} />
+                            <div className="h-5 rounded flex-1" style={{ background: 'rgba(255,255,255,0.05)' }} />
+                          </div>
+                          <span className="text-xs font-medium" style={{ color: !isFeatured ? '#F5F5F5' : '#666' }}>Mitad</span>
+                        </button>
 
-                    {/* Span size — only relevant when not featured */}
-                    {!isFeatured && (
-                      <div className="space-y-2">
-                        <label className="label-dark">Tamaño base</label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {SPAN_OPTIONS.map(opt => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => setSpanSize(opt.value)}
-                              className="flex flex-col items-center gap-1 p-3 rounded-xl transition-all"
-                              style={{
-                                background: spanSize === opt.value ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.04)',
-                                border: spanSize === opt.value ? '1.5px solid #D4AF37' : '1.5px solid transparent',
-                              }}
-                            >
-                              <span className="text-sm font-bold" style={{ color: spanSize === opt.value ? '#D4AF37' : '#F5F5F5' }}>
-                                {opt.label}
-                              </span>
-                              <span className="text-xs" style={{ color: '#A3A3A3' }}>{opt.desc}</span>
-                            </button>
-                          ))}
-                        </div>
+                        {/* Full width — featured */}
+                        <button
+                          id="btn-width-full"
+                          type="button"
+                          onClick={() => setIsFeatured(true)}
+                          className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
+                          style={{
+                            background: isFeatured ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.03)',
+                            border: isFeatured ? '1.5px solid rgba(212,175,55,0.40)' : '1.5px solid transparent',
+                          }}
+                        >
+                          {/* Visual metaphor: full-width block */}
+                          <div className="w-full flex gap-1">
+                            <div className="h-5 rounded w-full" style={{ background: isFeatured ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.08)' }} />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs font-medium" style={{ color: isFeatured ? '#D4AF37' : '#666' }}>Completo</span>
+                            <span className="text-xs" style={{ color: isFeatured ? '#D4AF37' : '#555' }}>⭐</span>
+                          </div>
+                        </button>
                       </div>
-                    )}
+                      {isFeatured && (
+                        <p className="text-xs" style={{ color: '#666' }}>
+                          El bloque ocupa todo el ancho y se muestra con un resplandor dorado especial.
+                        </p>
+                      )}
+                    </div>
 
                     {/* Error */}
                     {error && (
