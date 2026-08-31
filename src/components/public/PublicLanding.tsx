@@ -36,6 +36,8 @@ function BentoTile({
   const tileColor   = isSocial ? (SOCIAL_COLORS[platformKey] ?? accent) : accent
   const isLarge     = block.layout.spanSize === '2x2'
   const isWide      = block.layout.spanSize === '2x1'
+  // "Big" tiles have enough height to warrant the edge-pinned layout
+  const isBig       = isLarge || isWide
 
   return (
     <motion.a
@@ -56,17 +58,21 @@ function BentoTile({
       onClick={() => {
         if (block.content.url) void incrementClickCount(block.id)
       }}
-      className={`${SPAN_CLASS[block.layout.spanSize]} bento-tile flex items-center gap-3 px-4 relative overflow-hidden`}
+      className={[
+        SPAN_CLASS[block.layout.spanSize],
+        'bento-tile relative overflow-hidden',
+        // Big tiles: content pinned top-left / bottom-left (no dead center space)
+        isBig ? 'flex flex-col justify-between p-4' : 'flex items-center gap-3 px-4',
+      ].join(' ')}
       style={{
-        height:         isLarge ? '10rem' : isWide ? '4.5rem' : '4.5rem',
+        height:         isLarge ? '11rem' : isBig ? '5.5rem' : '4.5rem',
         textDecoration: 'none',
         cursor:         block.content.url ? 'pointer' : 'default',
-        // Active border tint from tile color — hairline
         borderColor:    `${tileColor}28`,
       }}
       aria-label={block.content.title}
     >
-      {/* VIP Glow — always present on large tiles; appears on hover for all */}
+      {/* VIP Glow — always present on large tiles; fades in on hover for all */}
       <motion.span
         aria-hidden="true"
         initial={{ opacity: isLarge ? 0.5 : 0 }}
@@ -85,38 +91,105 @@ function BentoTile({
         }}
       />
 
-      {/* Icon */}
-      {block.content.icon && (
-        <span
-          className="text-xl flex-shrink-0 leading-none"
-          aria-hidden="true"
-          style={{ position: 'relative', zIndex: 1 }}
-        >
-          {block.content.icon}
-        </span>
-      )}
+      {isBig ? (
+        // ── LARGE / WIDE TILE: edge-pinned layout ─────────────────────────
+        <>
+          {/* Icon — top-left anchor */}
+          {block.content.icon && (
+            <span
+              className="text-2xl leading-none self-start"
+              aria-hidden="true"
+              style={{ position: 'relative', zIndex: 1 }}
+            >
+              {block.content.icon}
+            </span>
+          )}
 
-      {/* Title */}
-      <span
-        className="text-sm font-semibold truncate leading-tight"
-        style={{ color: '#F0F0F0', position: 'relative', zIndex: 1 }}
-      >
-        {block.content.title}
-      </span>
+          {/* Text group — bottom-left anchor */}
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <p className="text-sm font-bold leading-tight" style={{ color: '#F0F0F0' }}>
+              {block.content.title}
+            </p>
+            {block.content.description && (
+              <p
+                className="text-xs mt-0.5 leading-snug"
+                style={{ color: 'rgba(163,163,163,0.80)' }}
+              >
+                {block.content.description}
+              </p>
+            )}
+          </div>
 
-      {/* External link chevron */}
-      {block.content.url && (
-        <svg
-          className="w-3.5 h-3.5 flex-shrink-0 ml-auto opacity-40"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-          style={{ color: tileColor, position: 'relative', zIndex: 1 }}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
+          {/* Watermark icon — oversized, ghosted, bottom-right */}
+          {block.content.icon && (
+            <span
+              aria-hidden="true"
+              style={{
+                position:      'absolute',
+                bottom:        '-12px',
+                right:         '-6px',
+                fontSize:      isLarge ? '8.5rem' : '5.5rem',
+                lineHeight:    1,
+                opacity:       0.07,
+                transform:     'rotate(-12deg)',
+                pointerEvents: 'none',
+                userSelect:    'none',
+                zIndex:        0,
+              }}
+            >
+              {block.content.icon}
+            </span>
+          )}
+
+          {/* External link indicator — top-right corner */}
+          {block.content.url && (
+            <svg
+              className="w-3 h-3 absolute top-4 right-4 opacity-30"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              style={{ color: tileColor, zIndex: 1 }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          )}
+        </>
+      ) : (
+        // ── COMPACT TILE (1x1): horizontal row layout ─────────────────────
+        <>
+          {block.content.icon && (
+            <span
+              className="text-xl flex-shrink-0 leading-none"
+              aria-hidden="true"
+              style={{ position: 'relative', zIndex: 1 }}
+            >
+              {block.content.icon}
+            </span>
+          )}
+
+          <span
+            className="text-sm font-semibold truncate leading-tight flex-1 min-w-0"
+            style={{ color: '#F0F0F0', position: 'relative', zIndex: 1 }}
+          >
+            {block.content.title}
+          </span>
+
+          {block.content.url && (
+            <svg
+              className="w-3.5 h-3.5 flex-shrink-0 ml-auto opacity-40"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              style={{ color: tileColor, position: 'relative', zIndex: 1 }}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          )}
+        </>
       )}
     </motion.a>
   )
@@ -133,8 +206,11 @@ interface PublicLandingProps {
  * Full-page public Micro-Landing VIP.
  * Rendered by the SSR route /[username].
  * Applies the user's chosen VIP theme, avatar, bio and Bento grid.
- * All tiles: pure glassmorphism (bento-tile class), hairline border, glow on hover.
- * Large (2x2) tiles: glow always visible at low intensity.
+ *
+ * Layout rules (3_UX_UI.md):
+ *   - Big tiles (2x1, 2x2): icon top-left, text bottom-left, watermark ghost icon bottom-right.
+ *   - Small tiles (1x1): compact horizontal row — icon | title | chevron.
+ *   - All tiles: glassmorphism (.bento-tile), VIP glow radial on hover.
  */
 export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)

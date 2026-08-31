@@ -129,7 +129,13 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
         <p className="text-sm font-semibold truncate" style={{ color: '#F5F5F5' }}>
           {block.content.title}
         </p>
-        <p className="text-xs truncate" style={{ color: '#555' }}>
+        {/* description — optional, shown if provided */}
+        {block.content.description && (
+          <p className="text-xs truncate mt-0.5" style={{ color: '#A3A3A3' }}>
+            {block.content.description}
+          </p>
+        )}
+        <p className="text-xs truncate" style={{ color: '#444' }}>
           {block.content.url} · {block.layout.spanSize}
         </p>
       </div>
@@ -185,6 +191,26 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
           </svg>
         )}
       </button>
+      {/* Watermark icon — only on large (col-span-2) cards, fills negative space */}
+      {colSpan === 'col-span-2' && block.content.icon && (
+        <span
+          aria-hidden="true"
+          style={{
+            position:      'absolute',
+            bottom:        '-10px',
+            left:          '50%',
+            transform:     'translateX(-50%) rotate(-8deg)',
+            fontSize:      '5rem',
+            lineHeight:    1,
+            opacity:       0.05,
+            pointerEvents: 'none',
+            userSelect:    'none',
+            zIndex:        0,
+          }}
+        >
+          {block.content.icon}
+        </span>
+      )}
     </motion.div>
   )
 }
