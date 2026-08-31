@@ -65,7 +65,11 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
   return (
     <motion.div
       ref={setNodeRef}
-      style={dndStyle}
+      style={{
+        ...dndStyle,
+        // Active state: hairline gold border instead of opaque colored border
+        borderColor: isActive ? 'rgba(212,175,55,0.22)' : undefined,
+      }}
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -74,10 +78,6 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
       whileHover={isDragging ? {} : { scale: 1.02 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       className="bento-tile flex items-center gap-3 p-3 relative overflow-hidden"
-      style={{
-        // Active state: hairline gold border instead of opaque colored border
-        borderColor: isActive ? 'rgba(212,175,55,0.22)' : undefined,
-      }}
     >
       {/* VIP Glow — radial gradient, shown on hover via motion */}
       <motion.span

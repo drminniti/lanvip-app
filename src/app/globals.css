@@ -73,6 +73,24 @@
     color: var(--color-text-primary);
   }
 
+  /* ── Bento Tile — shared dark crystal base for BlockCard & BentoTile ─── */
+  /* Single source of truth for the VIP glassmorphism card aesthetic.        */
+  .bento-tile {
+    background:            rgba(0, 0, 0, 0.40);
+    backdrop-filter:       blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border:                1px solid rgba(255, 255, 255, 0.08); /* hairline */
+    border-radius:         1.25rem;
+    position:              relative;
+    overflow:              hidden;
+    transition:            border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  .bento-tile:hover {
+    border-color: rgba(212, 175, 55, 0.20); /* hairline gold on hover */
+    box-shadow:   0 0 0 0 transparent,
+                  0 4px 24px rgba(0, 0, 0, 0.50);
+  }
+
   /* ── Input fields — dark premium style ────────────────────────────────── */
   .input-dark {
     width: 100%;
