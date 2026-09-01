@@ -13,7 +13,7 @@ const SOCIAL_COLORS: Record<string, string> = {
   whatsapp:  '#25D366',
 }
 
-// ─── Span mapping ─────────────────────────────────────────────────────────────
+// ─── Span mapping (retains spanSize for row-span support) ─────────────────────
 const SPAN_CLASS: Record<SpanSize, string> = {
   '1x1': 'col-span-1',
   '2x1': 'col-span-2',
@@ -22,6 +22,13 @@ const SPAN_CLASS: Record<SpanSize, string> = {
 }
 
 // ─── Individual Bento tile ────────────────────────────────────────────────────
+/**
+ * Layout rules (3_UX_UI.md §Bento Grid):
+ *   - isFeatured=true  → col-span-2, generous padding, description shown.
+ *   - isFeatured=false → col-span-1, compact horizontal row.
+ *   - All tiles: .bento-tile glassmorphism, VIP glow on hover, spring scale.
+ *   - Heights: content-driven via padding — no fixed heights.
+ */
 function BentoTile({
   block,
   accent,
@@ -34,8 +41,12 @@ function BentoTile({
   const isSocial    = block.type === 'social'
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
   const tileColor   = isSocial ? (SOCIAL_COLORS[platformKey] ?? accent) : accent
-  const isLarge     = block.layout.spanSize === '2x2'
-  const isWide      = block.layout.spanSize === '2x1'
+
+  // isFeatured drives the grid span; fallback to spanSize for legacy blocks
+  const isFeatured  = block.isFeatured ?? (block.layout.spanSize !== '1x1')
+  const colClass    = isFeatured
+    ? 'col-span-2'
+    : SPAN_CLASS[block.layout.spanSize] ?? 'col-span-1'
 
   return (
     <motion.a
@@ -50,26 +61,23 @@ function BentoTile({
         stiffness: 260,
         damping: 22,
       }}
-      // ── Spring hover scale — VIP micro-interaction ──────────────────────
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.96 }}
       onClick={() => {
         if (block.content.url) void incrementClickCount(block.id)
       }}
-      className={`${SPAN_CLASS[block.layout.spanSize]} bento-tile flex items-center gap-3 px-4 relative overflow-hidden`}
+      className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4`}
       style={{
-        height:         isLarge ? '10rem' : isWide ? '4.5rem' : '4.5rem',
         textDecoration: 'none',
         cursor:         block.content.url ? 'pointer' : 'default',
-        // Active border tint from tile color — hairline
         borderColor:    `${tileColor}28`,
       }}
       aria-label={block.content.title}
     >
-      {/* VIP Glow — always present on large tiles; appears on hover for all */}
+      {/* VIP Glow — stronger on featured tiles, appears on hover for compact */}
       <motion.span
         aria-hidden="true"
-        initial={{ opacity: isLarge ? 0.5 : 0 }}
+        initial={{ opacity: isFeatured ? 0.55 : 0 }}
         whileHover={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
         style={{
@@ -78,12 +86,31 @@ function BentoTile({
           right:         '-10%',
           width:         '65%',
           height:        '140%',
-          background:    `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
+          background:    `radial-gradient(circle, ${tileColor}${isFeatured ? '38' : '28'} 0%, transparent 70%)`,
           filter:        'blur(18px)',
           pointerEvents: 'none',
           zIndex:        0,
         }}
       />
+
+      {/* Featured badge — gold star top-right */}
+      {isFeatured && (
+        <span
+          aria-hidden="true"
+          style={{
+            position:  'absolute',
+            top:       '0.5rem',
+            right:     '0.5rem',
+            fontSize:  '0.65rem',
+            opacity:   0.55,
+            zIndex:    1,
+            lineHeight: 1,
+          }}
+        >
+          ⭐
+        </span>
+      )}
+
 
       {/* Icon */}
       {block.content.icon && (
@@ -96,13 +123,20 @@ function BentoTile({
         </span>
       )}
 
-      {/* Title */}
-      <span
-        className="text-sm font-semibold truncate leading-tight"
-        style={{ color: '#F0F0F0', position: 'relative', zIndex: 1 }}
-      >
-        {block.content.title}
-      </span>
+      {/* Text group — title + optional description */}
+      <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
+        <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+          {block.content.title}
+        </p>
+        {block.content.description && (
+          <p
+            className="text-xs mt-0.5 leading-snug"
+            style={{ color: 'rgba(163,163,163,0.85)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {block.content.description}
+          </p>
+        )}
+      </div>
 
       {/* External link chevron */}
       {block.content.url && (
@@ -133,8 +167,11 @@ interface PublicLandingProps {
  * Full-page public Micro-Landing VIP.
  * Rendered by the SSR route /[username].
  * Applies the user's chosen VIP theme, avatar, bio and Bento grid.
- * All tiles: pure glassmorphism (bento-tile class), hairline border, glow on hover.
- * Large (2x2) tiles: glow always visible at low intensity.
+ *
+ * Grid rules (3_UX_UI.md §Bento Grid Adaptativo):
+ *   - block.isFeatured = true  → col-span-2 (highlighted link with description)
+ *   - block.isFeatured = false → col-span-1 (compact tile)
+ *   - Heights: content-driven via py-4 padding — no fixed heights.
  */
 export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)

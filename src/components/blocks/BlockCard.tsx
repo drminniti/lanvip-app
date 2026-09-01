@@ -15,12 +15,11 @@ const SOCIAL_COLORS: Record<string, string> = {
 
 interface BlockCardProps {
   block:    Block
-  colSpan?: 'col-span-1' | 'col-span-2'
   onToggle: (block: Block) => Promise<void>
   onDelete: (blockId: string) => Promise<void>
 }
 
-export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }: BlockCardProps) {
+export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy]                   = useState(false)
   // Optimistic: flip locally immediately, Firestore confirms in background
@@ -36,12 +35,12 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
     isDragging,
   } = useSortable({ id: block.id })
 
-  // DnD transform/transition kept separate from Framer Motion props
+  // isFeatured drives col-span; DnD transform kept separate from FM props
   const dndStyle = {
     transform:  CSS.Transform.toString(transform),
     transition,
     opacity:    isDragging ? 0.35 : 1,
-    gridColumn: colSpan === 'col-span-2' ? 'span 2' : 'span 1',
+    gridColumn: block.isFeatured ? 'span 2' : 'span 1',
   }
 
   const accentColor = block.type === 'social'
@@ -53,7 +52,7 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
 
   async function handleToggle() {
     setIsActive(prev => !prev)   // optimistic
-    try { await onToggle(block) } catch { setIsActive(block.isActive) } // rollback on error
+    try { await onToggle(block) } catch { setIsActive(block.isActive) }
   }
 
   async function handleDelete() {
@@ -67,19 +66,18 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
       ref={setNodeRef}
       style={{
         ...dndStyle,
-        // Active state: hairline gold border instead of opaque colored border
         borderColor: isActive ? 'rgba(212,175,55,0.22)' : undefined,
       }}
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8, scale: 0.97 }}
-      // ── Spring hover scale — VIP micro-interaction ──────────────────────
       whileHover={isDragging ? {} : { scale: 1.02 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      className="bento-tile flex items-center gap-3 p-3 relative overflow-hidden"
+      // p-4 generous padding; height grows with content — no fixed heights
+      className="bento-tile flex items-center gap-3 p-4"
     >
-      {/* VIP Glow — radial gradient, shown on hover via motion */}
+      {/* VIP Glow */}
       <motion.span
         aria-hidden="true"
         initial={{ opacity: 0 }}
@@ -107,9 +105,9 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
         aria-label="Arrastrar"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-          <circle cx="7" cy="5"  r="1.5" />
-          <circle cx="7" cy="10" r="1.5" />
-          <circle cx="7" cy="15" r="1.5" />
+          <circle cx="7"  cy="5"  r="1.5" />
+          <circle cx="7"  cy="10" r="1.5" />
+          <circle cx="7"  cy="15" r="1.5" />
           <circle cx="13" cy="5"  r="1.5" />
           <circle cx="13" cy="10" r="1.5" />
           <circle cx="13" cy="15" r="1.5" />
@@ -118,23 +116,37 @@ export function BlockCard({ block, colSpan = 'col-span-1', onToggle, onDelete }:
 
       {/* Icon */}
       <div
-        className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 relative z-10"
+        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 relative z-10"
         style={{ background: `${accentColor}15`, fontSize: '1.1rem' }}
       >
         {block.content.icon}
       </div>
 
-      {/* Info */}
+      {/* Info — grows to fill available space */}
       <div className="flex-1 min-w-0 relative z-10">
         <p className="text-sm font-semibold truncate" style={{ color: '#F5F5F5' }}>
           {block.content.title}
         </p>
-        <p className="text-xs truncate" style={{ color: '#555' }}>
-          {block.content.url} · {block.layout.spanSize}
+        {/* description — rendered when present */}
+        {block.content.description && (
+          <p className="text-xs truncate mt-0.5" style={{ color: '#A3A3A3' }}>
+            {block.content.description}
+          </p>
+        )}
+        <p className="text-xs truncate mt-0.5" style={{ color: '#444' }}>
+          {block.content.url}
+          {block.isFeatured && (
+            <span
+              className="ml-1.5 px-1 py-0.5 rounded text-xs font-medium"
+              style={{ background: 'rgba(212,175,55,0.12)', color: '#D4AF37' }}
+            >
+              Destacado
+            </span>
+          )}
         </p>
       </div>
 
-      {/* Active toggle — pill badge */}
+      {/* Active toggle */}
       <button
         onClick={handleToggle}
         disabled={busy}

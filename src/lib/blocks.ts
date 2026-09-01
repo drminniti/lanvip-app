@@ -50,23 +50,26 @@ export interface AddBlockPayload {
   type: BlockType
   content: BlockContent
   spanSize: SpanSize
+  /** Whether this block spans the full grid width. Default: false. */
+  isFeatured?: boolean
   /** Current number of blocks — used to set initial `order` at the end. */
   currentCount: number
 }
 
 export async function addBlock(
   userId: string,
-  { type, content, spanSize, currentCount }: AddBlockPayload,
+  { type, content, spanSize, isFeatured = false, currentCount }: AddBlockPayload,
 ): Promise<string> {
   const ref = await addDoc(collection(getFirebaseDb(), COL), {
     userId,
     type,
     content,
     layout: { spanSize },
-    order: currentCount,        // append at the end
+    order:      currentCount,        // append at the end
     clickCount: 0,
-    isActive: true,
-    createdAt: serverTimestamp(),
+    isActive:   true,
+    isFeatured,
+    createdAt:  serverTimestamp(),
   })
   return ref.id
 }
@@ -75,7 +78,7 @@ export async function addBlock(
 
 export async function updateBlock(
   blockId: string,
-  data: Partial<Pick<Block, 'content' | 'layout' | 'isActive'>>,
+  data: Partial<Pick<Block, 'content' | 'layout' | 'isActive' | 'isFeatured'>>,
 ): Promise<void> {
   await updateDoc(doc(getFirebaseDb(), COL, blockId), data)
 }

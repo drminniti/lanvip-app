@@ -37,11 +37,13 @@ export default function BlocksPage() {
     await addBlock(user.uid, {
       type:         data.type,
       content: {
-        title: data.title,
-        url:   data.url,
-        icon:  data.icon,
+        title:       data.title,
+        url:         data.url,
+        icon:        data.icon,
+        description: data.description || undefined,
       },
-      spanSize:     data.spanSize,
+      spanSize:     '1x1',   // width controlled by isFeatured; spanSize kept for legacy
+      isFeatured:   data.isFeatured,
       currentCount: blocks.length,
     })
   }
