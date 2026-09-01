@@ -22,10 +22,12 @@ import type { Block } from '@/types'
 
 
 interface BlocksGridProps {
-  blocks: Block[]
+  blocks:  Block[]
+  /** Callback to open the edit modal for a specific block. Admin-only. */
+  onEdit?: (block: Block) => void
 }
 
-export function BlocksGrid({ blocks: liveBlocks }: BlocksGridProps) {
+export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
   // During an active drag we work on a local snapshot so the UI stays snappy.
   // Outside of a drag we always use liveBlocks directly (Firestore source of truth).
   const [dragSnapshot, setDragSnapshot] = useState<Block[] | null>(null)
@@ -102,6 +104,7 @@ export function BlocksGrid({ blocks: liveBlocks }: BlocksGridProps) {
               <BlockCard
                 key={block.id}
                 block={block}
+                onEdit={onEdit}
                 onToggle={handleToggle}
                 onDelete={handleDelete}
               />

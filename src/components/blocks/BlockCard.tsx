@@ -17,9 +17,11 @@ interface BlockCardProps {
   block:    Block
   onToggle: (block: Block) => Promise<void>
   onDelete: (blockId: string) => Promise<void>
+  /** When provided, shows the edit pencil button (admin-only). */
+  onEdit?:  (block: Block) => void
 }
 
-export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
+export function BlockCard({ block, onToggle, onDelete, onEdit }: BlockCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [busy, setBusy]                   = useState(false)
   // Optimistic: flip locally immediately, Firestore confirms in background
@@ -113,6 +115,37 @@ export function BlockCard({ block, onToggle, onDelete }: BlockCardProps) {
           <circle cx="13" cy="15" r="1.5" />
         </svg>
       </button>
+
+      {/* Edit button — visible only when onEdit is provided (dashboard only) */}
+      {onEdit && (
+        <button
+          onClick={() => onEdit(block)}
+          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors relative z-10"
+          style={{ background: 'rgba(255,255,255,0.04)' }}
+          aria-label="Editar bloque"
+          title="Editar"
+        >
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+            style={{ color: '#666' }}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+            />
+          </svg>
+        </button>
+      )}
 
       {/* Icon */}
       <div

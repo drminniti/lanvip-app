@@ -5,10 +5,11 @@ import { motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { useUserBlocks } from '@/hooks/useUserBlocks'
-import { addBlock } from '@/lib/blocks'
-import { AddBlockModal, type AddBlockFormData } from '@/components/blocks/AddBlockModal'
+import { addBlock, updateBlockContent } from '@/lib/blocks'
+import { BlockFormModal, type BlockFormData } from '@/components/blocks/BlockFormModal'
 import { BlocksGrid } from '@/components/blocks/BlocksGrid'
 import { LandingPreview } from '@/components/profile/LandingPreview'
+import type { Block } from '@/types'
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function Skeleton() {
@@ -30,9 +31,34 @@ export default function BlocksPage() {
   const { user } = useAuth()
   const { profile, loading: profileLoading } = useUserProfile(user?.uid)
   const { blocks, loading: blocksLoading }   = useUserBlocks(user?.uid)
-  const [modalOpen, setModalOpen] = useState(false)
 
-  async function handleAddBlock(data: AddBlockFormData) {
+  // ── Modal state ──────────────────────────────────────────────────────────────
+  // A single BlockFormModal handles both modes:
+  //   - createOpen=true, editingBlock=null → Creation mode
+  //   - editingBlock≠null                 → Edit mode (createOpen irrelevant)
+  const [createOpen, setCreateOpen]     = useState(false)
+  const [editingBlock, setEditingBlock] = useState<Block | null>(null)
+
+  const modalOpen = createOpen || editingBlock !== null
+
+  function openCreate() {
+    setEditingBlock(null)
+    setCreateOpen(true)
+  }
+
+  function openEdit(block: Block) {
+    setCreateOpen(false)
+    setEditingBlock(block)
+  }
+
+  function closeModal() {
+    setCreateOpen(false)
+    setEditingBlock(null)
+  }
+
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+
+  async function handleAddBlock(data: BlockFormData) {
     if (!user?.uid) return
     await addBlock(user.uid, {
       type:         data.type,
@@ -48,7 +74,29 @@ export default function BlocksPage() {
     })
   }
 
-  // Merge blocks into the preview profile
+  async function handleSaveEdit(data: BlockFormData) {
+    if (!editingBlock) return
+    await updateBlockContent(editingBlock.id, {
+      content: {
+        title:       data.title,
+        url:         data.url,
+        icon:        data.icon,
+        description: data.description || undefined,
+      },
+      isFeatured: data.isFeatured,
+    })
+    // editingBlock.id, order, userId, clickCount, isActive, createdAt untouched
+  }
+
+  // Unified submit — routes to create or edit based on current mode
+  async function handleSubmit(data: BlockFormData) {
+    if (editingBlock) {
+      await handleSaveEdit(data)
+    } else {
+      await handleAddBlock(data)
+    }
+  }
+
   const previewProfile = profile ? { ...profile } : null
 
   return (
@@ -69,7 +117,7 @@ export default function BlocksPage() {
           </div>
           <motion.button
             id="btn-add-block"
-            onClick={() => setModalOpen(true)}
+            onClick={openCreate}
             whileTap={{ scale: 0.96 }}
             className="btn-accent"
           >
@@ -109,7 +157,7 @@ export default function BlocksPage() {
             {/* Hint */}
             {blocks.length > 1 && (
               <p className="text-xs" style={{ color: '#555' }}>
-                ↕ Arrastrá para reordenar
+                ↕ Arrastrá para reordenar · ✏️ Lápiz para editar
               </p>
             )}
 
@@ -117,14 +165,14 @@ export default function BlocksPage() {
             {blocksLoading ? (
               <Skeleton />
             ) : (
-              <BlocksGrid blocks={blocks} />
+              <BlocksGrid blocks={blocks} onEdit={openEdit} />
             )}
 
             {/* Add CTA if empty */}
             {!blocksLoading && blocks.length === 0 && (
               <motion.button
                 id="btn-add-first-block-inline"
-                onClick={() => setModalOpen(true)}
+                onClick={openCreate}
                 whileTap={{ scale: 0.97 }}
                 className="btn-accent w-full mt-2"
               >
@@ -151,11 +199,12 @@ export default function BlocksPage() {
         </div>
       </div>
 
-      {/* Modal */}
-      <AddBlockModal
+      {/* Single BlockFormModal — handles both create and edit */}
+      <BlockFormModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onSubmit={handleAddBlock}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+        initialData={editingBlock ?? undefined}
       />
     </>
   )
