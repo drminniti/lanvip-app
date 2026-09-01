@@ -60,12 +60,18 @@ export async function addBlock(
   userId: string,
   { type, content, spanSize, isFeatured = false, currentCount }: AddBlockPayload,
 ): Promise<string> {
+  // Firestore rejects documents that contain explicit `undefined` values.
+  // Strip them before writing so optional fields (phone, email, etc.) are omitted.
+  const cleanContent = Object.fromEntries(
+    Object.entries(content).filter(([, v]) => v !== undefined && v !== ''),
+  ) as BlockContent
+
   const ref = await addDoc(collection(getFirebaseDb(), COL), {
     userId,
     type,
-    content,
-    layout: { spanSize },
-    order:      currentCount,        // append at the end
+    content:    cleanContent,
+    layout:     { spanSize },
+    order:      currentCount,
     clickCount: 0,
     isActive:   true,
     isFeatured,
@@ -100,7 +106,10 @@ export async function updateBlockContent(
   blockId: string,
   { content, isFeatured }: EditBlockPayload,
 ): Promise<void> {
-  await updateDoc(doc(getFirebaseDb(), COL, blockId), { content, isFeatured })
+  const cleanContent = Object.fromEntries(
+    Object.entries(content).filter(([, v]) => v !== undefined && v !== ''),
+  ) as BlockContent
+  await updateDoc(doc(getFirebaseDb(), COL, blockId), { content: cleanContent, isFeatured })
 }
 
 // ─── Delete ───────────────────────────────────────────────────────────────────
