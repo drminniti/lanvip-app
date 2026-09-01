@@ -83,6 +83,26 @@ export async function updateBlock(
   await updateDoc(doc(getFirebaseDb(), COL, blockId), data)
 }
 
+// ─── Update content (edit flow) ───────────────────────────────────────────────
+
+export interface EditBlockPayload {
+  content:    BlockContent
+  isFeatured: boolean
+}
+
+/**
+ * Updates only the user-editable fields of a block from the edit modal.
+ * Intentionally does NOT touch: id, order, userId, clickCount, isActive, createdAt.
+ *
+ * See 3_UX_UI.md §6 (BlockFormModal — edit mode) for UX context.
+ */
+export async function updateBlockContent(
+  blockId: string,
+  { content, isFeatured }: EditBlockPayload,
+): Promise<void> {
+  await updateDoc(doc(getFirebaseDb(), COL, blockId), { content, isFeatured })
+}
+
 // ─── Delete ───────────────────────────────────────────────────────────────────
 
 export async function deleteBlock(blockId: string): Promise<void> {
