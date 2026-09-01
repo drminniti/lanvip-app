@@ -154,6 +154,9 @@ service cloud.firestore {
 
 > **CRUD de bloques:** `addBlock()` crea, `updateBlockContent()` edita solo campos de usuario (`content` + `isFeatured`), `reorderBlocks()` persiste el orden, `deleteBlock()` elimina. `id`, `order`, `userId`, `clickCount` y `createdAt` nunca se tocan en el flujo de edición.
 
+> **Tipos de bloque y campos especiales:** Ver [`F01_Enlaces_Especiales.md`](./F01_Enlaces_Especiales.md) para el esquema completo por tipo (`link`, `social`, `vcard`, `calendly`) y la hoja de ruta de tipos futuros.
+> Campos vCard en `BlockContent`: `phone?`, `email?`, `company?`, `jobTitle?` — opcionales, `undefined` para otros tipos.
+
 ### 6. Guía de Despliegue en Vercel (Fase 5)
 
 > Esta guía documenta el proceso completo de deploy. El repositorio GitHub ya está conectado a Vercel para CI/CD automático (`main` → Producción).
