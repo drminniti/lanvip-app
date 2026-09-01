@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { getThemeById, matchThemeId } from '@/lib/themes'
 import { incrementClickCount } from '@/lib/analytics'
+import { downloadVCard } from '@/lib/vcard'
 import type { UserProfile, Block, SpanSize } from '@/types'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
@@ -33,21 +34,149 @@ function BentoTile({
   block,
   accent,
   index,
+  profileDisplayName,
 }: {
-  block: Block
-  accent: string
-  index: number
+  block:              Block
+  accent:             string
+  index:              number
+  profileDisplayName: string
 }) {
   const isSocial    = block.type === 'social'
+  const isVCard     = block.type === 'vcard'
+  const isCalendly  = block.type === 'calendly'
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
-  const tileColor   = isSocial ? (SOCIAL_COLORS[platformKey] ?? accent) : accent
 
-  // isFeatured drives the grid span; fallback to spanSize for legacy blocks
-  const isFeatured  = block.isFeatured ?? (block.layout.spanSize !== '1x1')
-  const colClass    = isFeatured
-    ? 'col-span-2'
-    : SPAN_CLASS[block.layout.spanSize] ?? 'col-span-1'
+  // Color per type
+  const tileColor = isVCard
+    ? '#22c55e'
+    : isCalendly
+      ? '#0069FF'
+      : isSocial
+        ? (SOCIAL_COLORS[platformKey] ?? accent)
+        : accent
 
+  const isFeatured = block.isFeatured ?? (block.layout.spanSize !== '1x1')
+  const colClass   = isFeatured ? 'col-span-2' : (SPAN_CLASS[block.layout.spanSize] ?? 'col-span-1')
+
+  // ── vCard tile — fires download, no navigation ────────────────────────────
+  if (isVCard) {
+    return (
+      <motion.button
+        type="button"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.96 }}
+        onClick={() => {
+          downloadVCard(block.content, profileDisplayName)
+          void incrementClickCount(block.id)
+        }}
+        className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4 w-full text-left`}
+        style={{ borderColor: `${tileColor}35`, cursor: 'pointer' }}
+        aria-label={`Descargar contacto: ${block.content.title}`}
+      >
+        {/* Glow */}
+        <motion.span
+          aria-hidden="true"
+          initial={{ opacity: isFeatured ? 0.55 : 0 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            position: 'absolute', top: '-20%', right: '-10%',
+            width: '65%', height: '140%',
+            background: `radial-gradient(circle, ${tileColor}30 0%, transparent 70%)`,
+            filter: 'blur(18px)', pointerEvents: 'none', zIndex: 0,
+          }}
+        />
+        {/* Icon */}
+        {block.content.icon && (
+          <span className="text-xl flex-shrink-0 leading-none" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
+            {block.content.icon}
+          </span>
+        )}
+        {/* Text */}
+        <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
+          <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+            {block.content.title}
+          </p>
+          {block.content.description && (
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(163,163,163,0.85)' }}>
+              {block.content.description}
+            </p>
+          )}
+        </div>
+        {/* Download badge */}
+        <span
+          className="flex-shrink-0 flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
+          style={{ background: `${tileColor}18`, color: tileColor, position: 'relative', zIndex: 1 }}
+          aria-hidden="true"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          VCF
+        </span>
+      </motion.button>
+    )
+  }
+
+  // ── Calendly tile — link with calendar badge ──────────────────────────────
+  if (isCalendly) {
+    return (
+      <motion.a
+        href={block.content.url || undefined}
+        target="_blank"
+        rel="noopener noreferrer"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.96 }}
+        onClick={() => void incrementClickCount(block.id)}
+        className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4`}
+        style={{ textDecoration: 'none', borderColor: `${tileColor}35`, cursor: 'pointer' }}
+        aria-label={block.content.title}
+      >
+        {/* Glow */}
+        <motion.span
+          aria-hidden="true"
+          initial={{ opacity: isFeatured ? 0.55 : 0 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            position: 'absolute', top: '-20%', right: '-10%',
+            width: '65%', height: '140%',
+            background: `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
+            filter: 'blur(18px)', pointerEvents: 'none', zIndex: 0,
+          }}
+        />
+        {/* Calendar icon */}
+        <span className="text-xl flex-shrink-0 leading-none" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>📅</span>
+        {/* Text */}
+        <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
+          <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+            {block.content.title}
+          </p>
+          {block.content.description && (
+            <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(163,163,163,0.85)' }}>
+              {block.content.description}
+            </p>
+          )}
+        </div>
+        {/* Agendar badge */}
+        <span
+          className="flex-shrink-0 flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg"
+          style={{ background: `${tileColor}18`, color: tileColor, position: 'relative', zIndex: 1 }}
+          aria-hidden="true"
+        >
+          Agendar
+        </span>
+      </motion.a>
+    )
+  }
+
+  // ── Default tile (link / social) ──────────────────────────────────────────
   return (
     <motion.a
       href={block.content.url || undefined}
@@ -55,17 +184,10 @@ function BentoTile({
       rel="noopener noreferrer"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        delay: index * 0.07,
-        type: 'spring',
-        stiffness: 260,
-        damping: 22,
-      }}
+      transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.96 }}
-      onClick={() => {
-        if (block.content.url) void incrementClickCount(block.id)
-      }}
+      onClick={() => { if (block.content.url) void incrementClickCount(block.id) }}
       className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4`}
       style={{
         textDecoration: 'none',
@@ -74,80 +196,48 @@ function BentoTile({
       }}
       aria-label={block.content.title}
     >
-      {/* VIP Glow — stronger on featured tiles, appears on hover for compact */}
+      {/* VIP Glow */}
       <motion.span
         aria-hidden="true"
         initial={{ opacity: isFeatured ? 0.55 : 0 }}
         whileHover={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
         style={{
-          position:      'absolute',
-          top:           '-20%',
-          right:         '-10%',
-          width:         '65%',
-          height:        '140%',
-          background:    `radial-gradient(circle, ${tileColor}${isFeatured ? '38' : '28'} 0%, transparent 70%)`,
-          filter:        'blur(18px)',
-          pointerEvents: 'none',
-          zIndex:        0,
+          position: 'absolute', top: '-20%', right: '-10%',
+          width: '65%', height: '140%',
+          background: `radial-gradient(circle, ${tileColor}${isFeatured ? '38' : '28'} 0%, transparent 70%)`,
+          filter: 'blur(18px)', pointerEvents: 'none', zIndex: 0,
         }}
       />
-
-      {/* Featured badge — gold star top-right */}
+      {/* Featured badge */}
       {isFeatured && (
-        <span
-          aria-hidden="true"
-          style={{
-            position:  'absolute',
-            top:       '0.5rem',
-            right:     '0.5rem',
-            fontSize:  '0.65rem',
-            opacity:   0.55,
-            zIndex:    1,
-            lineHeight: 1,
-          }}
-        >
+        <span aria-hidden="true" style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', fontSize: '0.65rem', opacity: 0.55, zIndex: 1, lineHeight: 1 }}>
           ⭐
         </span>
       )}
-
-
       {/* Icon */}
       {block.content.icon && (
-        <span
-          className="text-xl flex-shrink-0 leading-none"
-          aria-hidden="true"
-          style={{ position: 'relative', zIndex: 1 }}
-        >
+        <span className="text-xl flex-shrink-0 leading-none" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
           {block.content.icon}
         </span>
       )}
-
-      {/* Text group — title + optional description */}
+      {/* Text group */}
       <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
         <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
           {block.content.title}
         </p>
         {block.content.description && (
-          <p
-            className="text-xs mt-0.5 leading-snug"
-            style={{ color: 'rgba(163,163,163,0.85)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-          >
+          <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(163,163,163,0.85)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {block.content.description}
           </p>
         )}
       </div>
-
       {/* External link chevron */}
       {block.content.url && (
         <svg
           className="w-3.5 h-3.5 flex-shrink-0 ml-auto opacity-40"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-          style={{ color: tileColor, position: 'relative', zIndex: 1 }}
+          fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+          aria-hidden="true" style={{ color: tileColor, position: 'relative', zIndex: 1 }}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg>
@@ -260,7 +350,13 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         {blocks.length > 0 && (
           <div className="w-full grid grid-cols-2 gap-3 mt-2">
             {blocks.map((block, i) => (
-              <BentoTile key={block.id} block={block} accent={accent} index={i} />
+              <BentoTile
+                key={block.id}
+                block={block}
+                accent={accent}
+                index={i}
+                profileDisplayName={profile.displayName}
+              />
             ))}
           </div>
         )}

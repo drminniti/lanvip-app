@@ -64,11 +64,16 @@ export default function BlocksPage() {
       type:         data.type,
       content: {
         title:       data.title,
-        url:         data.url,
+        url:         data.url || undefined,
         icon:        data.icon,
         description: data.description || undefined,
+        // vCard fields (undefined for other types)
+        phone:       data.phone    || undefined,
+        email:       data.email    || undefined,
+        company:     data.company  || undefined,
+        jobTitle:    data.jobTitle || undefined,
       },
-      spanSize:     '1x1',   // width controlled by isFeatured; spanSize kept for legacy
+      spanSize:     '1x1',
       isFeatured:   data.isFeatured,
       currentCount: blocks.length,
     })
@@ -79,13 +84,16 @@ export default function BlocksPage() {
     await updateBlockContent(editingBlock.id, {
       content: {
         title:       data.title,
-        url:         data.url,
+        url:         data.url || undefined,
         icon:        data.icon,
         description: data.description || undefined,
+        phone:       data.phone    || undefined,
+        email:       data.email    || undefined,
+        company:     data.company  || undefined,
+        jobTitle:    data.jobTitle || undefined,
       },
       isFeatured: data.isFeatured,
     })
-    // editingBlock.id, order, userId, clickCount, isActive, createdAt untouched
   }
 
   // Unified submit — routes to create or edit based on current mode
