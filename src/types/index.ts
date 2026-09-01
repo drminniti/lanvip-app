@@ -59,6 +59,16 @@ export interface BlockContent {
   description?: string  // optional subtitle shown below the title
   thumbnailUrl?: string
   embedId?: string    // for YouTube / Spotify
+
+  // ── vCard-specific fields ───────────────────────────────────────────────
+  /** Full phone number, e.g. "+54 11 1234-5678" */
+  phone?:    string
+  /** Contact email, e.g. "damian@ejemplo.com" */
+  email?:    string
+  /** Company / organization name */
+  company?:  string
+  /** Job title or professional role */
+  jobTitle?: string
 }
 
 export interface Block {
