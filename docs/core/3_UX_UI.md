@@ -41,7 +41,15 @@
 
 **B. Panel de Administración:**
 - Navegación: Sidebar flotante en desktop, Bottom Tab Bar en móvil (glassmorphism).
-- Layout dividido (Desktop): Lista de bloques (izquierda) + Live Preview (derecha, sticky).
+
+**`/dashboard` — Home (Mi Landing):**
+- **LiveHeroCard:** Tarjeta principal con URL pública del usuario (`lanvip.app/[username]`), indicador "En vivo" (punto verde animado), botón "Copiar enlace" con feedback visual animado (Copiar → ✓ Copiado en verde), link "Ver mi landing" en nueva pestaña.
+- **Plan Actual:** Fila horizontal compacta con ícono, nombre del plan y badge "Activo".
+- **Quick Actions:** Grid 2 columnas — "Editar perfil" y "Gestionar bloques". Chevron visible en hover.
+- Las métricas (visitas, clics) viven **exclusivamente** en `/dashboard/analytics`.
+
+**`/dashboard/blocks` — Bloques Bento:**
+- Lista izquierda (BlocksGrid) + preview derecha (LandingPreview sticky en desktop).
 
 ### 5. Animaciones Core (Framer Motion)
 
