@@ -152,6 +152,8 @@ service cloud.firestore {
 > **Regla de grilla:** `isFeatured` es el campo canónico que controla el span horizontal del bloque.
 > `layout.spanSize` queda como legado para soporte de row-span futuro y migración de datos viejos.
 
+> **CRUD de bloques:** `addBlock()` crea, `updateBlockContent()` edita solo campos de usuario (`content` + `isFeatured`), `reorderBlocks()` persiste el orden, `deleteBlock()` elimina. `id`, `order`, `userId`, `clickCount` y `createdAt` nunca se tocan en el flujo de edición.
+
 ### 6. Guía de Despliegue en Vercel (Fase 5)
 
 > Esta guía documenta el proceso completo de deploy. El repositorio GitHub ya está conectado a Vercel para CI/CD automático (`main` → Producción).

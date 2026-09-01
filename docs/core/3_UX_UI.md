@@ -50,23 +50,41 @@
 - **Tap Feedback:** `whileTap={{ scale: 0.96 }}` en tiles públicos; `scale: 0.97` en botones de acción.
 - **VIP Glow on Hover:** `<motion.span>` con `radial-gradient`, `opacity: 0 → 1` en hover, `blur(18px)`.
 
-### 6. AddBlockModal — Campos y UX
+### 6. BlockFormModal — Campos y UX
+
+`BlockFormModal` es el modal multipropósito para la gestión de bloques. Opera en dos modos:
+
+**Modo Creación** (prop `initialData` ausente):
+- Step 1: Selector de tipo (`link` | `social`)
+- Step 2: Formulario de detalle con todos los campos
+- Botón submit: "Agregar bloque"
+- Se llama a `addBlock()` en Firestore
+
+**Modo Edición** (prop `initialData: Block` presente):
+- El Step 1 (selector de tipo) se omite — el `type` no puede cambiar
+- El botón de Back (`←`) no se muestra
+- Todos los campos se pre-cargan desde `initialData`
+- Título del header: "Editar enlace" o "Editar red social"
+- Botón submit: "Guardar cambios"
+- Se llama a `updateBlockContent()` en Firestore
+- `id`, `order`, `userId`, `clickCount`, `isActive` y `createdAt` permanecen intactos
+- La plataforma social (Instagram, LinkedIn, etc.) **sí** es editable en modo edición
 
 Al crear un bloque nuevo, el usuario puede configurar:
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `type` | selector (step 1) | `link` o `social` |
+| `type` | selector (step 1, solo creación) | `link` o `social` |
 | `title` | input text | Nombre del bloque (requerido) |
 | `url` | input url/text | URL o handle de red social (requerido) |
 | `icon` | EmojiPicker | Grid de 40 emojis en 5 grupos. Default: 🔗 |
 | `description` | textarea | Subtítulo opcional (120 char max) |
-| `isFeatured` | Toggle switch | `true` → ancho completo en la grilla |
-| `spanSize` | selector | Solo visible si `isFeatured=false` |
+| `isFeatured` | Selector visual | Mitad (col-span-1) o Completo ⭐ (col-span-2) |
+| `platform` | selector | Solo bloques `social` — editable en ambos modos |
 
-**EmojiPicker:** Panel animado con `AnimatePresence`, 5 grupos curados (Links & Web, Negocio, Creativo, Contacto, Varios). Se cierra al seleccionar.
+**EmojiPicker:** Panel animado con `AnimatePresence`, 5 grupos curados. Se cierra al seleccionar.
 
-**Toggle isFeatured:** Switch animado CSS, dorado cuando activo (`background: #D4AF37`, `box-shadow` con glow). Al activar, el selector de `spanSize` se oculta (redundante).
+**Selector de ancho:** Dos opciones visuales con diagrama de bloque. "Completo" activa `isFeatured=true`.
 
 ### 7. Bordes y Color System
 
