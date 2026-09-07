@@ -190,8 +190,9 @@ export function BlockCard({ block, onToggle, onDelete, onEdit }: BlockCardProps)
       >
         {glowEl}
 
-        {/* Drag handle — top-left */}
-        <div className="absolute top-1.5 left-1.5 z-10">
+        {/* Drag handle — z-30 keeps it above the action overlay (z-20) so
+            the user can always grab it regardless of hover state */}
+        <div className="absolute top-1.5 left-1.5 z-30">
           {dragHandle}
         </div>
 
