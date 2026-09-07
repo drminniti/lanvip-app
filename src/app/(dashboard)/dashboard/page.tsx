@@ -239,10 +239,15 @@ function QuickAction({
 
 // ─── Dashboard Home ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { user, loading }  = useAuth()
-  const { profile, loading: profileLoading } = useUserProfile(user?.uid)
+  const { user, loading: authLoading }           = useAuth()
+  const { profile, loading: profileLoading }     = useUserProfile(user?.uid)
 
-  if (loading || profileLoading) {
+  // Safety valve: if auth resolved but uid is missing (logged-out race),
+  // or if profile resolved (exists or confirmed null), stop the skeleton.
+  // This prevents infinite loading when onSnapshot fires before auth settles.
+  const isLoading = authLoading || (!!user?.uid && profileLoading)
+
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <SkeletonCard className="h-40" />
