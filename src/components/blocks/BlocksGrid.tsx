@@ -15,7 +15,7 @@ import {
 } from '@dnd-kit/core'
 import {
   SortableContext,
-  rectSortingStrategy,
+  verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable'
 import { updateBlock, deleteBlock, reorderBlocks } from '@/lib/blocks'
@@ -29,34 +29,44 @@ interface BlocksGridProps {
   onEdit?: (block: Block) => void
 }
 
+/**
+ * BlocksGrid — Editor drag-and-drop list.
+ *
+ * Architecture decision:
+ *   The editor uses a vertical list (verticalListSortingStrategy) instead of
+ *   a 2D Bento grid. rectSortingStrategy breaks with mixed-size items (col-span-1
+ *   + col-span-2) because the rect-collision algorithm can't reliably compute
+ *   drop positions for asymmetric grid layouts.
+ *
+ *   verticalListSortingStrategy is O(n) and bulletproof: each item has uniform
+ *   height, neighbours shift predictably, and the snap-back bug is impossible.
+ *
+ *   The Bento grid layout (featured vs compact tiles) is preserved in the PUBLIC
+ *   landing page (PublicLanding.tsx) — the visual presentation is unaffected.
+ *   The editor is about management, the public view is about presentation.
+ */
 export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
-  // During an active drag we work on a local snapshot so the UI stays snappy.
-  // Outside of a drag we always use liveBlocks directly (Firestore source of truth).
   const [dragSnapshot, setDragSnapshot] = useState<Block[] | null>(null)
 
   // What gets rendered: snapshot during drag, live data otherwise
   const displayBlocks = dragSnapshot ?? liveBlocks
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 150, tolerance: 6 } }),
   )
 
   function handleDragStart(_event: DragStartEvent) {
-    // Capture a snapshot of current live blocks at drag start
-    setDragSnapshot(liveBlocks)
+    setDragSnapshot([...liveBlocks])
   }
 
   /**
-   * onDragOver fires continuously as the pointer moves over other items.
-   * We update the snapshot in real-time so SortableContext sees the new
-   * order, which makes neighbouring blocks shift while holding an item.
-   * Without this handler, blocks only reorder on dragEnd (no live feedback).
+   * Update snapshot in real-time as the pointer moves over items.
+   * This makes neighbours immediately shift to show the landing position.
    */
   function handleDragOver(event: DragOverEvent) {
     const { active, over } = event
     if (!over || active.id === over.id || !dragSnapshot) return
-
     const oldIndex = dragSnapshot.findIndex(b => b.id === active.id)
     const newIndex = dragSnapshot.findIndex(b => b.id === over.id)
     if (oldIndex !== -1 && newIndex !== -1) {
@@ -68,15 +78,12 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
     const { active, over } = event
     const finalSnapshot = dragSnapshot
 
-    // ⚠️ Order matters: persist FIRST, then release the snapshot.
-    // Releasing before the write causes an instant revert to stale liveBlocks
-    // while Firestore is still writing — the user sees blocks snap back.
+    // ⚠️ Persist FIRST — only then clear snapshot.
+    // Clearing before the write reverts to stale liveBlocks while Firestore writes.
     if (over && active.id !== over.id && finalSnapshot) {
       await reorderBlocks(finalSnapshot)
     }
 
-    // Safe to release now: Firestore onSnapshot has already fired (or will
-    // fire momentarily) with the confirmed new order, so liveBlocks is ready.
     setDragSnapshot(null)
   }
 
@@ -116,15 +123,8 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      {/*
-        rectSortingStrategy handles 2D asymmetric grids (mixed col-span-1 and
-        col-span-2 items). No DragOverlay is used: the source item becomes
-        opacity:0 (a clean hole) while neighbours animate into position via
-        CSS transforms applied by useSortable. This avoids the sizing ambiguity
-        that DragOverlay has with mixed-width grid items.
-      */}
-      <SortableContext items={displayBlocks.map(b => b.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-2 gap-3">
+      <SortableContext items={displayBlocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
+        <div className="flex flex-col gap-2">
           {displayBlocks.map(block => (
             <BlockCard
               key={block.id}
