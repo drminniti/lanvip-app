@@ -339,9 +339,6 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           >
             {profile.displayName}
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: `${accent}99` }}>
-            @{profile.username}
-          </p>
         </motion.div>
 
         {/* Bio */}
