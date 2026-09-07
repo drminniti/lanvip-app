@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { logout } from '@/lib/auth'
 import { useAuth } from '@/context/AuthContext'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useDashboard } from '@/context/DashboardContext'
 
 // ─── Nav Items ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
@@ -87,7 +87,7 @@ export default function DashboardNav() {
   const pathname = usePathname()
   const router   = useRouter()
   const { user } = useAuth()
-  const { profile } = useUserProfile(user?.uid)
+  const { profile } = useDashboard()
   const username = profile?.username ?? null
 
   async function handleLogout() {
