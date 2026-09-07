@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   DndContext,
   closestCenter,
@@ -9,7 +9,6 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
-  DragOverlay,
   type DragEndEvent,
   type DragStartEvent,
   type DragOverEvent,
@@ -34,28 +33,25 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
   // During an active drag we work on a local snapshot so the UI stays snappy.
   // Outside of a drag we always use liveBlocks directly (Firestore source of truth).
   const [dragSnapshot, setDragSnapshot] = useState<Block[] | null>(null)
-  const [activeId, setActiveId]         = useState<string | null>(null)
 
   // What gets rendered: snapshot during drag, live data otherwise
   const displayBlocks = dragSnapshot ?? liveBlocks
-  const activeBlock   = activeId ? displayBlocks.find(b => b.id === activeId) : null
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 8 } }),
   )
 
-  function handleDragStart(event: DragStartEvent) {
+  function handleDragStart(_event: DragStartEvent) {
     // Capture a snapshot of current live blocks at drag start
     setDragSnapshot(liveBlocks)
-    setActiveId(String(event.active.id))
   }
 
   /**
    * onDragOver fires continuously as the pointer moves over other items.
    * We update the snapshot in real-time so SortableContext sees the new
-   * order and dnd-kit applies the correct shift transforms to neighbours.
-   * Without this handler, blocks don't move until dragEnd.
+   * order, which makes neighbouring blocks shift while holding an item.
+   * Without this handler, blocks only reorder on dragEnd (no live feedback).
    */
   function handleDragOver(event: DragOverEvent) {
     const { active, over } = event
@@ -70,19 +66,18 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
-
     const finalSnapshot = dragSnapshot
-    setActiveId(null)
+
+    // Release snapshot — Firestore onSnapshot will deliver the confirmed order
     setDragSnapshot(null)
 
-    // Persist the final order that was built up by onDragOver
+    // Persist the final order that was built progressively by onDragOver
     if (over && active.id !== over.id && finalSnapshot) {
       await reorderBlocks(finalSnapshot)
     }
   }
 
   function handleDragCancel() {
-    setActiveId(null)
     setDragSnapshot(null)
   }
 
@@ -118,37 +113,26 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      {/* rectSortingStrategy supports 2D asymmetric grids */}
+      {/*
+        rectSortingStrategy handles 2D asymmetric grids (mixed col-span-1 and
+        col-span-2 items). No DragOverlay is used: the source item becomes
+        opacity:0 (a clean hole) while neighbours animate into position via
+        CSS transforms applied by useSortable. This avoids the sizing ambiguity
+        that DragOverlay has with mixed-width grid items.
+      */}
       <SortableContext items={displayBlocks.map(b => b.id)} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-2 gap-3">
-          <AnimatePresence>
-            {displayBlocks.map(block => (
-              <BlockCard
-                key={block.id}
-                block={block}
-                onEdit={onEdit}
-                onToggle={handleToggle}
-                onDelete={handleDelete}
-              />
-            ))}
-          </AnimatePresence>
+          {displayBlocks.map(block => (
+            <BlockCard
+              key={block.id}
+              block={block}
+              onEdit={onEdit}
+              onToggle={handleToggle}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
       </SortableContext>
-
-      {/*
-        DragOverlay renders the dragged block as a floating layer outside
-        the grid flow, preventing layout-shift artifacts and giving a
-        crisp "lifted card" effect while dragging.
-      */}
-      <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
-        {activeBlock && (
-          <BlockCard
-            block={activeBlock}
-            onToggle={async () => {}}
-            onDelete={async () => {}}
-          />
-        )}
-      </DragOverlay>
     </DndContext>
   )
 }

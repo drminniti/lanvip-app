@@ -39,7 +39,10 @@ export function BlockCard({ block, onToggle, onDelete, onEdit }: BlockCardProps)
   const dndStyle = {
     transform:  CSS.Transform.toString(transform),
     transition,
-    opacity:    isDragging ? 0.35 : 1,
+    // opacity:0 hides the source slot cleanly. Without DragOverlay the item
+    // stays in the grid flow (preserving its column span) but becomes invisible,
+    // giving a clear visual 'hole' where the block will land.
+    opacity:    isDragging ? 0 : 1,
     gridColumn: block.isFeatured ? 'span 2' : 'span 1',
   }
 
