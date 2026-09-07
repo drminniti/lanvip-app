@@ -2,7 +2,6 @@ import { notFound }                   from 'next/navigation'
 import type { Metadata }              from 'next'
 import { getPublicProfileByUsername } from '@/lib/auth'
 import { getActiveBlocksByUserId }    from '@/lib/blocks'
-import { incrementViewCount }         from '@/lib/analytics'
 import { PublicLanding }             from '@/components/public/PublicLanding'
 import type { UserProfile, Block }   from '@/types'
 
@@ -82,9 +81,6 @@ export default async function UserPublicPage({
 
   const profile = await getPublicProfileByUsername(username)
   if (!profile) notFound()
-
-  // Fire-and-forget: increment views without blocking render
-  void incrementViewCount(profile.uid)
 
   const blocks = await getActiveBlocksByUserId(profile.uid)
 
