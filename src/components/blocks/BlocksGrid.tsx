@@ -9,7 +9,10 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  DragOverlay,
   type DragEndEvent,
+  type DragStartEvent,
+  type DragOverEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -31,37 +34,55 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
   // During an active drag we work on a local snapshot so the UI stays snappy.
   // Outside of a drag we always use liveBlocks directly (Firestore source of truth).
   const [dragSnapshot, setDragSnapshot] = useState<Block[] | null>(null)
-  const isDragging = dragSnapshot !== null
+  const [activeId, setActiveId]         = useState<string | null>(null)
 
   // What gets rendered: snapshot during drag, live data otherwise
-  const displayBlocks = isDragging ? dragSnapshot! : liveBlocks
+  const displayBlocks = dragSnapshot ?? liveBlocks
+  const activeBlock   = activeId ? displayBlocks.find(b => b.id === activeId) : null
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 8 } }),
   )
 
-  function handleDragStart() {
+  function handleDragStart(event: DragStartEvent) {
     // Capture a snapshot of current live blocks at drag start
     setDragSnapshot(liveBlocks)
+    setActiveId(String(event.active.id))
+  }
+
+  /**
+   * onDragOver fires continuously as the pointer moves over other items.
+   * We update the snapshot in real-time so SortableContext sees the new
+   * order and dnd-kit applies the correct shift transforms to neighbours.
+   * Without this handler, blocks don't move until dragEnd.
+   */
+  function handleDragOver(event: DragOverEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id || !dragSnapshot) return
+
+    const oldIndex = dragSnapshot.findIndex(b => b.id === active.id)
+    const newIndex = dragSnapshot.findIndex(b => b.id === over.id)
+    if (oldIndex !== -1 && newIndex !== -1) {
+      setDragSnapshot(arrayMove(dragSnapshot, oldIndex, newIndex))
+    }
   }
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
 
-    if (over && active.id !== over.id && dragSnapshot) {
-      const oldIndex  = dragSnapshot.findIndex(b => b.id === active.id)
-      const newIndex  = dragSnapshot.findIndex(b => b.id === over.id)
-      const reordered = arrayMove(dragSnapshot, oldIndex, newIndex)
-      setDragSnapshot(reordered) // keep showing reordered while Firestore writes
-      await reorderBlocks(reordered)
-    }
-
-    // Release snapshot — Firestore onSnapshot will deliver the confirmed order
+    const finalSnapshot = dragSnapshot
+    setActiveId(null)
     setDragSnapshot(null)
+
+    // Persist the final order that was built up by onDragOver
+    if (over && active.id !== over.id && finalSnapshot) {
+      await reorderBlocks(finalSnapshot)
+    }
   }
 
   function handleDragCancel() {
+    setActiveId(null)
     setDragSnapshot(null)
   }
 
@@ -93,6 +114,7 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
@@ -112,6 +134,21 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
           </AnimatePresence>
         </div>
       </SortableContext>
+
+      {/*
+        DragOverlay renders the dragged block as a floating layer outside
+        the grid flow, preventing layout-shift artifacts and giving a
+        crisp "lifted card" effect while dragging.
+      */}
+      <DragOverlay dropAnimation={{ duration: 180, easing: 'ease' }}>
+        {activeBlock && (
+          <BlockCard
+            block={activeBlock}
+            onToggle={async () => {}}
+            onDelete={async () => {}}
+          />
+        )}
+      </DragOverlay>
     </DndContext>
   )
 }

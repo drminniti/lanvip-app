@@ -176,7 +176,6 @@ export function BlockCard({ block, onToggle, onDelete, onEdit }: BlockCardProps)
           ...dndStyle,
           borderColor: isActive ? 'rgba(212,175,55,0.22)' : undefined,
         }}
-        layout
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8, scale: 0.97 }}
@@ -248,7 +247,7 @@ export function BlockCard({ block, onToggle, onDelete, onEdit }: BlockCardProps)
         ...dndStyle,
         borderColor: isActive ? 'rgba(212,175,55,0.22)' : undefined,
       }}
-      layout
+      layout={false}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8, scale: 0.97 }}
