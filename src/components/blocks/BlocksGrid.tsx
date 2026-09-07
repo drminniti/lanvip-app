@@ -1,94 +1,66 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   DndContext,
   closestCenter,
   PointerSensor,
   TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
-  type DragOverEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
   verticalListSortingStrategy,
   arrayMove,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
 import { updateBlock, deleteBlock, reorderBlocks } from '@/lib/blocks'
 import { BlockCard } from './BlockCard'
 import type { Block } from '@/types'
 
-
 interface BlocksGridProps {
   blocks:  Block[]
-  /** Callback to open the edit modal for a specific block. Admin-only. */
   onEdit?: (block: Block) => void
 }
 
-/**
- * BlocksGrid — Editor drag-and-drop list.
- *
- * Architecture decision:
- *   The editor uses a vertical list (verticalListSortingStrategy) instead of
- *   a 2D Bento grid. rectSortingStrategy breaks with mixed-size items (col-span-1
- *   + col-span-2) because the rect-collision algorithm can't reliably compute
- *   drop positions for asymmetric grid layouts.
- *
- *   verticalListSortingStrategy is O(n) and bulletproof: each item has uniform
- *   height, neighbours shift predictably, and the snap-back bug is impossible.
- *
- *   The Bento grid layout (featured vs compact tiles) is preserved in the PUBLIC
- *   landing page (PublicLanding.tsx) — the visual presentation is unaffected.
- *   The editor is about management, the public view is about presentation.
- */
 export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
-  const [dragSnapshot, setDragSnapshot] = useState<Block[] | null>(null)
+  // Local copy for optimistic updates — stays in sync with liveBlocks
+  // when not dragging, and holds the reordered state after a drag until
+  // Firestore confirms the new order via onSnapshot.
+  const [localBlocks, setLocalBlocks] = useState<Block[]>(liveBlocks)
 
-  // What gets rendered: snapshot during drag, live data otherwise
-  const displayBlocks = dragSnapshot ?? liveBlocks
+  // Keep localBlocks in sync when Firestore delivers updates
+  useEffect(() => {
+    setLocalBlocks(liveBlocks)
+  }, [liveBlocks])
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 150, tolerance: 6 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 100, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
-  function handleDragStart(_event: DragStartEvent) {
-    setDragSnapshot([...liveBlocks])
-  }
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return
 
-  /**
-   * Update snapshot in real-time as the pointer moves over items.
-   * This makes neighbours immediately shift to show the landing position.
-   */
-  function handleDragOver(event: DragOverEvent) {
-    const { active, over } = event
-    if (!over || active.id === over.id || !dragSnapshot) return
-    const oldIndex = dragSnapshot.findIndex(b => b.id === active.id)
-    const newIndex = dragSnapshot.findIndex(b => b.id === over.id)
-    if (oldIndex !== -1 && newIndex !== -1) {
-      setDragSnapshot(arrayMove(dragSnapshot, oldIndex, newIndex))
-    }
-  }
+    const oldIndex = localBlocks.findIndex(b => b.id === active.id)
+    const newIndex = localBlocks.findIndex(b => b.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
 
-  async function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    const finalSnapshot = dragSnapshot
+    const reordered = arrayMove(localBlocks, oldIndex, newIndex)
 
-    // ⚠️ Persist FIRST — only then clear snapshot.
-    // Clearing before the write reverts to stale liveBlocks while Firestore writes.
-    if (over && active.id !== over.id && finalSnapshot) {
-      await reorderBlocks(finalSnapshot)
-    }
+    // Optimistic update — show the new order immediately
+    setLocalBlocks(reordered)
 
-    setDragSnapshot(null)
-  }
-
-  function handleDragCancel() {
-    setDragSnapshot(null)
+    // Persist to Firestore (fire-and-forget; onSnapshot will confirm)
+    reorderBlocks(reordered).catch(() => {
+      // On error, revert to last known Firestore state
+      setLocalBlocks(liveBlocks)
+    })
   }
 
   async function handleToggle(block: Block) {
@@ -118,14 +90,14 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
     >
-      <SortableContext items={displayBlocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        items={localBlocks.map(b => b.id)}
+        strategy={verticalListSortingStrategy}
+      >
         <div className="flex flex-col gap-2">
-          {displayBlocks.map(block => (
+          {localBlocks.map(block => (
             <BlockCard
               key={block.id}
               block={block}
