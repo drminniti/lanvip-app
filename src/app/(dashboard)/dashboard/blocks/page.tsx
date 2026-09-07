@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useDashboard } from '@/context/DashboardContext'
 import { useUserBlocks } from '@/hooks/useUserBlocks'
 import { addBlock, updateBlockContent } from '@/lib/blocks'
 import { BlockFormModal, type BlockFormData } from '@/components/blocks/BlockFormModal'
@@ -29,7 +29,10 @@ function Skeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function BlocksPage() {
   const { user } = useAuth()
-  const { profile, loading: profileLoading } = useUserProfile(user?.uid)
+  // Consume DashboardContext — single source of truth for profile.
+  // Replaces the previous useUserProfile(user?.uid) call which opened a
+  // parallel Firestore subscription, risking desync with the rest of the dashboard.
+  const { profile, loading: profileLoading } = useDashboard()
   const { blocks, loading: blocksLoading }   = useUserBlocks(user?.uid)
 
   // ── Modal state ──────────────────────────────────────────────────────────────
@@ -118,7 +121,7 @@ export default function BlocksPage() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: '#F5F5F5' }}>Bloques Bento</h1>
+            <h1 className="text-2xl font-bold" style={{ color: '#F5F5F5' }}>Bloques</h1>
             <p className="text-sm mt-1" style={{ color: '#A3A3A3' }}>
               Gestioná y ordená los bloques de tu Micro-Landing.
             </p>

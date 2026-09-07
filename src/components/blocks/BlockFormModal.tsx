@@ -312,6 +312,17 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData])
 
+  // Lock background scroll while modal is open.
+  // Cleanup runs on close AND on unmount (e.g. navigating away with modal open).
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
   function reset() {
     if (!isEditMode) {
       setStep('type'); setTitle(''); setHandle(''); setUrl(''); setIcon('🔗')
