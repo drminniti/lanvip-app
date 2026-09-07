@@ -91,7 +91,10 @@ function socialUrl(platform: SocialPlatform, handle: string): string {
   const cleaned = handle.replace(/^@/, '').trim()
   switch (platform) {
     case 'instagram': return `https://instagram.com/${cleaned}`
-    case 'linkedin':  return `https://linkedin.com/in/${cleaned}`
+    case 'linkedin':
+      // Preserve company pages (e.g. 'company/acme') vs personal profiles
+      if (cleaned.startsWith('company/')) return `https://linkedin.com/${cleaned}`
+      return `https://linkedin.com/in/${cleaned}`
     case 'x':         return `https://x.com/${cleaned}`
     case 'whatsapp':  return `https://wa.me/${cleaned.replace(/\D/g, '')}`
   }
@@ -102,8 +105,23 @@ function platformFromIcon(icon: string): SocialPlatform {
   return match?.id ?? 'instagram'
 }
 
+/**
+ * Extracts the user-editable handle from a stored social URL.
+ * LinkedIn: strips the leading 'in/' prefix so editing doesn't double it.
+ *   Personal: linkedin.com/in/johndoe  → 'johndoe'
+ *   Company:  linkedin.com/company/acme → 'company/acme' (preserved as-is)
+ * WhatsApp: returns the phone number digits from wa.me/{number}
+ */
 function handleFromUrl(platform: SocialPlatform, url: string): string {
-  try { return new URL(url).pathname.replace(/^\//, '') } catch { return url }
+  try {
+    const path = new URL(url).pathname.replace(/^\//, '')
+    if (platform === 'linkedin') {
+      if (path.startsWith('in/'))      return path.slice(3)   // 'in/johndoe' → 'johndoe'
+      if (path.startsWith('company/')) return path            // keep 'company/acme'
+      return path
+    }
+    return path
+  } catch { return url }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -508,20 +526,51 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                         </div>
 
                         <div className="space-y-1">
-                          <label className="label-dark">Usuario / Handle *</label>
-                          <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#555' }}>@</span>
-                            <input
-                              id="block-url"
-                              type="text"
-                              value={handle}
-                              onChange={e => setHandle(e.target.value)}
-                              placeholder="tunombre"
-                              className="input-dark"
-                              style={{ paddingLeft: '2rem' }}
-                              required
-                            />
-                          </div>
+                          {platform === 'whatsapp' ? (
+                            /* WhatsApp uses a phone number, not a social handle */
+                            <>
+                              <label className="label-dark">Número de teléfono *</label>
+                              <input
+                                id="block-url"
+                                type="tel"
+                                value={handle}
+                                onChange={e => setHandle(e.target.value)}
+                                placeholder="+54 9 11 1234-5678"
+                                className="input-dark"
+                                required
+                              />
+                              <p className="text-xs" style={{ color: '#555' }}>
+                                Formato internacional con código de país. Los espacios y guiones se ignoran automáticamente.
+                              </p>
+                            </>
+                          ) : (
+                            /* Instagram, LinkedIn, X — handle with @ prefix */
+                            <>
+                              <label className="label-dark">
+                                {platform === 'linkedin'
+                                  ? 'Perfil / Empresa *'
+                                  : 'Usuario / Handle *'}
+                              </label>
+                              <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#555' }}>@</span>
+                                <input
+                                  id="block-url"
+                                  type="text"
+                                  value={handle}
+                                  onChange={e => setHandle(e.target.value)}
+                                  placeholder={platform === 'linkedin' ? 'mi-perfil o company/mi-empresa' : 'tunombre'}
+                                  className="input-dark"
+                                  style={{ paddingLeft: '2rem' }}
+                                  required
+                                />
+                              </div>
+                              {platform === 'linkedin' && (
+                                <p className="text-xs" style={{ color: '#555' }}>
+                                  Perfil personal: <span style={{ color: '#888' }}>mi-nombre</span> — Empresa: <span style={{ color: '#888' }}>company/mi-empresa</span>
+                                </p>
+                              )}
+                            </>
+                          )}
                         </div>
                       </>
                     )}
