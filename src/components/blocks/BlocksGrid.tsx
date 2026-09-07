@@ -1,68 +1,66 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import {
   DndContext,
   closestCenter,
   PointerSensor,
   TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
-  rectSortingStrategy,
+  verticalListSortingStrategy,
   arrayMove,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
 import { updateBlock, deleteBlock, reorderBlocks } from '@/lib/blocks'
 import { BlockCard } from './BlockCard'
 import type { Block } from '@/types'
 
-
 interface BlocksGridProps {
   blocks:  Block[]
-  /** Callback to open the edit modal for a specific block. Admin-only. */
   onEdit?: (block: Block) => void
 }
 
 export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
-  // During an active drag we work on a local snapshot so the UI stays snappy.
-  // Outside of a drag we always use liveBlocks directly (Firestore source of truth).
-  const [dragSnapshot, setDragSnapshot] = useState<Block[] | null>(null)
-  const isDragging = dragSnapshot !== null
+  // Local copy for optimistic updates — stays in sync with liveBlocks
+  // when not dragging, and holds the reordered state after a drag until
+  // Firestore confirms the new order via onSnapshot.
+  const [localBlocks, setLocalBlocks] = useState<Block[]>(liveBlocks)
 
-  // What gets rendered: snapshot during drag, live data otherwise
-  const displayBlocks = isDragging ? dragSnapshot! : liveBlocks
+  // Keep localBlocks in sync when Firestore delivers updates
+  useEffect(() => {
+    setLocalBlocks(liveBlocks)
+  }, [liveBlocks])
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor,   { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 100, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
-  function handleDragStart() {
-    // Capture a snapshot of current live blocks at drag start
-    setDragSnapshot(liveBlocks)
-  }
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    if (!over || active.id === over.id) return
 
-  async function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
+    const oldIndex = localBlocks.findIndex(b => b.id === active.id)
+    const newIndex = localBlocks.findIndex(b => b.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
 
-    if (over && active.id !== over.id && dragSnapshot) {
-      const oldIndex  = dragSnapshot.findIndex(b => b.id === active.id)
-      const newIndex  = dragSnapshot.findIndex(b => b.id === over.id)
-      const reordered = arrayMove(dragSnapshot, oldIndex, newIndex)
-      setDragSnapshot(reordered) // keep showing reordered while Firestore writes
-      await reorderBlocks(reordered)
-    }
+    const reordered = arrayMove(localBlocks, oldIndex, newIndex)
 
-    // Release snapshot — Firestore onSnapshot will deliver the confirmed order
-    setDragSnapshot(null)
-  }
+    // Optimistic update — show the new order immediately
+    setLocalBlocks(reordered)
 
-  function handleDragCancel() {
-    setDragSnapshot(null)
+    // Persist to Firestore (fire-and-forget; onSnapshot will confirm)
+    reorderBlocks(reordered).catch(() => {
+      // On error, revert to last known Firestore state
+      setLocalBlocks(liveBlocks)
+    })
   }
 
   async function handleToggle(block: Block) {
@@ -92,24 +90,22 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onDragCancel={handleDragCancel}
     >
-      {/* rectSortingStrategy supports 2D asymmetric grids */}
-      <SortableContext items={displayBlocks.map(b => b.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-2 gap-3">
-          <AnimatePresence>
-            {displayBlocks.map(block => (
-              <BlockCard
-                key={block.id}
-                block={block}
-                onEdit={onEdit}
-                onToggle={handleToggle}
-                onDelete={handleDelete}
-              />
-            ))}
-          </AnimatePresence>
+      <SortableContext
+        items={localBlocks.map(b => b.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="flex flex-col gap-2">
+          {localBlocks.map(block => (
+            <BlockCard
+              key={block.id}
+              block={block}
+              onEdit={onEdit}
+              onToggle={handleToggle}
+              onDelete={handleDelete}
+            />
+          ))}
         </div>
       </SortableContext>
     </DndContext>
