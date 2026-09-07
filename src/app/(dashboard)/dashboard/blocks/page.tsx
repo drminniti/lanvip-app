@@ -118,7 +118,7 @@ export default function BlocksPage() {
           className="flex items-center justify-between"
         >
           <div>
-            <h1 className="text-2xl font-bold" style={{ color: '#F5F5F5' }}>Bloques Bento</h1>
+            <h1 className="text-2xl font-bold" style={{ color: '#F5F5F5' }}>Bloques</h1>
             <p className="text-sm mt-1" style={{ color: '#A3A3A3' }}>
               Gestioná y ordená los bloques de tu Micro-Landing.
             </p>
