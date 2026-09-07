@@ -41,7 +41,7 @@ function StatCard({
         className="text-3xl font-bold tracking-tight mt-1"
         style={{ color: '#F5F5F5' }}
       >
-        {value.toLocaleString('es-AR')}
+        {typeof value === 'number' ? value.toLocaleString('es-AR') : value}
       </p>
       <p className="text-sm" style={{ color: '#A3A3A3' }}>{label}</p>
     </motion.div>
@@ -116,6 +116,9 @@ export default function AnalyticsPage() {
   const totalViews  = profile?.views ?? 0
   const totalClicks = blocks.reduce((sum, b) => sum + (b.clickCount ?? 0), 0)
   const activeCount = blocks.filter(b => b.isActive).length
+  const ctr         = totalViews > 0
+    ? `${((totalClicks / totalViews) * 100).toFixed(1)} %`
+    : '—'
 
   // Blocks sorted by clickCount desc (only active ones)
   const topBlocks = [...blocks]
@@ -152,7 +155,7 @@ export default function AnalyticsPage() {
       </motion.div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Visitas totales"
           value={totalViews}
@@ -173,6 +176,13 @@ export default function AnalyticsPage() {
           icon="⚡"
           accent={accent}
           delay={0.19}
+        />
+        <StatCard
+          label="CTR (clics / visitas)"
+          value={ctr}
+          icon="📈"
+          accent={accent}
+          delay={0.26}
         />
       </div>
 

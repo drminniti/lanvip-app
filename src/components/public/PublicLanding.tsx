@@ -1,8 +1,9 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { getThemeById, matchThemeId } from '@/lib/themes'
-import { incrementClickCount } from '@/lib/analytics'
+import { trackPageView, incrementClickCount } from '@/lib/analytics'
 import { downloadVCard } from '@/lib/vcard'
 import type { UserProfile, Block, SpanSize } from '@/types'
 
@@ -267,6 +268,16 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)
   const theme   = getThemeById(themeId)
   const accent  = theme?.accent ?? '#D4AF37'
+
+  // ── Track page view (client-side, sessionStorage-deduplicated) ─────────────
+  // useRef prevents a double-fire in React StrictMode dev (which intentionally
+  // mounts → unmounts → remounts each component to expose side-effect bugs).
+  const tracked = useRef(false)
+  useEffect(() => {
+    if (tracked.current) return
+    tracked.current = true
+    void trackPageView(profile.uid)
+  }, [profile.uid])
 
   const bg = profile.themeSettings.bgType === 'solid'
     ? profile.themeSettings.colors[0]

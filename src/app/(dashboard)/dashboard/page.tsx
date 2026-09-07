@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import { useUserProfile } from '@/hooks/useUserProfile'
+import { useDashboard } from '@/context/DashboardContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -239,10 +239,12 @@ function QuickAction({
 
 // ─── Dashboard Home ───────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const { user, loading }  = useAuth()
-  const { profile, loading: profileLoading } = useUserProfile(user?.uid)
+  // Reads from the single DashboardContext subscription owned by the layout.
+  // No new onSnapshot is created — this resolves instantly from cached state.
+  const { user }                         = useAuth()
+  const { profile, loading }             = useDashboard()
 
-  if (loading || profileLoading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         <SkeletonCard className="h-40" />

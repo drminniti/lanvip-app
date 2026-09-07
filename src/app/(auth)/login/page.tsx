@@ -27,7 +27,11 @@ export default function LoginPage() {
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
 
-  // Redirect already-authenticated users (handles session restore on page load)
+  // Redirect already-authenticated users and post-login users.
+  // We rely on this single useEffect for ALL navigation to /dashboard.
+  // This guarantees DashboardLayout mounts AFTER AuthContext has the real
+  // user — preventing the race condition where router.push fires before
+  // the AuthContext re-render propagates.
   useEffect(() => {
     if (!authLoading && user) {
       document.cookie = '__session=1; path=/; SameSite=Lax'
@@ -40,28 +44,29 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
+      // Do NOT call router.push here. Navigation is handled by the useEffect
+      // above which fires when AuthContext updates with the new user.
+      // This prevents a race where the dashboard mounts before auth settles.
       await loginWithEmail(email, password)
-      document.cookie = '__session=1; path=/; SameSite=Lax'
-      router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithEmail UI catch:', err)
       setError(getFirebaseErrorMessage(err))
-    } finally {
       setLoading(false)
     }
+    // Note: setLoading(false) is intentionally NOT called on success —
+    // the page will navigate away before it matters, and the spinner
+    // gives visual feedback during the auth→redirect transition.
   }
 
   async function handleGoogleLogin() {
     setError('')
     setLoading(true)
     try {
+      // Same pattern: let useEffect handle navigation after auth settles.
       await loginWithGoogle()
-      document.cookie = '__session=1; path=/; SameSite=Lax'
-      router.push('/dashboard')
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithGoogle UI catch:', err)
       setError(getFirebaseErrorMessage(err))
-    } finally {
       setLoading(false)
     }
   }
