@@ -68,13 +68,16 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
     const { active, over } = event
     const finalSnapshot = dragSnapshot
 
-    // Release snapshot — Firestore onSnapshot will deliver the confirmed order
-    setDragSnapshot(null)
-
-    // Persist the final order that was built progressively by onDragOver
+    // ⚠️ Order matters: persist FIRST, then release the snapshot.
+    // Releasing before the write causes an instant revert to stale liveBlocks
+    // while Firestore is still writing — the user sees blocks snap back.
     if (over && active.id !== over.id && finalSnapshot) {
       await reorderBlocks(finalSnapshot)
     }
+
+    // Safe to release now: Firestore onSnapshot has already fired (or will
+    // fire momentarily) with the confirmed new order, so liveBlocks is ready.
+    setDragSnapshot(null)
   }
 
   function handleDragCancel() {
