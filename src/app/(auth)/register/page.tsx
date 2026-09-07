@@ -29,6 +29,9 @@ export default function RegisterPage() {
   const [error, setError]             = useState('')
   const [loading, setLoading]         = useState(false)
 
+  // All navigation to /dashboard is handled here — AFTER AuthContext settles.
+  // Never call router.push in the handlers below; that creates a race where
+  // DashboardLayout mounts before AuthContext has propagated the new user.
   useEffect(() => {
     if (!authLoading && user) {
       document.cookie = '__session=1; path=/; SameSite=Lax'
@@ -50,12 +53,10 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       await registerWithEmail(email, password, username, displayName)
-      document.cookie = '__session=1; path=/; SameSite=Lax'
-      router.push('/dashboard')
+      // Navigation handled by useEffect above when AuthContext updates.
     } catch (err: unknown) {
       console.error('[Lanvip] registerWithEmail UI catch:', err)
       setError(getFirebaseErrorMessage(err))
-    } finally {
       setLoading(false)
     }
   }
@@ -65,12 +66,10 @@ export default function RegisterPage() {
     setLoading(true)
     try {
       await loginWithGoogle()
-      document.cookie = '__session=1; path=/; SameSite=Lax'
-      router.push('/dashboard')
+      // Navigation handled by useEffect above when AuthContext updates.
     } catch (err: unknown) {
       console.error('[Lanvip] loginWithGoogle UI catch (register):', err)
       setError(getFirebaseErrorMessage(err))
-    } finally {
       setLoading(false)
     }
   }
