@@ -56,8 +56,12 @@ function BentoTile({
         ? (SOCIAL_COLORS[platformKey] ?? accent)
         : accent
 
-  const isFeatured = block.isFeatured ?? (block.layout.spanSize !== '1x1')
-  const colClass   = isFeatured ? 'col-span-2' : (SPAN_CLASS[block.layout.spanSize] ?? 'col-span-1')
+  // Sprint 2: col-span driven by block.width; fallback for legacy Firestore docs that
+  // don't have this field yet (block.isFeatured ? 'full' : 'half').
+  const blockWidth = block.width ?? (block.isFeatured ? 'full' : 'half')
+  const colClass   = blockWidth === 'full' ? 'col-span-2' : 'col-span-1'
+  // isFeatured now controls ONLY the gold glow/border, not column span.
+  const isFeatured = block.isFeatured ?? false
 
   // ── vCard tile — fires download, no navigation ────────────────────────────
   if (isVCard) {
@@ -357,15 +361,57 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         {/* Bento grid */}
         {blocks.length > 0 && (
           <div className="w-full grid grid-cols-2 gap-3 mt-2">
-            {blocks.map((block, i) => (
-              <BentoTile
-                key={block.id}
-                block={block}
-                accent={accent}
-                index={i}
-                profileDisplayName={profile.displayName}
-              />
-            ))}
+            {blocks.map((block, i) => {
+              // ── Structural blocks ────────────────────────────────────────────
+              // Non-interactive, always col-span-2, no hover/click/cursor.
+              if (block.type === 'divider') {
+                return (
+                  <div key={block.id} className="col-span-2 flex items-center gap-3 py-1" aria-hidden="true">
+                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                    {block.content.title && (
+                      <span
+                        className="text-xs uppercase tracking-widest flex-shrink-0"
+                        style={{ color: 'rgba(255,255,255,0.18)', fontSize: '0.6rem' }}
+                      >
+                        {block.content.title}
+                      </span>
+                    )}
+                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                  </div>
+                )
+              }
+
+              if (block.type === 'section_title') {
+                return (
+                  <motion.div
+                    key={block.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="col-span-2 px-1 pt-3 pb-0.5"
+                    aria-label={block.content.title}
+                  >
+                    <p
+                      className="text-xs font-semibold uppercase tracking-widest"
+                      style={{ color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em' }}
+                    >
+                      {block.content.title}
+                    </p>
+                  </motion.div>
+                )
+              }
+
+              // ── Interactive tiles ─────────────────────────────────────────────
+              return (
+                <BentoTile
+                  key={block.id}
+                  block={block}
+                  accent={accent}
+                  index={i}
+                  profileDisplayName={profile.displayName}
+                />
+              )
+            })}
           </div>
         )}
 
