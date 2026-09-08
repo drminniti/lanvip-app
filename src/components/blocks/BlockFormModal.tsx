@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { BlockType, Block } from '@/types'
+import type { BlockType, BlockWidth, Block } from '@/types'
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,6 +13,9 @@ export interface BlockFormData {
   url:         string
   icon:        string
   description: string
+  /** Column span in the public Bento grid. Default: 'half'. */
+  width:       BlockWidth
+  /** Gold glassmorphism glow. Decoupled from width as of Sprint 2. */
   isFeatured:  boolean
   // social-only
   platform?: SocialPlatform
@@ -376,6 +380,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         url:         resolvedUrl,
         icon:        resolvedIcon,
         description: description.trim(),
+        width:       isFeatured ? 'full' : 'half', // will be replaced by dedicated WidthSelector in next commit
         isFeatured,
         platform:    blockType === 'social' ? platform : undefined,
         phone:       blockType === 'vcard' ? phone.trim()    : undefined,
