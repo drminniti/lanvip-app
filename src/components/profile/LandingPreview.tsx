@@ -74,8 +74,10 @@ export function LandingPreview({ profile, blocks = [] }: LandingPreviewProps) {
           Inner scaler:
           - Fixed at VIRTUAL_WIDTH × VIRTUAL_HEIGHT
           - Scaled down so it fits exactly within the outer container
-          - transform-origin: top center keeps it centered horizontally
-          - pointer-events: none so the preview is not accidentally interactive
+          - transform-origin: top left keeps it aligned correctly
+          - overflow-y: auto allows scrolling within the virtual phone frame
+          - pointer-events: auto so the user can scroll the preview
+          - userSelect: none to avoid accidental text selection while scrolling
         */}
         <div className="absolute inset-0 overflow-hidden">
           <div
@@ -84,8 +86,11 @@ export function LandingPreview({ profile, blocks = [] }: LandingPreviewProps) {
               height:          `${VIRTUAL_HEIGHT}px`,
               transformOrigin: 'top left',
               transform:       `scale(${scale})`,
-              pointerEvents:   'none',
+              overflowY:       'auto',
+              overflowX:       'hidden',
               userSelect:      'none',
+              // Custom scrollbar — subtle, matches dark theme
+              scrollbarWidth:  'thin',
             }}
           >
             <PublicLanding profile={profile} blocks={activeBlocks} />
