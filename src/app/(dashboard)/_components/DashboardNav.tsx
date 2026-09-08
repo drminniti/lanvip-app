@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { logout } from '@/lib/auth'
 import { useAuth } from '@/context/AuthContext'
 import { useDashboard } from '@/context/DashboardContext'
+import { LanvipLogo } from '@/components/ui/LanvipLogo'
 
 // ─── Nav Items ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
@@ -108,7 +109,10 @@ export default function DashboardNav() {
       >
         {/* Logo */}
         <div className="px-3 py-3 mb-2">
-          <span className="text-xl font-bold gradient-text tracking-tight">Lanvip</span>
+          <div className="flex items-center gap-2">
+            <LanvipLogo size={30} />
+            <span className="text-xl font-bold gradient-text tracking-tight">Lanvip</span>
+          </div>
         </div>
 
         {/* Nav items */}

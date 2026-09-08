@@ -49,6 +49,18 @@ export type BlockType =
   | 'image'
   | 'text'
   | 'music'
+  // ── Structural blocks (no click action, always full-width) ───────────────
+  | 'divider'       // subtle visual separator (line / space)
+  | 'section_title' // plain text heading to group links
+
+/**
+ * Controls the column span of a block in the public Bento grid.
+ * Independent from `isFeatured` — a block can be full-width without the
+ * gold glassmorphism treatment, or half-width but still "featured".
+ * New field: old Firestore docs without it fall back to the legacy behaviour
+ * via: block.width ?? (block.isFeatured ? 'full' : 'half')
+ */
+export type BlockWidth = 'half' | 'full'
 
 export type SpanSize = '1x1' | '2x1' | '1x2' | '2x2'
 
@@ -83,9 +95,17 @@ export interface Block {
   clickCount: number
   isActive: boolean
   /**
-   * When true the block occupies the full grid width (col-span-2).
-   * Replaces the previous spanSize-based col-span logic.
-   * Default: false (compact 1-column square).
+   * Grid width in the public Bento layout.
+   * 'full' = col-span-2 (full width), 'half' = col-span-1.
+   * Independent from isFeatured — decoupled as of Sprint 2.
+   * Optional for backwards compat: old docs fall back to
+   *   block.isFeatured ? 'full' : 'half'
+   */
+  width?: BlockWidth
+  /**
+   * When true, applies the gold glassmorphism glow + border treatment.
+   * Does NOT control column width any more (use `width` for that).
+   * Default: false.
    */
   isFeatured: boolean
   createdAt?: Timestamp

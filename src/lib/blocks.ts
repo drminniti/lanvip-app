@@ -19,7 +19,8 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore'
 import { getFirebaseDb } from './firebase'
-import type { Block, BlockType, BlockContent, SpanSize } from '@/types'
+import type { Block, BlockType, BlockContent, BlockWidth, SpanSize } from '@/types'
+
 
 const COL = 'blocks'
 
@@ -50,7 +51,9 @@ export interface AddBlockPayload {
   type: BlockType
   content: BlockContent
   spanSize: SpanSize
-  /** Whether this block spans the full grid width. Default: false. */
+  /** Column width in the public Bento grid. Default: 'half'. */
+  width?: BlockWidth
+  /** Gold glassmorphism glow + border. Default: false. */
   isFeatured?: boolean
   /** Current number of blocks — used to set initial `order` at the end. */
   currentCount: number
@@ -58,7 +61,7 @@ export interface AddBlockPayload {
 
 export async function addBlock(
   userId: string,
-  { type, content, spanSize, isFeatured = false, currentCount }: AddBlockPayload,
+  { type, content, spanSize, width = 'half', isFeatured = false, currentCount }: AddBlockPayload,
 ): Promise<string> {
   // Firestore rejects documents that contain explicit `undefined` values.
   // Strip them before writing so optional fields (phone, email, etc.) are omitted.
@@ -71,6 +74,7 @@ export async function addBlock(
     type,
     content:    cleanContent,
     layout:     { spanSize },
+    width,
     order:      currentCount,
     clickCount: 0,
     isActive:   true,
@@ -93,6 +97,7 @@ export async function updateBlock(
 
 export interface EditBlockPayload {
   content:    BlockContent
+  width:      BlockWidth
   isFeatured: boolean
 }
 
@@ -104,12 +109,12 @@ export interface EditBlockPayload {
  */
 export async function updateBlockContent(
   blockId: string,
-  { content, isFeatured }: EditBlockPayload,
+  { content, width, isFeatured }: EditBlockPayload,
 ): Promise<void> {
   const cleanContent = Object.fromEntries(
     Object.entries(content).filter(([, v]) => v !== undefined && v !== ''),
   ) as BlockContent
-  await updateDoc(doc(getFirebaseDb(), COL, blockId), { content: cleanContent, isFeatured })
+  await updateDoc(doc(getFirebaseDb(), COL, blockId), { content: cleanContent, width, isFeatured })
 }
 
 // ─── Delete ───────────────────────────────────────────────────────────────────

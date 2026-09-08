@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { BlockType, Block } from '@/types'
+import type { BlockType, BlockWidth, Block } from '@/types'
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,6 +13,9 @@ export interface BlockFormData {
   url:         string
   icon:        string
   description: string
+  /** Column span in the public Bento grid. Default: 'half'. */
+  width:       BlockWidth
+  /** Gold glassmorphism glow. Decoupled from width as of Sprint 2. */
   isFeatured:  boolean
   // social-only
   platform?: SocialPlatform
@@ -33,9 +37,9 @@ const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon
   { id: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', icon: '💬' },
 ]
 
-/** The 4 block types the user can choose in step 1 */
+/** The block types the user can choose in step 1 */
 const BLOCK_TYPES: {
-  id:       'link' | 'social' | 'vcard' | 'calendly'
+  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title'
   emoji:    string
   label:    string
   subtitle: string
@@ -73,6 +77,22 @@ const BLOCK_TYPES: {
     subtitle: 'Agendar reuniones',
     bg:       'rgba(0,105,255,0.08)',
     border:   'rgba(0,105,255,0.20)',
+  },
+  {
+    id:       'divider',
+    emoji:    '―',
+    label:    'Divisor',
+    subtitle: 'Separador visual',
+    bg:       'rgba(255,255,255,0.04)',
+    border:   'rgba(255,255,255,0.10)',
+  },
+  {
+    id:       'section_title',
+    emoji:    '§',
+    label:    'Sección',
+    subtitle: 'Encabezado de grupo',
+    bg:       'rgba(168,85,247,0.08)',
+    border:   'rgba(168,85,247,0.20)',
   },
 ]
 
@@ -195,7 +215,10 @@ function EmojiPicker({ value, onChange }: { value: string; onChange: (e: string)
   )
 }
 
-function WidthSelector({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+// WidthSelector — now driven by BlockWidth ('half' | 'full'), NOT isFeatured
+function WidthSelector({ value, onChange }: { value: BlockWidth; onChange: (v: BlockWidth) => void }) {
+  const isHalf = value === 'half'
+  const isFull = value === 'full'
   return (
     <div className="space-y-2">
       <label className="label-dark">Ancho en la grilla</label>
@@ -203,40 +226,69 @@ function WidthSelector({ value, onChange }: { value: boolean; onChange: (v: bool
         <button
           id="btn-width-half"
           type="button"
-          onClick={() => onChange(false)}
+          onClick={() => onChange('half')}
           className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
           style={{
-            background: !value ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
-            border:     !value ? '1.5px solid rgba(255,255,255,0.20)' : '1.5px solid transparent',
+            background: isHalf ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+            border:     isHalf ? '1.5px solid rgba(255,255,255,0.20)' : '1.5px solid transparent',
           }}
         >
           <div className="w-full flex gap-1">
-            <div className="h-5 rounded flex-1" style={{ background: !value ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)' }} />
+            <div className="h-5 rounded flex-1" style={{ background: isHalf ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)' }} />
             <div className="h-5 rounded flex-1" style={{ background: 'rgba(255,255,255,0.05)' }} />
           </div>
-          <span className="text-xs font-medium" style={{ color: !value ? '#F5F5F5' : '#666' }}>Mitad</span>
+          <span className="text-xs font-medium" style={{ color: isHalf ? '#F5F5F5' : '#666' }}>Mitad</span>
         </button>
         <button
           id="btn-width-full"
           type="button"
-          onClick={() => onChange(true)}
+          onClick={() => onChange('full')}
           className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
           style={{
-            background: value ? 'rgba(212,175,55,0.12)' : 'rgba(255,255,255,0.03)',
-            border:     value ? '1.5px solid rgba(212,175,55,0.40)' : '1.5px solid transparent',
+            background: isFull ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+            border:     isFull ? '1.5px solid rgba(255,255,255,0.20)' : '1.5px solid transparent',
           }}
         >
           <div className="w-full">
-            <div className="h-5 rounded w-full" style={{ background: value ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.08)' }} />
+            <div className="h-5 rounded w-full" style={{ background: isFull ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)' }} />
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-xs font-medium" style={{ color: value ? '#D4AF37' : '#666' }}>Completo</span>
-            <span className="text-xs" style={{ color: value ? '#D4AF37' : '#555' }}>⭐</span>
-          </div>
+          <span className="text-xs font-medium" style={{ color: isFull ? '#F5F5F5' : '#666' }}>Completo</span>
         </button>
       </div>
-      {value && <p className="text-xs" style={{ color: '#666' }}>El bloque ocupa todo el ancho con resplandor dorado.</p>}
     </div>
+  )
+}
+
+// FeaturedToggle — independent from width; controls gold glassmorphism glow
+function FeaturedToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      id="btn-featured-toggle"
+      type="button"
+      onClick={() => onChange(!value)}
+      className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all"
+      style={{
+        background: value ? 'rgba(212,175,55,0.10)' : 'rgba(255,255,255,0.04)',
+        border:     value ? '1px solid rgba(212,175,55,0.35)' : '1px solid rgba(255,255,255,0.06)',
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <span className="text-base">⭐</span>
+        <div className="text-left">
+          <p className="text-sm font-medium" style={{ color: value ? '#D4AF37' : '#888' }}>Destacado</p>
+          <p className="text-xs" style={{ color: '#555' }}>Aplica brillo y borde dorado</p>
+        </div>
+      </div>
+      <div
+        className="w-10 h-5 rounded-full relative transition-all"
+        style={{ background: value ? 'rgba(212,175,55,0.60)' : 'rgba(255,255,255,0.10)' }}
+      >
+        <div
+          className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
+          style={{ background: '#fff', left: value ? '1.25rem' : '0.125rem' }}
+        />
+      </div>
+    </button>
   )
 }
 
@@ -252,10 +304,10 @@ interface BlockFormModalProps {
 export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFormModalProps) {
   const isEditMode = Boolean(initialData)
 
-  // Derive initial block type — clamp to the 4 supported UI types
-  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly'
+  // Derive initial block type — clamp to the supported UI types
+  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title'
   function toUIType(t?: BlockType): UIBlockType {
-    if (t === 'social' || t === 'vcard' || t === 'calendly') return t
+    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title') return t
     return 'link'
   }
 
@@ -274,6 +326,10 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const [icon, setIcon]           = useState(initialData?.content.icon ?? '🔗')
   const [description, setDescription] = useState(initialData?.content.description ?? '')
   const [isFeatured, setIsFeatured]   = useState(initialData?.isFeatured ?? false)
+  // Sprint 2: blockWidth is independent from isFeatured
+  const [blockWidth, setBlockWidth]   = useState<BlockWidth>(
+    initialData?.width ?? (initialData?.isFeatured ? 'full' : 'half')
+  )
   // vCard fields
   const [phone, setPhone]       = useState(initialData?.content.phone    ?? '')
   const [email, setEmail]       = useState(initialData?.content.email    ?? '')
@@ -297,6 +353,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setIcon(initialData.content.icon ?? '🔗')
       setDescription(initialData.content.description ?? '')
       setIsFeatured(initialData.isFeatured ?? false)
+      setBlockWidth(initialData.width ?? (initialData.isFeatured ? 'full' : 'half'))
       setPhone(initialData.content.phone    ?? '')
       setEmail(initialData.content.email    ?? '')
       setCompany(initialData.content.company  ?? '')
@@ -305,7 +362,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     } else {
       setStep('type'); setBlockType('link'); setPlatform('instagram')
       setTitle(''); setHandle(''); setUrl(''); setIcon('🔗')
-      setDescription(''); setIsFeatured(false)
+      setDescription(''); setIsFeatured(false); setBlockWidth('half')
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
       setError('')
     }
@@ -336,9 +393,11 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
 
   function handleTypeNext(type: UIBlockType) {
     setBlockType(type)
-    if (type === 'social') setIcon(SOCIAL_PLATFORMS.find(p => p.id === platform)?.icon ?? '📱')
-    if (type === 'vcard')   setIcon('👤')
-    if (type === 'calendly') setIcon('📅')
+    if (type === 'social')        setIcon(SOCIAL_PLATFORMS.find(p => p.id === platform)?.icon ?? '📱')
+    if (type === 'vcard')         setIcon('👤')
+    if (type === 'calendly')      setIcon('📅')
+    if (type === 'divider')       { setIcon(''); setBlockWidth('full') }
+    if (type === 'section_title') { setIcon(''); setBlockWidth('full') }
     setStep('details')
   }
 
@@ -350,7 +409,14 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     let resolvedIcon  = icon || '🔗'
     let resolvedTitle = title.trim()
 
-    if (blockType === 'social') {
+    if (blockType === 'divider') {
+      resolvedUrl   = ''
+      resolvedIcon  = ''
+      resolvedTitle = title.trim() // optional label text for the divider
+    } else if (blockType === 'section_title') {
+      resolvedUrl   = ''
+      resolvedIcon  = ''
+    } else if (blockType === 'social') {
       resolvedUrl   = socialUrl(platform, handle)
       resolvedIcon  = SOCIAL_PLATFORMS.find(p => p.id === platform)?.icon ?? '📱'
       resolvedTitle = resolvedTitle || (SOCIAL_PLATFORMS.find(p => p.id === platform)?.label ?? '')
@@ -365,8 +431,10 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       resolvedUrl = url.trim()
     }
 
-    if (!resolvedTitle) { setError('El título es obligatorio.'); return }
-    if (blockType !== 'vcard' && !resolvedUrl) { setError('La URL es obligatoria.'); return }
+    // Structural blocks don't need a URL or a mandatory title
+    const isStructural = blockType === 'divider' || blockType === 'section_title'
+    if (!resolvedTitle && !isStructural) { setError('El título es obligatorio.'); return }
+    if (!resolvedUrl && !isStructural && blockType !== 'vcard') { setError('La URL es obligatoria.'); return }
 
     setSaving(true)
     try {
@@ -376,6 +444,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         url:         resolvedUrl,
         icon:        resolvedIcon,
         description: description.trim(),
+        width:       blockWidth,
         isFeatured,
         platform:    blockType === 'social' ? platform : undefined,
         phone:       blockType === 'vcard' ? phone.trim()    : undefined,
@@ -393,15 +462,19 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
 
   function headerTitle() {
     if (isEditMode) {
-      if (blockType === 'vcard')   return 'Editar tarjeta VIP'
-      if (blockType === 'calendly') return 'Editar Calendly'
-      if (blockType === 'social')  return 'Editar red social'
+      if (blockType === 'vcard')         return 'Editar tarjeta VIP'
+      if (blockType === 'calendly')      return 'Editar Calendly'
+      if (blockType === 'social')        return 'Editar red social'
+      if (blockType === 'divider')       return 'Editar divisor'
+      if (blockType === 'section_title') return 'Editar sección'
       return 'Editar enlace'
     }
     if (step === 'type') return 'Nuevo bloque'
-    if (blockType === 'vcard')   return 'Tarjeta VIP'
-    if (blockType === 'calendly') return 'Calendly'
-    if (blockType === 'social')  return 'Red Social'
+    if (blockType === 'vcard')         return 'Tarjeta VIP'
+    if (blockType === 'calendly')      return 'Calendly'
+    if (blockType === 'social')        return 'Red Social'
+    if (blockType === 'divider')       return 'Divisor'
+    if (blockType === 'section_title') return 'Sección'
     return 'Enlace'
   }
 
@@ -703,8 +776,68 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                       </>
                     )}
 
-                    {/* ── Width selector (all types) ──────────────────────── */}
-                    <WidthSelector value={isFeatured} onChange={setIsFeatured} />
+                    {/* ── DIVIDER ────────────────────────────────────────── */}
+                    {blockType === 'divider' && (
+                      <div className="space-y-4">
+                        <div
+                          className="flex items-center gap-3 py-2 px-3 rounded-xl"
+                          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                        >
+                          <span className="text-xl">―</span>
+                          <p className="text-xs leading-relaxed" style={{ color: '#888' }}>
+                            Añade una línea separadora sutil entre tus bloques.
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Etiqueta (opcional)</label>
+                          <input
+                            id="block-title"
+                            type="text"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder="ej: Servicios, Contacto…"
+                            className="input-dark"
+                            maxLength={40}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── SECTION TITLE ──────────────────────────────────── */}
+                    {blockType === 'section_title' && (
+                      <div className="space-y-4">
+                        <div
+                          className="flex items-center gap-3 py-2 px-3 rounded-xl"
+                          style={{ background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.20)' }}
+                        >
+                          <span className="text-xl">§</span>
+                          <p className="text-xs leading-relaxed" style={{ color: '#c4b5fd' }}>
+                            Crea un encabezado para agrupar los bloques que le siguen.
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Título de la sección *</label>
+                          <input
+                            id="block-title"
+                            type="text"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder="ej: Mis servicios"
+                            className="input-dark"
+                            maxLength={60}
+                            required
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Width + Featured (link/social/vcard/calendly only) ─ */}
+                    {blockType !== 'divider' && blockType !== 'section_title' && (
+                      <>
+                        <WidthSelector value={blockWidth} onChange={setBlockWidth} />
+                        <FeaturedToggle value={isFeatured} onChange={setIsFeatured} />
+                      </>
+                    )}
 
                     {/* Error */}
                     {error && <p className="text-sm" style={{ color: '#EF4444' }}>{error}</p>}

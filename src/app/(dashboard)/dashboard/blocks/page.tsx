@@ -95,6 +95,7 @@ export default function BlocksPage() {
         company:     data.company  || undefined,
         jobTitle:    data.jobTitle || undefined,
       },
+      width:      data.width ?? 'half',
       isFeatured: data.isFeatured,
     })
   }
