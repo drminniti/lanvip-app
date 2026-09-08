@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { getThemeById, matchThemeId } from '@/lib/themes'
 import { trackPageView, incrementClickCount } from '@/lib/analytics'
 import { downloadVCard } from '@/lib/vcard'
+import { LanvipLogo } from '@/components/ui/LanvipLogo'
 import type { UserProfile, Block, SpanSize } from '@/types'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
@@ -427,6 +428,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
             className="text-xs flex items-center gap-1.5 hover:opacity-80 transition-opacity"
             style={{ color: 'rgba(255,255,255,0.2)', textDecoration: 'none' }}
           >
+            <LanvipLogo size={14} />
             <span>Creado con</span>
             <span style={{ color: `${accent}66`, fontWeight: 600 }}>Lanvip</span>
           </a>
