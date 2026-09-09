@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { BlockType, BlockWidth, Block } from '@/types'
-import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook } from 'react-icons/fa6'
+import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook, FaPhone, FaLink } from 'react-icons/fa6'
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -341,6 +341,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const [email, setEmail]       = useState(initialData?.content.email    ?? '')
   const [company, setCompany]   = useState(initialData?.content.company  ?? '')
   const [jobTitle, setJobTitle] = useState(initialData?.content.jobTitle ?? '')
+  const [showLabelWarning, setShowLabelWarning] = useState(false)
 
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -371,6 +372,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setDescription(''); setIsFeatured(false); setBlockWidth('half')
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
       setError('')
+      setShowLabelWarning(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData])
@@ -393,6 +395,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
     }
     setError('')
+    setShowLabelWarning(false)
   }
 
   function handleClose() { reset(); onClose() }
@@ -405,6 +408,26 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     if (type === 'divider')       { setIcon(''); setBlockWidth('full') }
     if (type === 'section_title') { setIcon(''); setBlockWidth('full') }
     setStep('details')
+  }
+
+  function handleSocialChange(newPlatformId: SocialPlatform) {
+    const oldPlatform = SOCIAL_PLATFORMS.find(p => p.id === platform)
+    const newPlatform = SOCIAL_PLATFORMS.find(p => p.id === newPlatformId)
+
+    if (!isEditMode) {
+      setTitle('')
+      setShowLabelWarning(false)
+    } else {
+      // Si el titulo actual era exactamente el label anterior, lo pisamos con el nuevo
+      if (title.trim() === oldPlatform?.label || title.trim() === '') {
+        setTitle(newPlatform?.label ?? '')
+        setShowLabelWarning(false)
+      } else {
+        // Es un texto custom, avisamos
+        setShowLabelWarning(true)
+      }
+    }
+    setPlatform(newPlatformId)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -593,7 +616,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             <button
                               key={p.id}
                               type="button"
-                              onClick={() => { setPlatform(p.id); if (!isEditMode) setTitle('') }}
+                              onClick={() => handleSocialChange(p.id)}
                               className="flex flex-col items-center gap-1 p-2 rounded-xl transition-all"
                               style={{
                                 background: platform === p.id ? `${p.color}22` : 'rgba(255,255,255,0.04)',
@@ -607,6 +630,11 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             </button>
                           ))}
                         </div>
+                        {showLabelWarning && isEditMode && (
+                          <p className="text-xs" style={{ color: '#D4AF37' }}>
+                            ⚠️ Verifica que tu etiqueta coincida con la nueva red social.
+                          </p>
+                        )}
 
                         <div className="space-y-1">
                           <label className="label-dark">Etiqueta (opcional)</label>
@@ -626,45 +654,46 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             /* WhatsApp uses a phone number, not a social handle */
                             <>
                               <label className="label-dark">Número de teléfono *</label>
-                              <input
-                                id="block-url"
-                                type="tel"
-                                value={handle}
-                                onChange={e => setHandle(e.target.value)}
-                                placeholder="+54 9 11 1234-5678"
-                                className="input-dark"
-                                required
-                              />
+                              <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#555' }}><FaPhone /></span>
+                                <input
+                                  id="block-url"
+                                  type="tel"
+                                  value={handle}
+                                  onChange={e => setHandle(e.target.value)}
+                                  placeholder="Ej: 549112345678"
+                                  className="input-dark"
+                                  style={{ paddingLeft: '2.5rem' }}
+                                  required
+                                />
+                              </div>
                               <p className="text-xs" style={{ color: '#555' }}>
                                 Formato internacional con código de país. Los espacios y guiones se ignoran automáticamente.
                               </p>
                             </>
                           ) : (
-                            /* Instagram, LinkedIn, X — handle with @ prefix */
+                            /* Instagram, LinkedIn, X — handle with @ prefix or URL */
                             <>
                               <label className="label-dark">
                                 {platform === 'linkedin'
-                                  ? 'Perfil / Empresa *'
+                                  ? 'Usuario o URL *'
                                   : 'Usuario / Handle *'}
                               </label>
                               <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#555' }}>@</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#555' }}>
+                                  {platform === 'linkedin' ? <FaLink /> : '@'}
+                                </span>
                                 <input
                                   id="block-url"
                                   type="text"
                                   value={handle}
                                   onChange={e => setHandle(e.target.value)}
-                                  placeholder={platform === 'linkedin' ? 'mi-perfil o company/mi-empresa' : 'tunombre'}
+                                  placeholder={platform === 'linkedin' ? 'Ej: in/tu-perfil o empresa' : 'tunombre'}
                                   className="input-dark"
-                                  style={{ paddingLeft: '2rem' }}
+                                  style={{ paddingLeft: platform === 'linkedin' ? '2.5rem' : '2rem' }}
                                   required
                                 />
                               </div>
-                              {platform === 'linkedin' && (
-                                <p className="text-xs" style={{ color: '#555' }}>
-                                  Perfil personal: <span style={{ color: '#888' }}>mi-nombre</span> — Empresa: <span style={{ color: '#888' }}>company/mi-empresa</span>
-                                </p>
-                              )}
                             </>
                           )}
                         </div>

@@ -4,12 +4,16 @@ import { useState, useEffect } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Block } from '@/types'
+import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook } from 'react-icons/fa6'
 
 const SOCIAL_COLORS: Record<string, string> = {
   instagram: '#E1306C',
   linkedin:  '#0A66C2',
-  x:         '#888888',
+  x:         '#555555',
   whatsapp:  '#25D366',
+  youtube:   '#FF0000',
+  tiktok:    '#000000',
+  facebook:  '#1877F2',
 }
 
 interface BlockCardProps {
@@ -77,9 +81,23 @@ export function BlockCard({ block, onToggle, onDelete, onEdit }: BlockCardProps)
       {/* Icon */}
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
-        style={{ background: `${accentColor}18` }}
+        style={{ background: `${accentColor}18`, color: accentColor }}
       >
-        {block.content.icon || '🔗'}
+        {block.type === 'social' ? (
+          (() => {
+            const s = block.content.icon
+            if (s === 'instagram') return <FaInstagram className="w-5 h-5" />
+            if (s === 'linkedin')  return <FaLinkedin className="w-5 h-5" />
+            if (s === 'x')         return <FaXTwitter className="w-5 h-5" />
+            if (s === 'whatsapp')  return <FaWhatsapp className="w-5 h-5" />
+            if (s === 'youtube')   return <FaYoutube className="w-5 h-5" />
+            if (s === 'tiktok')    return <FaTiktok className="w-5 h-5" />
+            if (s === 'facebook')  return <FaFacebook className="w-5 h-5" />
+            return s
+          })()
+        ) : (
+          block.content.icon || '🔗'
+        )}
       </div>
 
       {/* Info */}
