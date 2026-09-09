@@ -170,7 +170,7 @@ export default function DashboardNav() {
       {/* ── Mobile Bottom Tab Bar ─────────────────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-50">
         <div
-          className="mx-3 mb-3 px-2 py-2 flex items-center justify-around rounded-3xl backdrop-blur-2xl"
+          className="mx-3 mb-3 px-2 py-2 flex items-stretch justify-around rounded-3xl backdrop-blur-2xl"
           style={{
             background: 'rgba(26,26,26,0.85)',
             border:     '1px solid #333333',
@@ -182,10 +182,10 @@ export default function DashboardNav() {
               key={item.href}
               href={item.href}
               id={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
-              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-xs font-medium transition-all duration-200"
-              style={{ color: pathname === item.href ? '#F5F5F5' : '#A3A3A3' }}
+              className="flex flex-col items-center justify-start gap-1 px-1 py-2 rounded-2xl text-[11px] leading-tight text-center font-medium transition-all duration-200"
+              style={{ color: pathname === item.href ? '#F5F5F5' : '#A3A3A3', width: '4.5rem' }}
             >
-              <motion.span whileTap={{ scale: 0.85 }} className="block">
+              <motion.span whileTap={{ scale: 0.85 }} className="block flex-shrink-0">
                 {item.icon}
               </motion.span>
               <span>{item.label}</span>
@@ -198,10 +198,10 @@ export default function DashboardNav() {
               href={`/${username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-xs font-medium transition-all duration-200"
-              style={{ color: '#D4AF37' }}
+              className="flex flex-col items-center justify-start gap-1 px-1 py-2 rounded-2xl text-[11px] leading-tight text-center font-medium transition-all duration-200"
+              style={{ color: '#D4AF37', width: '4.5rem' }}
             >
-              <motion.span whileTap={{ scale: 0.85 }} className="block">
+              <motion.span whileTap={{ scale: 0.85 }} className="block flex-shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
@@ -213,10 +213,10 @@ export default function DashboardNav() {
           <button
             id="btn-logout-mobile"
             onClick={handleLogout}
-            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-xs font-medium transition-all duration-200"
-            style={{ color: '#A3A3A3' }}
+            className="flex flex-col items-center justify-start gap-1 px-1 py-2 rounded-2xl text-[11px] leading-tight text-center font-medium transition-all duration-200"
+            style={{ color: '#A3A3A3', width: '4.5rem' }}
           >
-            <motion.span whileTap={{ scale: 0.85 }} className="block">
+            <motion.span whileTap={{ scale: 0.85 }} className="block flex-shrink-0">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
