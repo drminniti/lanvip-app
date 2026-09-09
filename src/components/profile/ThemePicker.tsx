@@ -13,8 +13,25 @@ interface CustomThemePayload {
 interface ThemePickerProps {
   currentSettings: ThemeSettings
   onChange: (theme: VipTheme | CustomThemePayload) => void
-  onCustomColorChange?: (key: 'background' | 'accent' | 'textColor', value: string) => void
+  onCustomColorChange?: (updates: Partial<NonNullable<ThemeSettings['customColors']>>) => void
   disabled?: boolean
+}
+
+function Toggle({ checked, onChange, label, disabled }: { checked: boolean; onChange: (c: boolean) => void; label: string; disabled?: boolean }) {
+  return (
+    <label className={`flex items-center gap-2 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer opacity-90 hover:opacity-100'} transition-opacity`}>
+      <div className={`relative w-8 h-4 rounded-full transition-colors ${checked ? 'bg-[#D4AF37]' : 'bg-[#333333]'}`}>
+        <motion.div 
+          className="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow-sm"
+          initial={false}
+          animate={{ x: checked ? 16 : 0 }}
+          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        />
+      </div>
+      <span className="text-xs font-semibold" style={{ color: '#F5F5F5' }}>{label}</span>
+      <input type="checkbox" className="sr-only" checked={checked} disabled={disabled} onChange={e => onChange(e.target.checked)} />
+    </label>
+  )
 }
 
 export function ThemePicker({ 
@@ -112,6 +129,10 @@ export function ThemePicker({
           const customBg = currentSettings.customColors?.background ?? '#0a0a0a'
           const customAccent = currentSettings.customColors?.accent ?? '#D4AF37'
           const customText = currentSettings.customColors?.textColor ?? '#ffffff'
+          const useGradient = currentSettings.customColors?.useGradient ?? false
+          const gradientColor = currentSettings.customColors?.gradientColor ?? '#1a1a1a'
+          const useTexture = currentSettings.customColors?.useTexture ?? false
+          const autoContrast = currentSettings.customColors?.autoContrast ?? true
           
           return (
             <motion.div className="col-span-2 space-y-3 mt-2">
@@ -130,7 +151,11 @@ export function ThemePicker({
                         customColors: {
                           background: customBg,
                           accent: customAccent,
-                          textColor: customText
+                          textColor: customText,
+                          useGradient,
+                          gradientColor,
+                          useTexture,
+                          autoContrast
                         }
                       }
                     })
@@ -178,41 +203,83 @@ export function ThemePicker({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl border overflow-hidden"
+                    className="flex flex-col gap-5 p-5 rounded-2xl border overflow-hidden"
                     style={{ 
                       borderColor: 'rgba(255,255,255,0.06)', 
                       background: 'rgba(26,26,26,0.5)' 
                     }}
                   >
-                    <div className="flex-1 w-full space-y-1">
-                      <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Color de Fondo</label>
-                      <input 
-                        type="color" 
-                        value={customBg}
+                    {/* Toggles */}
+                    <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                      <Toggle 
+                        checked={useGradient} 
+                        onChange={v => onCustomColorChange?.({ useGradient: v })} 
+                        label="Activar Degradado" 
                         disabled={disabled}
-                        onChange={e => onCustomColorChange?.('background', e.target.value)}
-                        className="w-full h-10 rounded cursor-pointer border-0 p-0"
+                      />
+                      <Toggle 
+                        checked={useTexture} 
+                        onChange={v => onCustomColorChange?.({ useTexture: v })} 
+                        label="Textura Noise" 
+                        disabled={disabled}
+                      />
+                      <Toggle 
+                        checked={autoContrast} 
+                        onChange={v => onCustomColorChange?.({ autoContrast: v })} 
+                        label="Contraste Auto" 
+                        disabled={disabled}
                       />
                     </div>
-                    <div className="flex-1 w-full space-y-1">
-                      <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Color de Acento</label>
-                      <input 
-                        type="color" 
-                        value={customAccent}
-                        disabled={disabled}
-                        onChange={e => onCustomColorChange?.('accent', e.target.value)}
-                        className="w-full h-10 rounded cursor-pointer border-0 p-0"
-                      />
-                    </div>
-                    <div className="flex-1 w-full space-y-1">
-                      <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Color de Texto</label>
-                      <input 
-                        type="color" 
-                        value={customText}
-                        disabled={disabled}
-                        onChange={e => onCustomColorChange?.('textColor', e.target.value)}
-                        className="w-full h-10 rounded cursor-pointer border-0 p-0"
-                      />
+
+                    {/* Colors */}
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="flex-1 w-full space-y-1">
+                        <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>{useGradient ? 'Fondo 1' : 'Color de Fondo'}</label>
+                        <input 
+                          type="color" 
+                          value={customBg}
+                          disabled={disabled}
+                          onChange={e => onCustomColorChange?.({ background: e.target.value })}
+                          className="w-full h-10 rounded cursor-pointer border-0 p-0"
+                        />
+                      </div>
+                      
+                      {useGradient && (
+                        <div className="flex-1 w-full space-y-1">
+                          <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Fondo 2</label>
+                          <input 
+                            type="color" 
+                            value={gradientColor}
+                            disabled={disabled}
+                            onChange={e => onCustomColorChange?.({ gradientColor: e.target.value })}
+                            className="w-full h-10 rounded cursor-pointer border-0 p-0"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex-1 w-full space-y-1">
+                        <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Acento VIP</label>
+                        <input 
+                          type="color" 
+                          value={customAccent}
+                          disabled={disabled}
+                          onChange={e => onCustomColorChange?.({ accent: e.target.value })}
+                          className="w-full h-10 rounded cursor-pointer border-0 p-0"
+                        />
+                      </div>
+
+                      {!autoContrast && (
+                        <div className="flex-1 w-full space-y-1">
+                          <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Color de Texto</label>
+                          <input 
+                            type="color" 
+                            value={customText}
+                            disabled={disabled}
+                            onChange={e => onCustomColorChange?.({ textColor: e.target.value })}
+                            className="w-full h-10 rounded cursor-pointer border-0 p-0"
+                          />
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}

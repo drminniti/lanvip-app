@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getThemeById, matchThemeId } from '@/lib/themes'
+import { getAutoContrastTextColor } from '@/lib/colorUtils'
 import { trackPageView, incrementClickCount } from '@/lib/analytics'
 import { downloadVCard } from '@/lib/vcard'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
@@ -435,11 +436,12 @@ interface PublicLandingProps {
 export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)
   const isCustomTheme = themeId === 'custom'
+  const customColors = profile.themeSettings.customColors
   
   const theme = isCustomTheme ? undefined : getThemeById(themeId)
   
   const accent = isCustomTheme
-    ? (profile.themeSettings.customColors?.accent ?? '#D4AF37')
+    ? (customColors?.accent ?? '#D4AF37')
     : (theme?.accent ?? '#D4AF37')
 
   // ── Track page view (client-side, sessionStorage-deduplicated) ─────────────
@@ -456,11 +458,27 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
     window.scrollTo(0, 0)
   }, [profile.uid])
 
-  const bg = isCustomTheme
-    ? (profile.themeSettings.customColors?.background ?? '#0a0a0a')
-    : (profile.themeSettings.bgType === 'solid'
+  // Custom logic for background
+  let bg = ''
+  if (isCustomTheme) {
+    const bg1 = customColors?.background ?? '#0a0a0a'
+    const bg2 = customColors?.gradientColor ?? '#1a1a1a'
+    const useGradient = customColors?.useGradient ?? false
+    bg = useGradient ? `linear-gradient(135deg, ${bg1} 0%, ${bg2} 100%)` : bg1
+  } else {
+    bg = profile.themeSettings.bgType === 'solid'
       ? profile.themeSettings.colors[0]
-      : `linear-gradient(145deg, ${profile.themeSettings.colors[0]} 0%, ${profile.themeSettings.colors[1] ?? profile.themeSettings.colors[0]} 100%)`)
+      : `linear-gradient(145deg, ${profile.themeSettings.colors[0]} 0%, ${profile.themeSettings.colors[1] ?? profile.themeSettings.colors[0]} 100%)`
+  }
+
+  // Custom logic for text color
+  let textColor = isCustomTheme ? (customColors?.textColor ?? '#ffffff') : undefined
+  if (isCustomTheme && (customColors?.autoContrast ?? true)) {
+    const baseBg = customColors?.background ?? '#0a0a0a'
+    textColor = getAutoContrastTextColor(baseBg)
+  }
+
+  const useTexture = isCustomTheme && (customColors?.useTexture ?? false)
 
   const isImageBg = profile.themeSettings.background?.type === 'image' && !!profile.themeSettings.background?.url
   const bgUrl = profile.themeSettings.background?.url
@@ -473,9 +491,19 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         background: isImageBg ? undefined : bg,
         '--theme-bg': isCustomTheme ? bg : undefined,
         '--theme-accent': isCustomTheme ? accent : undefined,
-        '--theme-text': isCustomTheme ? (profile.themeSettings.customColors?.textColor ?? '#ffffff') : undefined,
+        '--theme-text': textColor,
       } as React.CSSProperties}
     >
+      {useTexture && !isImageBg && (
+        <div 
+          className="fixed inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            opacity: 0.15,
+            mixBlendMode: 'overlay',
+          }}
+        />
+      )}
       {isImageBg && (
         <>
           <div 

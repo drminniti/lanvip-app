@@ -97,7 +97,15 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleCustomColorChange(key: 'background' | 'accent' | 'textColor', value: string) {
+  async function handleCustomColorChange(updates: Partial<{
+    background: string
+    accent: string
+    textColor: string
+    useGradient: boolean
+    gradientColor: string
+    useTexture: boolean
+    autoContrast: boolean
+  }>) {
     if (!user?.uid || !profile) return
     try {
       const currentThemeSettings = profile.themeSettings
@@ -105,7 +113,11 @@ export default function ProfilePage() {
         background: currentThemeSettings.customColors?.background ?? '#0a0a0a',
         accent: currentThemeSettings.customColors?.accent ?? '#D4AF37',
         textColor: currentThemeSettings.customColors?.textColor ?? '#ffffff',
-        [key]: value
+        useGradient: currentThemeSettings.customColors?.useGradient ?? false,
+        gradientColor: currentThemeSettings.customColors?.gradientColor ?? '#1a1a1a',
+        useTexture: currentThemeSettings.customColors?.useTexture ?? false,
+        autoContrast: currentThemeSettings.customColors?.autoContrast ?? true,
+        ...updates
       }
       
       const mergedSettings: any = { 

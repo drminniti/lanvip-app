@@ -19,6 +19,10 @@ export interface ThemeSettings {
     background: string
     accent: string
     textColor: string
+    useGradient?: boolean
+    gradientColor?: string
+    useTexture?: boolean
+    autoContrast?: boolean
   }
   
   // ── Sprint 4: Visuals ──
