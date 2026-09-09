@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
   },
+  icons: {
+    icon: '/assets/LV_Logo.svg',
+  },
 }
 
 export default function RootLayout({

@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { loginWithEmail, loginWithGoogle } from '@/lib/auth'
 import { useAuth } from '@/context/AuthContext'
+import { getFirebaseErrorMessage } from '@/lib/errors'
+import { LanvipLogo } from '@/components/ui/LanvipLogo'
 
 function GoogleIcon() {
   return (
@@ -87,6 +89,13 @@ export default function LoginPage() {
       className="w-full max-w-sm"
     >
       <div className="glass-card p-8 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-center mb-6"
+        >
+          <LanvipLogo size={48} />
+        </motion.div>
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold gradient-text tracking-tight">Lanvip</h1>
           <p className="text-sm" style={{ color: '#A3A3A3' }}>Bienvenido de vuelta</p>

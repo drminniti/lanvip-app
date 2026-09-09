@@ -15,7 +15,7 @@ export function ThemePicker({ currentSettings, onChange, disabled }: ThemePicker
 
   return (
     <div className="space-y-3">
-      <p className="label-dark">Tema VIP</p>
+      <p className="label-dark">Temas estándar</p>
       <div className="grid grid-cols-2 gap-3">
         {VIP_THEMES.map((theme, i) => {
           const isActive = theme.id === activeId
