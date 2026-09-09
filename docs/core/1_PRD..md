@@ -12,7 +12,8 @@ Crear una plataforma escalable y segura que permita a profesionales y empresas d
 1. **Página Pública (Vista del Visitante):**
    - Perfil centralizado: Avatar HD, Título profesional y Biografía.
    - Grilla Bento: Distribución dinámica de enlaces y módulos (bloques cuadrados o rectangulares).
-   - Soporte para enlaces estándar y "Rich Links" (Ver `F01_Enlaces_Especiales.md`).
+   - Soporte para enlaces estándar, bloques de estructura (divisores, títulos de sección) y "Rich Links" (Ver `F01_Enlaces_Especiales.md`).
+   - Bloques sociales con iconos oficiales expandidos (Instagram, LinkedIn, X, TikTok, YouTube, etc).
 2. **Panel de Administración (Backoffice):**
    - Autenticación segura gestionada por Firebase.
    - Interfaz de previsualización en vivo (Live Preview) al estilo editor visual.

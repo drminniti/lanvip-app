@@ -130,29 +130,27 @@ service cloud.firestore {
 {
   id:          string,
   userId:      string,
-  type:        string,           // 'link' | 'social' | 'vcard' | 'calendly' | ...
+  type:        string,           // 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title'
   content: {
     title:       string,
     url:         string,
-    icon:        string,         // emoji elegido por el usuario
-    description: string?,        // subtítulo opcional bajo el título
+    icon:        string,         // emoji o ID de icono (ej: lucide)
+    description: string?,        // subtítulo opcional
     thumbnailUrl: string?,
     embedId:     string?,        // para YouTube / Spotify
   },
-  layout: {
-    spanSize: '1x1' | '2x1' | '2x2',  // reservado para uso futuro / row-span
-  },
-  isFeatured:  boolean,          // true → col-span-2 (ancho completo de grilla)
+  width:       'full' | 'half',  // controla el span horizontal
+  isFeatured:  boolean,          // aplica estilos premium (brillo, borde especial)
   order:       number,
   clickCount:  number,
   isActive:    boolean,
 }
 ```
 
-> **Regla de grilla:** `isFeatured` es el campo canónico que controla el span horizontal del bloque.
-> `layout.spanSize` queda como legado para soporte de row-span futuro y migración de datos viejos.
+> **Regla de grilla:** El campo `width` controla explícitamente si el bloque ocupa todo el ancho (`full` -> `col-span-2`) o la mitad (`half` -> `col-span-1`). El estado `isFeatured` es estrictamente cosmético (aplica glow glassmorphism y borde dorado).
+> (Legacy: documentos antiguos sin el campo `width` hacen fallback a `isFeatured ? 'full' : 'half'`).
 
-> **CRUD de bloques:** `addBlock()` crea, `updateBlockContent()` edita solo campos de usuario (`content` + `isFeatured`), `reorderBlocks()` persiste el orden, `deleteBlock()` elimina. `id`, `order`, `userId`, `clickCount` y `createdAt` nunca se tocan en el flujo de edición.
+> **CRUD de bloques:** `addBlock()` crea, `updateBlockContent()` edita solo campos de usuario (`content`, `width`, `isFeatured`), `reorderBlocks()` persiste el orden, `deleteBlock()` elimina. `id`, `order`, `userId`, `clickCount` y `createdAt` nunca se tocan en el flujo de edición.
 
 > **Tipos de bloque y campos especiales:** Ver [`F01_Enlaces_Especiales.md`](./F01_Enlaces_Especiales.md) para el esquema completo por tipo (`link`, `social`, `vcard`, `calendly`) y la hoja de ruta de tipos futuros.
 > Campos vCard en `BlockContent`: `phone?`, `email?`, `company?`, `jobTitle?` — opcionales, `undefined` para otros tipos.

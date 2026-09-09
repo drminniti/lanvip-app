@@ -1,20 +1,20 @@
 # Estructura de UI e Interacciones
 
 ### 1. Filosofía de Diseño
-- **Bento Box Layout:** La grilla CSS (`grid-cols-2`) es el corazón de la Micro-Landing. Los bloques son adaptativos: su tamaño responde al campo `isFeatured` del bloque, no a alturas fijas.
+- **Bento Box Layout:** La grilla CSS (`grid-cols-2`) es el corazón de la Micro-Landing. Los bloques son adaptativos: su tamaño horizontal (`col-span`) responde al campo `width`, mientras que el estilo destacado (brillo) responde a `isFeatured`.
 - **Content-Driven Heights:** Las tarjetas no tienen alturas fijas (`h-*`). Crecen según su contenido mediante padding interno generoso (`p-4`). Esto evita el problema de "espacio negativo" en bloques con poco texto.
 - **Glassmorphism Puro:** Fondo `rgba(0,0,0,0.40)` + `backdrop-filter: blur(16px)`. Sin marrón ni oliva. La clase `.bento-tile` en `globals.css` es la única fuente de verdad del estilo de tarjeta.
 
 ### 2. Reglas de la Grilla Bento (Fuente de Verdad)
 
-| Campo | Valor | Comportamiento en grilla |
+| Campo | Valor | Comportamiento en grilla / estilo |
 |-------|-------|--------------------------|
-| `block.isFeatured` | `true` | `col-span-2` — ancho completo (bloque destacado) |
-| `block.isFeatured` | `false` | `col-span-1` — cuadrado compacto (default) |
+| `block.width` | `'full'` | `col-span-2` — ancho completo |
+| `block.width` | `'half'` | `col-span-1` — cuadrado compacto |
+| `block.isFeatured` | `true` | Aplica glow glassmorphism y borde dorado |
+| `block.type` | `'divider'` \| `'section_title'` | `col-span-2` forzado, sin estados interactivos |
 
-**Regla de retrocompatibilidad:** Bloques viejos sin `isFeatured` hacen fallback a `spanSize !== '1x1'` para determinar si son full-width.
-
-**Bloques sociales** (type: `social`): siempre compactos — el usuario no puede marcarlos como `isFeatured`.
+**Regla de retrocompatibilidad:** Bloques viejos sin `width` hacen fallback a `isFeatured ? 'full' : 'half'`.
 
 ### 3. Componentes de Tarjeta
 
@@ -82,17 +82,18 @@ Al crear un bloque nuevo, el usuario puede configurar:
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `type` | selector (step 1, solo creación) | `link` o `social` |
-| `title` | input text | Nombre del bloque (requerido) |
+| `type` | selector (step 1, solo creación) | `link`, `social`, `vcard`, `calendly`, `divider`, `section_title` |
+| `title` | input text | Nombre del bloque (requerido para interactivos) |
 | `url` | input url/text | URL o handle de red social (requerido) |
-| `icon` | EmojiPicker | Grid de 40 emojis en 5 grupos. Default: 🔗 |
-| `description` | textarea | Subtítulo opcional (120 char max) |
-| `isFeatured` | Selector visual | Mitad (col-span-1) o Completo ⭐ (col-span-2) |
+| `icon` | EmojiPicker / SVG | Grid de 40 emojis. Bloques sociales usan iconos de `lucide-react`. |
+| `description` | textarea | Subtítulo opcional en todos los bloques interactivos y de sección |
+| `width` | Selector visual | Mitad (`half`) o Completo (`full` - default) |
+| `isFeatured` | Toggle | Aplica estilo premium (brillo, borde dorado y ⭐) |
 | `platform` | selector | Solo bloques `social` — editable en ambos modos |
 
 **EmojiPicker:** Panel animado con `AnimatePresence`, 5 grupos curados. Se cierra al seleccionar.
 
-**Selector de ancho:** Dos opciones visuales con diagrama de bloque. "Completo" activa `isFeatured=true`.
+**Selector de ancho e IsFeatured:** El ancho visual (`width`) está separado del estado cosmético (`isFeatured`). Ambos cuentan con componentes UI visuales en el formulario.
 
 ### 7. Bordes y Color System
 
