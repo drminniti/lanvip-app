@@ -112,18 +112,47 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function socialUrl(platform: SocialPlatform, handle: string): string {
-  const cleaned = handle.replace(/^@/, '').trim()
+  let cleaned = handle.trim()
+
+  if (platform === 'whatsapp') {
+    cleaned = cleaned.replace(/\D/g, '')
+    return `https://wa.me/${cleaned}`
+  }
+
+  // Remove generic URL prefixes
+  cleaned = cleaned.replace(/^https?:\/\/(www\.)?/, '')
+  cleaned = cleaned.replace(/^@/, '')
+  cleaned = cleaned.replace(/\/$/, '')
+
+  if (platform === 'linkedin') {
+    if (cleaned.includes('linkedin.com/in/')) {
+      cleaned = cleaned.split('linkedin.com/in/')[1]
+    } else if (cleaned.includes('linkedin.com/company/')) {
+      cleaned = 'company/' + cleaned.split('linkedin.com/company/')[1]
+    }
+    // Clean remaining 'in/' prefix if present
+    cleaned = cleaned.replace(/^in\//, '')
+  } else {
+    // For instagram, tiktok, x, youtube, facebook
+    if (cleaned.includes('.com/')) {
+      cleaned = cleaned.split('.com/')[1]
+    } else if (cleaned.includes('.me/')) {
+      cleaned = cleaned.split('.me/')[1]
+    }
+    // Handle youtube/@usuario or tiktok/@usuario
+    cleaned = cleaned.replace(/^@/, '')
+  }
+
   switch (platform) {
     case 'instagram': return `https://instagram.com/${cleaned}`
     case 'youtube':   return `https://youtube.com/@${cleaned}`
     case 'tiktok':    return `https://tiktok.com/@${cleaned}`
     case 'facebook':  return `https://facebook.com/${cleaned}`
     case 'linkedin':
-      // Preserve company pages (e.g. 'company/acme') vs personal profiles
       if (cleaned.startsWith('company/')) return `https://linkedin.com/${cleaned}`
       return `https://linkedin.com/in/${cleaned}`
     case 'x':         return `https://x.com/${cleaned}`
-    case 'whatsapp':  return `https://wa.me/${cleaned.replace(/\D/g, '')}`
+    default:          return `https://${platform}.com/${cleaned}`
   }
 }
 
@@ -661,7 +690,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                                   type="tel"
                                   value={handle}
                                   onChange={e => setHandle(e.target.value)}
-                                  placeholder="Ej: 549112345678"
+                                  placeholder="Ej: 549112345678 (Solo números, con código de país)"
                                   className="input-dark"
                                   style={{ paddingLeft: '2.5rem' }}
                                   required
@@ -688,7 +717,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                                   type="text"
                                   value={handle}
                                   onChange={e => setHandle(e.target.value)}
-                                  placeholder={platform === 'linkedin' ? 'Ej: in/tu-perfil o empresa' : 'tunombre'}
+                                  placeholder={platform === 'linkedin' ? 'Ej: tu-perfil o pegá tu URL completa' : 'Ej: tu_usuario o pegá tu URL completa'}
                                   className="input-dark"
                                   style={{ paddingLeft: platform === 'linkedin' ? '2.5rem' : '2rem' }}
                                   required
