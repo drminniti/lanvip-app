@@ -68,6 +68,7 @@ export function getThemeById(id: string): VipTheme | undefined {
 
 /** Derives a theme ID from stored ThemeSettings (for highlighting selected) */
 export function matchThemeId(settings: ThemeSettings): string {
+  if (settings.themeId) return settings.themeId
   return (
     VIP_THEMES.find(
       t => t.settings.colors[0] === settings.colors[0],

@@ -434,8 +434,13 @@ interface PublicLandingProps {
  */
 export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)
-  const theme   = getThemeById(themeId)
-  const accent  = theme?.accent ?? '#D4AF37'
+  const isCustomTheme = themeId === 'custom'
+  
+  const theme = isCustomTheme ? undefined : getThemeById(themeId)
+  
+  const accent = isCustomTheme
+    ? (profile.themeSettings.customColors?.accent ?? '#D4AF37')
+    : (theme?.accent ?? '#D4AF37')
 
   // ── Track page view (client-side, sessionStorage-deduplicated) ─────────────
   // useRef prevents a double-fire in React StrictMode dev (which intentionally
@@ -451,9 +456,11 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
     window.scrollTo(0, 0)
   }, [profile.uid])
 
-  const bg = profile.themeSettings.bgType === 'solid'
-    ? profile.themeSettings.colors[0]
-    : `linear-gradient(145deg, ${profile.themeSettings.colors[0]} 0%, ${profile.themeSettings.colors[1] ?? profile.themeSettings.colors[0]} 100%)`
+  const bg = isCustomTheme
+    ? (profile.themeSettings.customColors?.background ?? '#0a0a0a')
+    : (profile.themeSettings.bgType === 'solid'
+      ? profile.themeSettings.colors[0]
+      : `linear-gradient(145deg, ${profile.themeSettings.colors[0]} 0%, ${profile.themeSettings.colors[1] ?? profile.themeSettings.colors[0]} 100%)`)
 
   const isImageBg = profile.themeSettings.background?.type === 'image' && !!profile.themeSettings.background?.url
   const bgUrl = profile.themeSettings.background?.url
@@ -462,7 +469,11 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   return (
     <main
       className="min-h-screen flex flex-col items-center relative"
-      style={{ background: isImageBg ? undefined : bg }}
+      style={{ 
+        background: isImageBg ? undefined : bg,
+        '--theme-bg': isCustomTheme ? bg : undefined,
+        '--theme-accent': isCustomTheme ? accent : undefined,
+      } as React.CSSProperties}
     >
       {isImageBg && (
         <>

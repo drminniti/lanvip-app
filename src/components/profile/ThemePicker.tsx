@@ -1,16 +1,27 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { VIP_THEMES, matchThemeId, type VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
 
+interface CustomThemePayload {
+  id: 'custom'
+  settings: ThemeSettings
+}
+
 interface ThemePickerProps {
   currentSettings: ThemeSettings
-  onChange: (theme: VipTheme) => void
+  onChange: (theme: VipTheme | CustomThemePayload) => void
+  onCustomColorChange?: (key: 'background' | 'accent', value: string) => void
   disabled?: boolean
 }
 
-export function ThemePicker({ currentSettings, onChange, disabled }: ThemePickerProps) {
+export function ThemePicker({ 
+  currentSettings, 
+  onChange, 
+  onCustomColorChange,
+  disabled 
+}: ThemePickerProps) {
   const activeId = matchThemeId(currentSettings)
 
   return (
@@ -79,6 +90,109 @@ export function ThemePicker({ currentSettings, onChange, disabled }: ThemePicker
             </motion.button>
           )
         })}
+
+        {/* Custom Theme Button */}
+        {(() => {
+          const isActive = activeId === 'custom'
+          const customBg = currentSettings.customColors?.background ?? '#0a0a0a'
+          const customAccent = currentSettings.customColors?.accent ?? '#D4AF37'
+          
+          return (
+            <motion.div className="col-span-2 space-y-3 mt-2">
+              <motion.button
+                key="custom"
+                id="theme-custom"
+                type="button"
+                disabled={disabled}
+                onClick={() => {
+                  if (!isActive) {
+                    onChange({
+                      id: 'custom',
+                      settings: {
+                        ...currentSettings,
+                        themeId: 'custom',
+                        customColors: {
+                          background: customBg,
+                          accent: customAccent
+                        }
+                      }
+                    })
+                  }
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="relative rounded-2xl overflow-hidden text-left transition-all w-full"
+                style={{
+                  border: isActive
+                    ? `2px solid ${customAccent}`
+                    : '2px solid #333333',
+                  boxShadow: isActive
+                    ? `0 0 20px ${customAccent}33`
+                    : 'none',
+                }}
+              >
+                <div
+                  className="h-14 w-full"
+                  style={{ background: customBg }}
+                >
+                  <div
+                    className="absolute top-2 right-2 w-3 h-3 rounded-full"
+                    style={{ background: customAccent }}
+                  />
+                  {isActive && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-2 left-2 w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                      style={{ background: customAccent, color: '#0A0A0A' }}
+                    >
+                      ✓
+                    </motion.div>
+                  )}
+                </div>
+                <div className="px-3 py-2" style={{ background: 'rgba(26,26,26,0.9)' }}>
+                  <p className="text-xs font-semibold" style={{ color: '#F5F5F5' }}>Personalizado</p>
+                  <p className="text-xs" style={{ color: '#A3A3A3' }}>Crea tu propia identidad visual</p>
+                </div>
+              </motion.button>
+              
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl border overflow-hidden"
+                    style={{ 
+                      borderColor: 'rgba(255,255,255,0.06)', 
+                      background: 'rgba(26,26,26,0.5)' 
+                    }}
+                  >
+                    <div className="flex-1 w-full space-y-1">
+                      <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Color de Fondo</label>
+                      <input 
+                        type="color" 
+                        value={customBg}
+                        disabled={disabled}
+                        onChange={e => onCustomColorChange?.('background', e.target.value)}
+                        className="w-full h-10 rounded cursor-pointer border-0 p-0"
+                      />
+                    </div>
+                    <div className="flex-1 w-full space-y-1">
+                      <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Color de Acento</label>
+                      <input 
+                        type="color" 
+                        value={customAccent}
+                        disabled={disabled}
+                        onChange={e => onCustomColorChange?.('accent', e.target.value)}
+                        className="w-full h-10 rounded cursor-pointer border-0 p-0"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )
+        })()}
       </div>
     </div>
   )

@@ -13,6 +13,13 @@ export interface ThemeSettings {
   cardStyle: CardStyle
   darkMode: boolean
   
+  // ── Sprint 5: Custom Themes ──
+  themeId?: string // e.g. 'obsidian', 'custom'
+  customColors?: {
+    background: string
+    accent: string
+  }
+  
   // ── Sprint 4: Visuals ──
   background?: {
     type: 'color' | 'image'

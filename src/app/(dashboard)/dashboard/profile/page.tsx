@@ -9,6 +9,7 @@ import { updateUserProfile, checkUsernameAvailable } from '@/lib/auth'
 import { ThemePicker } from '@/components/profile/ThemePicker'
 import { LandingPreview } from '@/components/profile/LandingPreview'
 import type { VipTheme } from '@/lib/themes'
+import type { ThemeSettings } from '@/types'
 
 const DEBOUNCE_MS = 600
 
@@ -78,10 +79,10 @@ export default function ProfilePage() {
   }
 
   // Theme change: save immediately on select
-  async function handleThemeChange(theme: VipTheme) {
+  async function handleThemeChange(theme: VipTheme | { id: 'custom', settings: ThemeSettings }) {
     if (!user?.uid || !profile) return
     try {
-      const mergedSettings: any = { ...theme.settings }
+      const mergedSettings: any = { ...theme.settings, themeId: theme.id }
       if (profile.themeSettings?.background) {
         const bg = { ...profile.themeSettings.background }
         if (bg.url === undefined) delete bg.url
@@ -93,6 +94,37 @@ export default function ProfilePage() {
       })
     } catch (err) {
       console.error('[Lanvip] theme update failed:', err)
+    }
+  }
+
+  async function handleCustomColorChange(key: 'background' | 'accent', value: string) {
+    if (!user?.uid || !profile) return
+    try {
+      const currentThemeSettings = profile.themeSettings
+      const newCustomColors = {
+        background: currentThemeSettings.customColors?.background ?? '#0a0a0a',
+        accent: currentThemeSettings.customColors?.accent ?? '#D4AF37',
+        [key]: value
+      }
+      
+      const mergedSettings: any = { 
+        ...currentThemeSettings,
+        themeId: 'custom',
+        customColors: newCustomColors
+      }
+      
+      if (profile.themeSettings?.background) {
+        const bg = { ...profile.themeSettings.background }
+        if (bg.url === undefined) delete bg.url
+        if (bg.overlayOpacity === undefined) delete bg.overlayOpacity
+        mergedSettings.background = bg
+      }
+
+      await updateUserProfile(user.uid, { 
+        themeSettings: mergedSettings
+      })
+    } catch (err) {
+      console.error('[Lanvip] custom color update failed:', err)
     }
   }
 
@@ -410,6 +442,7 @@ export default function ProfilePage() {
             <ThemePicker
               currentSettings={previewProfile?.themeSettings ?? profile.themeSettings}
               onChange={handleThemeChange}
+              onCustomColorChange={handleCustomColorChange}
               disabled={saving}
             />
           </div>
