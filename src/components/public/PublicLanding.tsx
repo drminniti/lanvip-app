@@ -455,47 +455,78 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
     ? profile.themeSettings.colors[0]
     : `linear-gradient(145deg, ${profile.themeSettings.colors[0]} 0%, ${profile.themeSettings.colors[1] ?? profile.themeSettings.colors[0]} 100%)`
 
+  const isImageBg = profile.themeSettings.background?.type === 'image' && !!profile.themeSettings.background?.url
+  const bgUrl = profile.themeSettings.background?.url
+  const overlayOpacity = (profile.themeSettings.background?.overlayOpacity ?? 50) / 100
+
+  const avatarStyle = profile.themeSettings.avatarStyle ?? 'classic'
+  const isHero = avatarStyle === 'hero'
+  const isShape = avatarStyle === 'shape'
+
   return (
     <main
-      className="min-h-screen flex flex-col items-center"
-      style={{ background: bg }}
+      className="min-h-screen flex flex-col items-center relative"
+      style={{ background: isImageBg ? undefined : bg }}
     >
-      <div className="w-full max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6">
+      {isImageBg && (
+        <>
+          <div 
+            className="fixed inset-0 bg-cover bg-center z-0" 
+            style={{ backgroundImage: `url(${bgUrl})` }} 
+          />
+          <div 
+            className="fixed inset-0 bg-black z-0" 
+            style={{ opacity: overlayOpacity }} 
+          />
+        </>
+      )}
+      <div className="w-full max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6 relative z-10">
 
         {/* Avatar */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-          className="relative"
+          className={`relative flex justify-center ${isHero ? 'w-[calc(100%+2rem)] -mx-4 -mt-12 mb-2' : ''}`}
         >
-          <div
-            className="w-24 h-24 rounded-full overflow-hidden"
-            style={{
-              border:    `3px solid ${accent}`,
-              boxShadow: `0 0 32px ${accent}55, 0 0 64px ${accent}22`,
-            }}
-          >
-            {profile.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.avatarUrl}
-                alt={`Foto de ${profile.displayName}`}
-                className="w-full h-full object-cover"
-              />
-            ) : (
+          <div className="relative">
+            <div
+              className={`overflow-hidden ${
+                isHero ? 'w-full h-48 rounded-b-2xl' : 
+                isShape ? 'w-24 h-24 rounded-3xl' : 
+                'w-24 h-24 rounded-full'
+              }`}
+              style={{
+                border: isHero ? 'none' : `3px solid ${accent}`,
+                borderBottom: isHero ? `3px solid ${accent}` : undefined,
+                boxShadow: isHero ? 'none' : `0 0 32px ${accent}55, 0 0 64px ${accent}22`,
+                width: isHero ? '100vw' : undefined,
+                maxWidth: isHero ? '448px' : undefined, // matches max-w-md which is 448px
+              }}
+            >
+              {profile.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profile.avatarUrl}
+                  alt={`Foto de ${profile.displayName}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center text-3xl font-bold"
+                  style={{ background: `${accent}22`, color: accent }}
+                >
+                  {profile.displayName?.[0]?.toUpperCase() ?? '?'}
+                </div>
+              )}
+            </div>
+            {!isHero && (
               <div
-                className="w-full h-full flex items-center justify-center text-3xl font-bold"
-                style={{ background: `${accent}22`, color: accent }}
-              >
-                {profile.displayName?.[0]?.toUpperCase() ?? '?'}
-              </div>
+                className={`absolute inset-0 pointer-events-none ${isShape ? 'rounded-3xl' : 'rounded-full'}`}
+                style={{ boxShadow: `0 0 0 1px ${accent}33` }}
+              />
             )}
           </div>
-          <div
-            className="absolute inset-0 rounded-full pointer-events-none"
-            style={{ boxShadow: `0 0 0 1px ${accent}33` }}
-          />
         </motion.div>
 
         {/* Name */}

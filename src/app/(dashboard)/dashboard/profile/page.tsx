@@ -23,6 +23,12 @@ export default function ProfilePage() {
   const [bio, setBio]                 = useState('')
   const [avatarUrl, setAvatarUrl]     = useState('')
 
+  // Sprint 4: Visuals
+  const [avatarStyle, setAvatarStyle] = useState<'classic' | 'shape' | 'hero'>('classic')
+  const [bgType, setBgType]           = useState<'color' | 'image'>('color')
+  const [bgUrl, setBgUrl]             = useState('')
+  const [bgOverlayOpacity, setBgOverlayOpacity] = useState(50)
+
   const [usernameStatus, setUsernameStatus] = useState<
     'idle' | 'checking' | 'available' | 'taken' | 'too-short' | 'unchanged'
   >('idle')
@@ -38,7 +44,13 @@ export default function ProfilePage() {
     setUsername(profile.username ?? '')
     setBio(profile.bio ?? '')
     setAvatarUrl(profile.avatarUrl || user?.photoURL || '')
-  }, [profile?.uid]) // only on uid change to avoid overwriting in-progress edits
+    
+    // Sprint 4 Visuals
+    setAvatarStyle(profile.themeSettings?.avatarStyle ?? 'classic')
+    setBgType(profile.themeSettings?.background?.type ?? 'color')
+    setBgUrl(profile.themeSettings?.background?.url ?? '')
+    setBgOverlayOpacity(profile.themeSettings?.background?.overlayOpacity ?? 50)
+  }, [profile?.uid, user?.photoURL]) // only on uid change to avoid overwriting in-progress edits
 
   // Username availability check (debounced)
   const checkUsername = useCallback(
@@ -69,9 +81,15 @@ export default function ProfilePage() {
 
   // Theme change: save immediately on select
   async function handleThemeChange(theme: VipTheme) {
-    if (!user?.uid) return
+    if (!user?.uid || !profile) return
     try {
-      await updateUserProfile(user.uid, { themeSettings: theme.settings })
+      await updateUserProfile(user.uid, { 
+        themeSettings: { 
+          ...theme.settings,
+          avatarStyle: profile.themeSettings?.avatarStyle,
+          background: profile.themeSettings?.background
+        } 
+      })
     } catch (err) {
       console.error('[Lanvip] theme update failed:', err)
     }
@@ -98,8 +116,17 @@ export default function ProfilePage() {
         username,
         bio:         bio.trim(),
         avatarUrl:   avatarUrl.trim(),
+        themeSettings: {
+          ...profile!.themeSettings,
+          avatarStyle,
+          background: {
+            type: (bgUrl.trim() ? 'image' : 'color') as 'image' | 'color',
+            url: bgUrl.trim(),
+            overlayOpacity: bgOverlayOpacity
+          }
+        }
       })
-      setSaveMsg({ type: 'ok', text: '¡Perfil actualizado!' })
+      setSaveMsg({ type: 'ok', text: '¡Perfil y apariencia actualizados!' })
     } catch (err) {
       console.error('[Lanvip] updateUserProfile failed:', err)
       setSaveMsg({ type: 'err', text: 'Error al guardar. Inténtalo de nuevo.' })
@@ -111,7 +138,22 @@ export default function ProfilePage() {
 
   // Build a live preview profile merging form state over persisted data
   const previewProfile = profile
-    ? { ...profile, displayName, username, bio, avatarUrl }
+    ? { 
+        ...profile, 
+        displayName, 
+        username, 
+        bio, 
+        avatarUrl,
+        themeSettings: {
+          ...profile.themeSettings,
+          avatarStyle,
+          background: {
+            type: (bgUrl.trim() ? 'image' : 'color') as 'image' | 'color',
+            url: bgUrl.trim(),
+            overlayOpacity: bgOverlayOpacity
+          }
+        }
+      }
     : null
 
   const statusColors: Record<string, string> = {
@@ -203,6 +245,20 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
+            
+            <div className="space-y-1 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              <label htmlFor="prof-avatar-style" className="label-dark">Estilo visual de la foto</label>
+              <select
+                id="prof-avatar-style"
+                value={avatarStyle}
+                onChange={e => setAvatarStyle(e.target.value as 'classic' | 'shape' | 'hero')}
+                className="input-dark w-full"
+              >
+                <option value="classic">Clásico (Redondo)</option>
+                <option value="shape">Moderno (Cuadrado curvo)</option>
+                <option value="hero">Banner Hero (Ancho completo)</option>
+              </select>
+            </div>
           </div>
 
           {/* Identity */}
@@ -279,6 +335,43 @@ export default function ProfilePage() {
               <p className="text-xs text-right" style={{ color: '#555' }}>
                 {bio.length}/160
               </p>
+            </div>
+
+            <div className="pt-4 border-t space-y-4" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              <h3 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>Fondo de Pantalla</h3>
+              <div className="space-y-1">
+                <label htmlFor="prof-bg-url" className="label-dark">URL de imagen (opcional)</label>
+                <input
+                  id="prof-bg-url"
+                  type="url"
+                  value={bgUrl}
+                  onChange={e => setBgUrl(e.target.value)}
+                  placeholder="https://ejemplo.com/tu-fondo.jpg"
+                  className="input-dark"
+                />
+              </div>
+              
+              {bgUrl.trim() !== '' && (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label htmlFor="prof-bg-opacity" className="label-dark">Oscurecimiento (Overlay)</label>
+                    <span className="text-xs font-mono" style={{ color: '#A3A3A3' }}>{bgOverlayOpacity}%</span>
+                  </div>
+                  <input
+                    id="prof-bg-opacity"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={bgOverlayOpacity}
+                    onChange={e => setBgOverlayOpacity(parseInt(e.target.value))}
+                    className="w-full accent-[#D4AF37]"
+                  />
+                  <p className="text-xs" style={{ color: '#A3A3A3' }}>
+                    Mejora la legibilidad de tus enlaces oscureciendo la imagen.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Save feedback */}

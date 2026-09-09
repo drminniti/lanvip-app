@@ -12,6 +12,14 @@ export interface ThemeSettings {
   colors: string[]        // e.g. ['#f0e6ff', '#e0f0ff']
   cardStyle: CardStyle
   darkMode: boolean
+  
+  // ── Sprint 4: Visuals ──
+  avatarStyle?: 'classic' | 'shape' | 'hero'
+  background?: {
+    type: 'color' | 'image'
+    url?: string
+    overlayOpacity?: number
+  }
 }
 
 // ─── User ────────────────────────────────────────────────────────────────────
