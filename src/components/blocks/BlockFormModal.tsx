@@ -26,15 +26,18 @@ export interface BlockFormData {
   jobTitle?: string
 }
 
-export type SocialPlatform = 'instagram' | 'linkedin' | 'x' | 'whatsapp'
+export type SocialPlatform = 'instagram' | 'linkedin' | 'x' | 'whatsapp' | 'youtube' | 'tiktok' | 'facebook'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon: string }[] = [
-  { id: 'instagram', label: 'Instagram', color: '#E1306C', icon: '📸' },
-  { id: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', icon: '💼' },
-  { id: 'x',         label: 'X / Twitter', color: '#555555', icon: '🐦' },
-  { id: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', icon: '💬' },
+  { id: 'instagram', label: 'Instagram', color: '#E1306C', icon: 'instagram' },
+  { id: 'youtube',   label: 'YouTube',   color: '#FF0000', icon: 'youtube' },
+  { id: 'tiktok',    label: 'TikTok',    color: '#000000', icon: 'tiktok' },
+  { id: 'x',         label: 'X / Twitter', color: '#555555', icon: 'x' },
+  { id: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', icon: 'linkedin' },
+  { id: 'facebook',  label: 'Facebook',  color: '#1877F2', icon: 'facebook' },
+  { id: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', icon: 'whatsapp' },
 ]
 
 /** The block types the user can choose in step 1 */
@@ -111,6 +114,9 @@ function socialUrl(platform: SocialPlatform, handle: string): string {
   const cleaned = handle.replace(/^@/, '').trim()
   switch (platform) {
     case 'instagram': return `https://instagram.com/${cleaned}`
+    case 'youtube':   return `https://youtube.com/@${cleaned}`
+    case 'tiktok':    return `https://tiktok.com/@${cleaned}`
+    case 'facebook':  return `https://facebook.com/${cleaned}`
     case 'linkedin':
       // Preserve company pages (e.g. 'company/acme') vs personal profiles
       if (cleaned.startsWith('company/')) return `https://linkedin.com/${cleaned}`
@@ -276,7 +282,7 @@ function FeaturedToggle({ value, onChange }: { value: boolean; onChange: (v: boo
         <span className="text-base">⭐</span>
         <div className="text-left">
           <p className="text-sm font-medium" style={{ color: value ? '#D4AF37' : '#888' }}>Destacado</p>
-          <p className="text-xs" style={{ color: '#555' }}>Aplica brillo y borde dorado</p>
+          <p className="text-xs" style={{ color: '#555' }}>Destaca este bloque visualmente en tu grilla</p>
         </div>
       </div>
       <div
@@ -328,7 +334,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const [isFeatured, setIsFeatured]   = useState(initialData?.isFeatured ?? false)
   // Sprint 2: blockWidth is independent from isFeatured
   const [blockWidth, setBlockWidth]   = useState<BlockWidth>(
-    initialData?.width ?? (initialData?.isFeatured ? 'full' : 'half')
+    initialData ? (initialData.width ?? (initialData.isFeatured ? 'full' : 'half')) : 'full'
   )
   // vCard fields
   const [phone, setPhone]       = useState(initialData?.content.phone    ?? '')
@@ -436,12 +442,18 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     if (!resolvedTitle && !isStructural) { setError('El título es obligatorio.'); return }
     if (!resolvedUrl && !isStructural && blockType !== 'vcard') { setError('La URL es obligatoria.'); return }
 
+    // Auto-format URLs: prepend https:// if missing
+    let formattedUrl = resolvedUrl.trim()
+    if (formattedUrl && !formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://') && !formattedUrl.startsWith('mailto:') && !formattedUrl.startsWith('tel:')) {
+      formattedUrl = `https://${formattedUrl}`
+    }
+
     setSaving(true)
     try {
       await onSubmit({
         type:        blockType,
         title:       resolvedTitle,
-        url:         resolvedUrl,
+        url:         formattedUrl,
         icon:        resolvedIcon,
         description: description.trim(),
         width:       blockWidth,
@@ -656,6 +668,12 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             </>
                           )}
                         </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Descripción (opcional)</label>
+                          <textarea value={description} onChange={e => setDescription(e.target.value)}
+                            placeholder="Ej: Seguime para más contenido" className="input-dark"
+                            style={{ resize: 'none', minHeight: '3rem' }} maxLength={120} rows={2} />
+                        </div>
                       </>
                     )}
 
@@ -827,6 +845,12 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             maxLength={60}
                             required
                           />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Descripción (opcional)</label>
+                          <textarea value={description} onChange={e => setDescription(e.target.value)}
+                            placeholder="Subtítulo de la sección" className="input-dark"
+                            style={{ resize: 'none', minHeight: '3rem' }} maxLength={120} rows={2} />
                         </div>
                       </div>
                     )}
