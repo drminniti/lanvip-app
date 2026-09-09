@@ -194,38 +194,27 @@ function BentoTile({
       target={block.content.url ? '_blank' : undefined}
       rel="noopener noreferrer"
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0,
+        boxShadow: isFeatured ? '0 0 12px rgba(212,175,55,0.15)' : 'none'
+      }}
       transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ 
+        scale: 1.02,
+        boxShadow: isFeatured ? '0 0 24px rgba(212,175,55,0.4)' : 'none'
+      }}
       whileTap={{ scale: 0.96 }}
       onClick={() => { if (block.content.url) void incrementClickCount(block.id) }}
       className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4`}
       style={{
         textDecoration: 'none',
         cursor:         block.content.url ? 'pointer' : 'default',
-        borderColor:    `${tileColor}28`,
+        borderColor:    isFeatured ? 'rgba(212,175,55,0.45)' : `${tileColor}28`,
       }}
       aria-label={block.content.title}
     >
-      {/* VIP Glow */}
-      <motion.span
-        aria-hidden="true"
-        initial={{ opacity: isFeatured ? 0.55 : 0 }}
-        whileHover={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        style={{
-          position: 'absolute', top: '-20%', right: '-10%',
-          width: '65%', height: '140%',
-          background: `radial-gradient(circle, ${tileColor}${isFeatured ? '38' : '28'} 0%, transparent 70%)`,
-          filter: 'blur(18px)', pointerEvents: 'none', zIndex: 0,
-        }}
-      />
-      {/* Featured badge */}
-      {isFeatured && (
-        <span aria-hidden="true" style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', fontSize: '0.65rem', opacity: 0.55, zIndex: 1, lineHeight: 1 }}>
-          ⭐
-        </span>
-      )}
+
       {/* Icon */}
       {block.content.icon && (
         <span className="text-xl flex-shrink-0 leading-none flex items-center justify-center" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>

@@ -56,6 +56,8 @@ export function BlockCard({ block, onToggle, onDelete, onEdit }: BlockCardProps)
         transition: transition ?? 'transform 200ms ease',
         opacity:    isDragging ? 0.5 : 1,
         zIndex:     isDragging ? 10 : 'auto',
+        boxShadow:  block.isFeatured && !isDragging ? '0 0 12px rgba(212,175,55,0.15)' : 'none',
+        borderColor: block.isFeatured ? 'rgba(212,175,55,0.45)' : 'rgba(255,255,255,0.06)'
       }}
       className="bento-tile flex items-center gap-3 px-3 py-3"
     >
@@ -106,14 +108,6 @@ export function BlockCard({ block, onToggle, onDelete, onEdit }: BlockCardProps)
           <p className="text-sm font-semibold truncate" style={{ color: '#F5F5F5' }}>
             {block.content.title}
           </p>
-          {block.isFeatured && (
-            <span
-              className="px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0"
-              style={{ background: 'rgba(212,175,55,0.12)', color: '#D4AF37' }}
-            >
-              ⭐
-            </span>
-          )}
         </div>
         {block.content.url && (
           <p className="text-xs truncate mt-0.5" style={{ color: '#444' }}>

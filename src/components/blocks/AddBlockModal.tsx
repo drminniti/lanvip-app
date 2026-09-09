@@ -45,7 +45,7 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
   },
   {
     label: 'Contacto',
-    emojis: ['💬', '📩', '📞', '📧', '👋', '🙌', '❤️', '⭐'],
+    emojis: ['💬', '📩', '📞', '📧', '👋', '🙌', '❤️'],
   },
   {
     label: 'Varios',
@@ -507,7 +507,7 @@ export function AddBlockModal({ open, onClose, onSubmit }: AddBlockModalProps) {
                           </div>
                           <div className="flex items-center gap-1">
                             <span className="text-xs font-medium" style={{ color: isFeatured ? '#D4AF37' : '#666' }}>Completo</span>
-                            <span className="text-xs" style={{ color: isFeatured ? '#D4AF37' : '#555' }}>⭐</span>
+                            <span className="text-xs leading-none" style={{ color: isFeatured ? '#D4AF37' : '#555' }}>✨</span>
                           </div>
                         </button>
                       </div>

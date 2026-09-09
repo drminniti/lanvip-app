@@ -105,7 +105,7 @@ const EMOJI_GROUPS: { label: string; emojis: string[] }[] = [
   { label: 'Links & Web',  emojis: ['🔗', '🌐', '🖥️', '📱', '💻', '🔌', '📡', '🛰️'] },
   { label: 'Negocio',      emojis: ['💼', '📊', '📈', '🤝', '🏢', '💰', '🎯', '🏆'] },
   { label: 'Creativo',     emojis: ['🎨', '✏️', '📸', '🎬', '🎵', '🎤', '🖌️', '✨'] },
-  { label: 'Contacto',     emojis: ['💬', '📩', '📞', '📧', '👋', '🙌', '❤️', '⭐'] },
+  { label: 'Contacto',     emojis: ['💬', '📩', '📞', '📧', '👋', '🙌', '❤️'] },
   { label: 'Varios',       emojis: ['🚀', '🌟', '💡', '🔑', '🎁', '📌', '🗂️', '📋'] },
 ]
 
@@ -308,7 +308,7 @@ function FeaturedToggle({ value, onChange }: { value: boolean; onChange: (v: boo
       }}
     >
       <div className="flex items-center gap-2">
-        <span className="text-base">⭐</span>
+        <span className="text-base leading-none" style={{ color: value ? '#D4AF37' : '#888' }}>✨</span>
         <div className="text-left">
           <p className="text-sm font-medium" style={{ color: value ? '#D4AF37' : '#888' }}>Destacado</p>
           <p className="text-xs" style={{ color: '#555' }}>Destaca este bloque visualmente en tu grilla</p>
