@@ -28,6 +28,7 @@ export interface BlockFormData {
   // youtube-only
   autoplay?: boolean
   embedId?:  string
+  displayMode?: 'player' | 'button'
 }
 
 export type SocialPlatform = 'instagram' | 'linkedin' | 'x' | 'whatsapp' | 'youtube' | 'tiktok' | 'facebook'
@@ -310,6 +311,73 @@ function WidthSelector({ value, onChange }: { value: BlockWidth; onChange: (v: B
   )
 }
 
+function YouTubeDisplaySelector({
+  displayMode,
+  setDisplayMode,
+  blockWidth,
+  setBlockWidth,
+}: {
+  displayMode: 'player' | 'button'
+  setDisplayMode: (v: 'player' | 'button') => void
+  blockWidth: BlockWidth
+  setBlockWidth: (v: BlockWidth) => void
+}) {
+  const isPlayer = displayMode === 'player'
+  const isButtonFull = displayMode === 'button' && blockWidth === 'full'
+  const isButtonHalf = displayMode === 'button' && blockWidth === 'half'
+
+  return (
+    <div className="space-y-2">
+      <label className="label-dark">Modo de visualización</label>
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={() => { setDisplayMode('player'); setBlockWidth('full') }}
+          className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
+          style={{
+            background: isPlayer ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.03)',
+            border:     isPlayer ? '1.5px solid rgba(239,68,68,0.3)' : '1.5px solid transparent',
+          }}
+        >
+          <div className="w-full">
+            <div className="h-5 rounded w-full" style={{ background: isPlayer ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.08)' }} />
+          </div>
+          <span className="text-xs font-medium" style={{ color: isPlayer ? '#ef4444' : '#666' }}>Reproductor</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setDisplayMode('button'); setBlockWidth('full') }}
+          className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
+          style={{
+            background: isButtonFull ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+            border:     isButtonFull ? '1.5px solid rgba(255,255,255,0.20)' : '1.5px solid transparent',
+          }}
+        >
+          <div className="w-full">
+            <div className="h-5 rounded w-full" style={{ background: isButtonFull ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)' }} />
+          </div>
+          <span className="text-xs font-medium" style={{ color: isButtonFull ? '#F5F5F5' : '#666' }}>Botón Completo</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setDisplayMode('button'); setBlockWidth('half') }}
+          className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
+          style={{
+            background: isButtonHalf ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+            border:     isButtonHalf ? '1.5px solid rgba(255,255,255,0.20)' : '1.5px solid transparent',
+          }}
+        >
+          <div className="w-full flex gap-1">
+            <div className="h-5 rounded flex-1" style={{ background: isButtonHalf ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)' }} />
+            <div className="h-5 rounded flex-1" style={{ background: 'rgba(255,255,255,0.05)' }} />
+          </div>
+          <span className="text-xs font-medium" style={{ color: isButtonHalf ? '#F5F5F5' : '#666' }}>Botón Mitad</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // FeaturedToggle — independent from width; controls gold glassmorphism glow
 function FeaturedToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -387,6 +455,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const [company, setCompany]   = useState(initialData?.content.company  ?? '')
   const [jobTitle, setJobTitle] = useState(initialData?.content.jobTitle ?? '')
   const [autoplay, setAutoplay] = useState(initialData?.content.autoplay ?? false)
+  const [displayMode, setDisplayMode] = useState<'player' | 'button'>(initialData?.content.displayMode ?? 'player')
   const [showLabelWarning, setShowLabelWarning] = useState(false)
 
   const [saving, setSaving] = useState(false)
@@ -412,13 +481,15 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setCompany(initialData.content.company  ?? '')
       setJobTitle(initialData.content.jobTitle ?? '')
       setAutoplay(initialData.content.autoplay ?? false)
+      setDisplayMode(initialData.content.displayMode ?? 'player')
       setError('')
     } else {
       setStep('type'); setBlockType('link'); setPlatform('instagram')
       setTitle(''); setHandle(''); setUrl(''); setIcon('🔗')
-      setDescription(''); setIsFeatured(false); setBlockWidth('half')
+      setDescription(''); setIsFeatured(false); setBlockWidth('full')
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
       setAutoplay(false)
+      setDisplayMode('player')
       setError('')
       setShowLabelWarning(false)
     }
@@ -439,9 +510,10 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   function reset() {
     if (!isEditMode) {
       setStep('type'); setTitle(''); setHandle(''); setUrl(''); setIcon('🔗')
-      setDescription(''); setIsFeatured(false)
+      setDescription(''); setIsFeatured(false); setBlockWidth('full')
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
       setAutoplay(false)
+      setDisplayMode('player')
     }
     setError('')
     setShowLabelWarning(false)
@@ -546,6 +618,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         jobTitle:    blockType === 'vcard' ? jobTitle.trim() : undefined,
         embedId:     blockType === 'youtube' ? parseYouTubeId(formattedUrl) || undefined : undefined,
         autoplay:    blockType === 'youtube' ? autoplay : undefined,
+        displayMode: blockType === 'youtube' ? displayMode : undefined,
       })
       handleClose()
     } catch {
@@ -891,17 +964,21 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                           <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)}
                             placeholder="https://youtu.be/..." className="input-dark" required />
                         </div>
-                        <div className="space-y-1">
-                          <label className="label-dark">Título (opcional)</label>
-                          <input id="block-title" type="text" value={title} onChange={e => setTitle(e.target.value)}
-                            placeholder="Dejar vacío para 'Video de YouTube'" className="input-dark" maxLength={60} />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="label-dark">Descripción (opcional)</label>
-                          <textarea value={description} onChange={e => setDescription(e.target.value)}
-                            placeholder="Breve descripción del video" className="input-dark"
-                            style={{ resize: 'none', minHeight: '3rem' }} maxLength={120} rows={2} />
-                        </div>
+                        {displayMode === 'button' && (
+                          <>
+                            <div className="space-y-1">
+                              <label className="label-dark">Título (opcional)</label>
+                              <input id="block-title" type="text" value={title} onChange={e => setTitle(e.target.value)}
+                                placeholder="Dejar vacío para 'Video de YouTube'" className="input-dark" maxLength={60} />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="label-dark">Descripción (opcional)</label>
+                              <textarea value={description} onChange={e => setDescription(e.target.value)}
+                                placeholder="Breve descripción del video" className="input-dark"
+                                style={{ resize: 'none', minHeight: '3rem' }} maxLength={120} rows={2} />
+                            </div>
+                          </>
+                        )}
                         <div className="pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                           <button
                             type="button"
@@ -991,10 +1068,19 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                       </div>
                     )}
 
-                    {/* ── Width + Featured (link/social/vcard/calendly only) ─ */}
+                    {/* ── Width + Featured (link/social/vcard/calendly/youtube only) ─ */}
                     {blockType !== 'divider' && blockType !== 'section_title' && (
                       <>
-                        <WidthSelector value={blockWidth} onChange={setBlockWidth} />
+                        {blockType === 'youtube' ? (
+                          <YouTubeDisplaySelector 
+                            displayMode={displayMode}
+                            setDisplayMode={setDisplayMode}
+                            blockWidth={blockWidth}
+                            setBlockWidth={setBlockWidth}
+                          />
+                        ) : (
+                          <WidthSelector value={blockWidth} onChange={setBlockWidth} />
+                        )}
                         <FeaturedToggle value={isFeatured} onChange={setIsFeatured} />
                       </>
                     )}

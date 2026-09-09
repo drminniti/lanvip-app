@@ -196,14 +196,15 @@ function BentoTile({
   if (isYouTube) {
     const embedId = block.content.embedId
     const autoplay = block.content.autoplay ?? false
+    const displayMode = block.content.displayMode ?? (blockWidth === 'full' ? 'player' : 'button')
 
-    if (blockWidth === 'full') {
+    if (displayMode === 'player') {
       return (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0, boxShadow: isFeatured ? `0 0 12px ${accent}26` : 'none' }}
           transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
-          className={`${colClass} bento-tile overflow-hidden relative`}
+          className="col-span-2 bento-tile overflow-hidden relative"
           style={{ borderColor: isFeatured ? `${accent}73` : `rgba(255,255,255,0.08)`, padding: 0 }}
         >
           {/* Glow for featured full-width youtube block */}
@@ -252,7 +253,7 @@ function BentoTile({
       )
     }
 
-    // Half Width
+    // Button mode (Full or Half Width)
     return (
       <>
         <motion.button

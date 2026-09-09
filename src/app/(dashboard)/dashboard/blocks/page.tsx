@@ -79,6 +79,7 @@ export default function BlocksPage() {
         // YouTube fields
         embedId:     data.embedId  || undefined,
         autoplay:    data.autoplay,
+        displayMode: data.displayMode || undefined,
       },
       spanSize:     '1x1',
       isFeatured:   data.isFeatured,
@@ -100,8 +101,9 @@ export default function BlocksPage() {
         jobTitle:    data.jobTitle || undefined,
         embedId:     data.embedId  || undefined,
         autoplay:    data.autoplay,
+        displayMode: data.displayMode || undefined,
       },
-      width:      data.width ?? 'half',
+      width:      data.width ?? 'full',
       isFeatured: data.isFeatured,
     })
   }

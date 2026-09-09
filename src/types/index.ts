@@ -73,6 +73,7 @@ export interface BlockContent {
   thumbnailUrl?: string
   embedId?: string    // for YouTube / Spotify
   autoplay?: boolean  // for YouTube
+  displayMode?: 'player' | 'button' // for YouTube
 
   // ── vCard-specific fields ───────────────────────────────────────────────
   /** Full phone number, e.g. "+54 11 1234-5678" */
