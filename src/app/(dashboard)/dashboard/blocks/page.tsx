@@ -76,6 +76,9 @@ export default function BlocksPage() {
         email:       data.email    || undefined,
         company:     data.company  || undefined,
         jobTitle:    data.jobTitle || undefined,
+        // YouTube fields
+        embedId:     data.embedId  || undefined,
+        autoplay:    data.autoplay,
       },
       spanSize:     '1x1',
       isFeatured:   data.isFeatured,
@@ -95,6 +98,8 @@ export default function BlocksPage() {
         email:       data.email    || undefined,
         company:     data.company  || undefined,
         jobTitle:    data.jobTitle || undefined,
+        embedId:     data.embedId  || undefined,
+        autoplay:    data.autoplay,
       },
       width:      data.width ?? 'half',
       isFeatured: data.isFeatured,

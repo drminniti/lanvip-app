@@ -25,6 +25,9 @@ export interface BlockFormData {
   email?:    string
   company?:  string
   jobTitle?: string
+  // youtube-only
+  autoplay?: boolean
+  embedId?:  string
 }
 
 export type SocialPlatform = 'instagram' | 'linkedin' | 'x' | 'whatsapp' | 'youtube' | 'tiktok' | 'facebook'
@@ -43,7 +46,7 @@ const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon
 
 /** The block types the user can choose in step 1 */
 const BLOCK_TYPES: {
-  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title'
+  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube'
   emoji:    string
   label:    string
   subtitle: string
@@ -97,6 +100,14 @@ const BLOCK_TYPES: {
     subtitle: 'Encabezado de grupo',
     bg:       'rgba(168,85,247,0.08)',
     border:   'rgba(168,85,247,0.20)',
+  },
+  {
+    id:       'youtube',
+    emoji:    '▶️',
+    label:    'YouTube',
+    subtitle: 'Video interactivo',
+    bg:       'rgba(239,68,68,0.08)',
+    border:   'rgba(239,68,68,0.20)',
   },
 ]
 
@@ -154,6 +165,11 @@ function socialUrl(platform: SocialPlatform, handle: string): string {
     case 'x':         return `https://x.com/${cleaned}`
     default:          return `https://${platform}.com/${cleaned}`
   }
+}
+
+function parseYouTubeId(urlStr: string): string | null {
+  const match = urlStr.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)
+  return match ? match[1] : null
 }
 
 function platformFromIcon(icon: string): SocialPlatform {
@@ -340,16 +356,16 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const isEditMode = Boolean(initialData)
 
   // Derive initial block type — clamp to the supported UI types
-  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title'
+  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube'
   function toUIType(t?: BlockType): UIBlockType {
-    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title') return t
+    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube') return t
     return 'link'
   }
 
   const initType     = toUIType(initialData?.type)
   const initPlatform = initType === 'social' ? platformFromIcon(initialData?.content.icon ?? '') : 'instagram' as SocialPlatform
   const initHandle   = initType === 'social' ? handleFromUrl(initPlatform, initialData?.content.url ?? '') : ''
-  const initUrl      = (initType === 'link' || initType === 'calendly') ? (initialData?.content.url ?? '') : ''
+  const initUrl      = (initType === 'link' || initType === 'calendly' || initType === 'youtube') ? (initialData?.content.url ?? '') : ''
 
   // ── State ────────────────────────────────────────────────────────────────
   const [step, setStep]           = useState<'type' | 'details'>(isEditMode ? 'details' : 'type')
@@ -370,6 +386,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const [email, setEmail]       = useState(initialData?.content.email    ?? '')
   const [company, setCompany]   = useState(initialData?.content.company  ?? '')
   const [jobTitle, setJobTitle] = useState(initialData?.content.jobTitle ?? '')
+  const [autoplay, setAutoplay] = useState(initialData?.content.autoplay ?? false)
   const [showLabelWarning, setShowLabelWarning] = useState(false)
 
   const [saving, setSaving] = useState(false)
@@ -385,7 +402,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setPlatform(pt)
       setTitle(initialData.content.title ?? '')
       setHandle(uit === 'social' ? handleFromUrl(pt, initialData.content.url ?? '') : '')
-      setUrl((uit === 'link' || uit === 'calendly') ? (initialData.content.url ?? '') : '')
+      setUrl((uit === 'link' || uit === 'calendly' || uit === 'youtube') ? (initialData.content.url ?? '') : '')
       setIcon(initialData.content.icon ?? '🔗')
       setDescription(initialData.content.description ?? '')
       setIsFeatured(initialData.isFeatured ?? false)
@@ -394,12 +411,14 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setEmail(initialData.content.email    ?? '')
       setCompany(initialData.content.company  ?? '')
       setJobTitle(initialData.content.jobTitle ?? '')
+      setAutoplay(initialData.content.autoplay ?? false)
       setError('')
     } else {
       setStep('type'); setBlockType('link'); setPlatform('instagram')
       setTitle(''); setHandle(''); setUrl(''); setIcon('🔗')
       setDescription(''); setIsFeatured(false); setBlockWidth('half')
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
+      setAutoplay(false)
       setError('')
       setShowLabelWarning(false)
     }
@@ -422,6 +441,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setStep('type'); setTitle(''); setHandle(''); setUrl(''); setIcon('🔗')
       setDescription(''); setIsFeatured(false)
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
+      setAutoplay(false)
     }
     setError('')
     setShowLabelWarning(false)
@@ -485,6 +505,15 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     } else if (blockType === 'vcard') {
       resolvedUrl  = url.trim() // optional website
       resolvedIcon = icon || '👤'
+    } else if (blockType === 'youtube') {
+      const parsedId = parseYouTubeId(url.trim())
+      if (!parsedId) {
+        setError('URL de YouTube inválida. Revisa el enlace.')
+        return
+      }
+      resolvedUrl = `https://youtu.be/${parsedId}`
+      resolvedIcon = '▶️'
+      if (!resolvedTitle) resolvedTitle = 'Video de YouTube'
     } else {
       resolvedUrl = url.trim()
     }
@@ -515,6 +544,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         email:       blockType === 'vcard' ? email.trim()    : undefined,
         company:     blockType === 'vcard' ? company.trim()  : undefined,
         jobTitle:    blockType === 'vcard' ? jobTitle.trim() : undefined,
+        embedId:     blockType === 'youtube' ? parseYouTubeId(formattedUrl) || undefined : undefined,
+        autoplay:    blockType === 'youtube' ? autoplay : undefined,
       })
       handleClose()
     } catch {
@@ -848,6 +879,53 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                           <textarea value={description} onChange={e => setDescription(e.target.value)}
                             placeholder="30 min · Videollamada" className="input-dark"
                             style={{ resize: 'none', minHeight: '3rem' }} maxLength={120} rows={2} />
+                        </div>
+                      </>
+                    )}
+
+                    {/* ── YOUTUBE ────────────────────────────────────────── */}
+                    {blockType === 'youtube' && (
+                      <>
+                        <div className="space-y-1">
+                          <label className="label-dark">URL del Video *</label>
+                          <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)}
+                            placeholder="https://youtu.be/..." className="input-dark" required />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Título (opcional)</label>
+                          <input id="block-title" type="text" value={title} onChange={e => setTitle(e.target.value)}
+                            placeholder="Dejar vacío para 'Video de YouTube'" className="input-dark" maxLength={60} />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Descripción (opcional)</label>
+                          <textarea value={description} onChange={e => setDescription(e.target.value)}
+                            placeholder="Breve descripción del video" className="input-dark"
+                            style={{ resize: 'none', minHeight: '3rem' }} maxLength={120} rows={2} />
+                        </div>
+                        <div className="pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+                          <button
+                            type="button"
+                            onClick={() => setAutoplay(!autoplay)}
+                            className="flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all"
+                            style={{
+                              background: autoplay ? 'rgba(239,68,68,0.10)' : 'rgba(255,255,255,0.04)',
+                              border:     autoplay ? '1px solid rgba(239,68,68,0.35)' : '1px solid rgba(255,255,255,0.06)',
+                            }}
+                          >
+                            <div className="text-left">
+                              <p className="text-sm font-medium" style={{ color: autoplay ? '#ef4444' : '#888' }}>Autoplay (Inicia en silencio)</p>
+                              <p className="text-xs" style={{ color: '#555' }}>El video arrancará automáticamente sin sonido para no ser invasivo.</p>
+                            </div>
+                            <div
+                              className="w-10 h-5 rounded-full relative transition-all"
+                              style={{ background: autoplay ? 'rgba(239,68,68,0.60)' : 'rgba(255,255,255,0.10)' }}
+                            >
+                              <div
+                                className="absolute top-0.5 w-4 h-4 rounded-full transition-all"
+                                style={{ background: '#fff', left: autoplay ? '1.25rem' : '0.125rem' }}
+                              />
+                            </div>
+                          </button>
                         </div>
                       </>
                     )}

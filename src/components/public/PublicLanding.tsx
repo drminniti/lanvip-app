@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { getThemeById, matchThemeId } from '@/lib/themes'
 import { trackPageView, incrementClickCount } from '@/lib/analytics'
 import { downloadVCard } from '@/lib/vcard'
@@ -51,16 +51,21 @@ function BentoTile({
   const isSocial    = block.type === 'social'
   const isVCard     = block.type === 'vcard'
   const isCalendly  = block.type === 'calendly'
+  const isYouTube   = block.type === 'youtube'
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [showLightbox, setShowLightbox] = useState(false)
 
   // Color per type
   const tileColor = isVCard
     ? '#22c55e'
     : isCalendly
       ? '#0069FF'
-      : isSocial
-        ? (SOCIAL_COLORS[platformKey] ?? accent)
-        : accent
+      : isYouTube
+        ? '#ef4444'
+        : isSocial
+          ? (SOCIAL_COLORS[platformKey] ?? accent)
+          : accent
 
   // Sprint 2: col-span driven by block.width; fallback for legacy Firestore docs that
   // don't have this field yet (block.isFeatured ? 'full' : 'half').
@@ -184,6 +189,154 @@ function BentoTile({
           Agendar
         </span>
       </motion.a>
+    )
+  }
+
+  // ── YouTube tile — embedded iframe or lightbox ─────────────────────────
+  if (isYouTube) {
+    const embedId = block.content.embedId
+    const autoplay = block.content.autoplay ?? false
+
+    if (blockWidth === 'full') {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0, boxShadow: isFeatured ? `0 0 12px ${accent}26` : 'none' }}
+          transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
+          className={`${colClass} bento-tile overflow-hidden relative`}
+          style={{ borderColor: isFeatured ? `${accent}73` : `rgba(255,255,255,0.08)`, padding: 0 }}
+        >
+          {/* Glow for featured full-width youtube block */}
+          {isFeatured && (
+            <span
+              aria-hidden="true"
+              style={{
+                position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+                boxShadow: `inset 0 0 20px ${accent}22`,
+                pointerEvents: 'none', zIndex: 1,
+              }}
+            />
+          )}
+          {autoplay || isPlaying ? (
+            <div className="w-full relative" style={{ paddingTop: '56.25%' }}>
+              <iframe
+                src={`https://www.youtube.com/embed/${embedId}?autoplay=1${autoplay && !isPlaying ? '&mute=1' : ''}&modestbranding=1`}
+                className="absolute top-0 left-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{ border: 0 }}
+              />
+            </div>
+          ) : (
+            <div 
+              className="w-full relative cursor-pointer group" 
+              style={{ paddingTop: '56.25%' }}
+              onClick={() => {
+                setIsPlaying(true)
+                void incrementClickCount(block.id)
+              }}
+            >
+              <img
+                src={`https://img.youtube.com/vi/${embedId}/maxresdefault.jpg`}
+                alt={block.content.title}
+                className="absolute top-0 left-0 w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors flex items-center justify-center z-10">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center backdrop-blur-md bg-white/10 border border-white/20 shadow-xl group-hover:scale-110 transition-transform">
+                  <FaYoutube className="w-8 h-8 text-white ml-1" />
+                </div>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      )
+    }
+
+    // Half Width
+    return (
+      <>
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0, boxShadow: isFeatured ? `0 0 12px ${accent}26` : 'none' }}
+          transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
+          whileHover={{ scale: 1.02, boxShadow: isFeatured ? `0 0 24px ${accent}66` : 'none' }}
+          whileTap={{ scale: 0.96 }}
+          onClick={() => {
+            setShowLightbox(true)
+            void incrementClickCount(block.id)
+          }}
+          className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4 w-full text-left`}
+          style={{ borderColor: isFeatured ? `${accent}73` : `rgba(239,68,68,0.28)`, cursor: 'pointer' }}
+        >
+          {/* Glow */}
+          <motion.span
+            aria-hidden="true"
+            initial={{ opacity: isFeatured ? 0.55 : 0 }}
+            whileHover={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'absolute', top: '-20%', right: '-10%',
+              width: '65%', height: '140%',
+              background: `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
+              filter: 'blur(18px)', pointerEvents: 'none', zIndex: 0,
+            }}
+          />
+          {/* Icon */}
+          <span className="text-xl flex-shrink-0 leading-none flex items-center justify-center text-red-500" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
+            <FaYoutube className="w-5 h-5" />
+          </span>
+          {/* Text */}
+          <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
+            <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+              {block.content.title || 'Video de YouTube'}
+            </p>
+            {block.content.description && (
+              <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(163,163,163,0.85)' }}>
+                {block.content.description}
+              </p>
+            )}
+          </div>
+        </motion.button>
+        {/* Lightbox Modal */}
+        <AnimatePresence>
+          {showLightbox && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl" 
+              onClick={() => setShowLightbox(false)}
+            >
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="w-full max-w-4xl relative" 
+                onClick={e => e.stopPropagation()}
+              >
+                <button 
+                  onClick={() => setShowLightbox(false)}
+                  className="absolute -top-12 right-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white transition-colors"
+                  aria-label="Cerrar video"
+                >
+                  ✕
+                </button>
+                <div className="w-full relative rounded-2xl overflow-hidden shadow-2xl border border-white/10" style={{ paddingTop: '56.25%' }}>
+                  <iframe
+                    src={`https://www.youtube.com/embed/${embedId}?autoplay=1&modestbranding=1`}
+                    className="absolute top-0 left-0 w-full h-full bg-black"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    style={{ border: 0 }}
+                  />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </>
     )
   }
 

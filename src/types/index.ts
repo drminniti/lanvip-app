@@ -45,6 +45,7 @@ export type BlockType =
   | 'social'
   | 'vcard'
   | 'calendly'
+  | 'youtube'
   | 'video'
   | 'image'
   | 'text'
@@ -71,6 +72,7 @@ export interface BlockContent {
   description?: string  // optional subtitle shown below the title
   thumbnailUrl?: string
   embedId?: string    // for YouTube / Spotify
+  autoplay?: boolean  // for YouTube
 
   // ── vCard-specific fields ───────────────────────────────────────────────
   /** Full phone number, e.g. "+54 11 1234-5678" */
