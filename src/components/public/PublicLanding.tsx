@@ -7,6 +7,7 @@ import { trackPageView, incrementClickCount } from '@/lib/analytics'
 import { downloadVCard } from '@/lib/vcard'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
 import type { UserProfile, Block, SpanSize } from '@/types'
+import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook } from 'react-icons/fa6'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
 const SOCIAL_COLORS: Record<string, string> = {
@@ -231,13 +232,13 @@ function BentoTile({
           {block.type === 'social' ? (
             (() => {
               const s = block.content.icon
-              if (s === 'instagram') return '📸'
-              if (s === 'linkedin')  return '💼'
-              if (s === 'x')         return '🐦'
-              if (s === 'whatsapp')  return '💬'
-              if (s === 'youtube')   return '▶️'
-              if (s === 'tiktok')    return '🎵'
-              if (s === 'facebook')  return '📘'
+              if (s === 'instagram') return <FaInstagram className="w-5 h-5" />
+              if (s === 'linkedin')  return <FaLinkedin className="w-5 h-5" />
+              if (s === 'x')         return <FaXTwitter className="w-5 h-5" />
+              if (s === 'whatsapp')  return <FaWhatsapp className="w-5 h-5" />
+              if (s === 'youtube')   return <FaYoutube className="w-5 h-5" />
+              if (s === 'tiktok')    return <FaTiktok className="w-5 h-5" />
+              if (s === 'facebook')  return <FaFacebook className="w-5 h-5" />
               return s
             })()
           ) : (

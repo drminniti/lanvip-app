@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { BlockType, BlockWidth, Block } from '@/types'
+import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook } from 'react-icons/fa6'
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -30,14 +31,14 @@ export type SocialPlatform = 'instagram' | 'linkedin' | 'x' | 'whatsapp' | 'yout
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon: string }[] = [
-  { id: 'instagram', label: 'Instagram', color: '#E1306C', icon: 'instagram' },
-  { id: 'youtube',   label: 'YouTube',   color: '#FF0000', icon: 'youtube' },
-  { id: 'tiktok',    label: 'TikTok',    color: '#000000', icon: 'tiktok' },
-  { id: 'x',         label: 'X / Twitter', color: '#555555', icon: 'x' },
-  { id: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', icon: 'linkedin' },
-  { id: 'facebook',  label: 'Facebook',  color: '#1877F2', icon: 'facebook' },
-  { id: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', icon: 'whatsapp' },
+const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon: React.ReactNode }[] = [
+  { id: 'instagram', label: 'Instagram', color: '#E1306C', icon: <FaInstagram /> },
+  { id: 'youtube',   label: 'YouTube',   color: '#FF0000', icon: <FaYoutube /> },
+  { id: 'tiktok',    label: 'TikTok',    color: '#000000', icon: <FaTiktok /> },
+  { id: 'x',         label: 'X / Twitter', color: '#555555', icon: <FaXTwitter /> },
+  { id: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', icon: <FaLinkedin /> },
+  { id: 'facebook',  label: 'Facebook',  color: '#1877F2', icon: <FaFacebook /> },
+  { id: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', icon: <FaWhatsapp /> },
 ]
 
 /** The block types the user can choose in step 1 */
@@ -127,8 +128,7 @@ function socialUrl(platform: SocialPlatform, handle: string): string {
 }
 
 function platformFromIcon(icon: string): SocialPlatform {
-  const match = SOCIAL_PLATFORMS.find(p => p.icon === icon)
-  return match?.id ?? 'instagram'
+  return (icon as SocialPlatform) ?? 'instagram'
 }
 
 /**
@@ -399,7 +399,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
 
   function handleTypeNext(type: UIBlockType) {
     setBlockType(type)
-    if (type === 'social')        setIcon(SOCIAL_PLATFORMS.find(p => p.id === platform)?.icon ?? '📱')
+    if (type === 'social')        setIcon(platform)
     if (type === 'vcard')         setIcon('👤')
     if (type === 'calendly')      setIcon('📅')
     if (type === 'divider')       { setIcon(''); setBlockWidth('full') }
@@ -424,7 +424,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       resolvedIcon  = ''
     } else if (blockType === 'social') {
       resolvedUrl   = socialUrl(platform, handle)
-      resolvedIcon  = SOCIAL_PLATFORMS.find(p => p.id === platform)?.icon ?? '📱'
+      resolvedIcon  = platform
       resolvedTitle = resolvedTitle || (SOCIAL_PLATFORMS.find(p => p.id === platform)?.label ?? '')
     } else if (blockType === 'calendly') {
       resolvedUrl  = url.trim()
