@@ -7,7 +7,6 @@ import { trackPageView, incrementClickCount } from '@/lib/analytics'
 import { downloadVCard } from '@/lib/vcard'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
 import type { UserProfile, Block, SpanSize } from '@/types'
-import { Instagram, Linkedin, Twitter, Youtube, Facebook, MessageCircle } from 'lucide-react'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
 const SOCIAL_COLORS: Record<string, string> = {
@@ -232,13 +231,13 @@ function BentoTile({
           {block.type === 'social' ? (
             (() => {
               const s = block.content.icon
-              if (s === 'instagram') return <Instagram size={20} />
-              if (s === 'linkedin')  return <Linkedin size={20} />
-              if (s === 'x')         return <Twitter size={20} />
-              if (s === 'whatsapp')  return <MessageCircle size={20} />
-              if (s === 'youtube')   return <Youtube size={20} />
-              if (s === 'tiktok')    return <span className="font-bold">♪</span> // Custom or lucide fallback
-              if (s === 'facebook')  return <Facebook size={20} />
+              if (s === 'instagram') return '📸'
+              if (s === 'linkedin')  return '💼'
+              if (s === 'x')         return '🐦'
+              if (s === 'whatsapp')  return '💬'
+              if (s === 'youtube')   return '▶️'
+              if (s === 'tiktok')    return '🎵'
+              if (s === 'facebook')  return '📘'
               return s
             })()
           ) : (
