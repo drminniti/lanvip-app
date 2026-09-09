@@ -116,10 +116,10 @@ export default function BlocksPage() {
       <div className="space-y-6">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center justify-between"
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
         >
           <div>
             <h1 className="text-2xl font-bold" style={{ color: '#F5F5F5' }}>Bloques</h1>
@@ -131,7 +131,7 @@ export default function BlocksPage() {
             id="btn-add-block"
             onClick={openCreate}
             whileTap={{ scale: 0.96 }}
-            className="btn-accent"
+            className="btn-accent self-start sm:self-auto"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

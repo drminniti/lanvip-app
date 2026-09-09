@@ -7,6 +7,7 @@ import { trackPageView, incrementClickCount } from '@/lib/analytics'
 import { downloadVCard } from '@/lib/vcard'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
 import type { UserProfile, Block, SpanSize } from '@/types'
+import { Instagram, Linkedin, Twitter, Youtube, Facebook, MessageCircle } from 'lucide-react'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
 const SOCIAL_COLORS: Record<string, string> = {
@@ -14,7 +15,11 @@ const SOCIAL_COLORS: Record<string, string> = {
   linkedin:  '#0A66C2',
   x:         '#888888',
   whatsapp:  '#25D366',
+  youtube:   '#FF0000',
+  tiktok:    '#000000', // or an accent like #FF0050
+  facebook:  '#1877F2',
 }
+
 
 // ─── Span mapping (retains spanSize for row-span support) ─────────────────────
 const SPAN_CLASS: Record<SpanSize, string> = {
@@ -217,16 +222,31 @@ function BentoTile({
       />
       {/* Featured badge */}
       {isFeatured && (
-        <span aria-hidden="true" style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', fontSize: '0.65rem', opacity: 0.55, zIndex: 1, lineHeight: 1 }}>
+        <span aria-hidden="true" style={{ position: 'absolute', top: '0.75rem', left: '0.75rem', fontSize: '0.65rem', opacity: 0.55, zIndex: 1, lineHeight: 1 }}>
           ⭐
         </span>
       )}
       {/* Icon */}
       {block.content.icon && (
-        <span className="text-xl flex-shrink-0 leading-none" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
-          {block.content.icon}
+        <span className="text-xl flex-shrink-0 leading-none flex items-center justify-center" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
+          {block.type === 'social' ? (
+            (() => {
+              const s = block.content.icon
+              if (s === 'instagram') return <Instagram size={20} />
+              if (s === 'linkedin')  return <Linkedin size={20} />
+              if (s === 'x')         return <Twitter size={20} />
+              if (s === 'whatsapp')  return <MessageCircle size={20} />
+              if (s === 'youtube')   return <Youtube size={20} />
+              if (s === 'tiktok')    return <span className="font-bold">♪</span> // Custom or lucide fallback
+              if (s === 'facebook')  return <Facebook size={20} />
+              return s
+            })()
+          ) : (
+            block.content.icon
+          )}
         </span>
       )}
+
       {/* Text group */}
       <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
         <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
@@ -279,9 +299,13 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   // mounts → unmounts → remounts each component to expose side-effect bugs).
   const tracked = useRef(false)
   useEffect(() => {
-    if (tracked.current) return
-    tracked.current = true
-    void trackPageView(profile.uid)
+    // Record page view on load
+    if (!tracked.current) {
+      tracked.current = true
+      void trackPageView(profile.uid)
+    }
+    // Force scroll to top on mount
+    window.scrollTo(0, 0)
   }, [profile.uid])
 
   const bg = profile.themeSettings.bgType === 'solid'

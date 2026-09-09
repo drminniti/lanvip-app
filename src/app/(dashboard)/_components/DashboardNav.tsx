@@ -209,6 +209,20 @@ export default function DashboardNav() {
               <span>Mi link</span>
             </a>
           )}
+          {/* Cerrar sesión — mobile */}
+          <button
+            id="btn-logout-mobile"
+            onClick={handleLogout}
+            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-2xl text-xs font-medium transition-all duration-200"
+            style={{ color: '#A3A3A3' }}
+          >
+            <motion.span whileTap={{ scale: 0.85 }} className="block">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </motion.span>
+            <span>Salir</span>
+          </button>
         </div>
       </nav>
     </>
