@@ -24,7 +24,6 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl]     = useState('')
 
   // Sprint 4: Visuals
-  const [avatarStyle, setAvatarStyle] = useState<'classic' | 'shape' | 'hero'>('classic')
   const [bgType, setBgType]           = useState<'color' | 'image'>('color')
   const [bgUrl, setBgUrl]             = useState('')
   const [bgOverlayOpacity, setBgOverlayOpacity] = useState(50)
@@ -46,7 +45,6 @@ export default function ProfilePage() {
     setAvatarUrl(profile.avatarUrl || user?.photoURL || '')
     
     // Sprint 4 Visuals
-    setAvatarStyle(profile.themeSettings?.avatarStyle ?? 'classic')
     setBgType(profile.themeSettings?.background?.type ?? 'color')
     setBgUrl(profile.themeSettings?.background?.url ?? '')
     setBgOverlayOpacity(profile.themeSettings?.background?.overlayOpacity ?? 50)
@@ -83,12 +81,15 @@ export default function ProfilePage() {
   async function handleThemeChange(theme: VipTheme) {
     if (!user?.uid || !profile) return
     try {
+      const mergedSettings: any = { ...theme.settings }
+      if (profile.themeSettings?.background) {
+        const bg = { ...profile.themeSettings.background }
+        if (bg.url === undefined) delete bg.url
+        if (bg.overlayOpacity === undefined) delete bg.overlayOpacity
+        mergedSettings.background = bg
+      }
       await updateUserProfile(user.uid, { 
-        themeSettings: { 
-          ...theme.settings,
-          avatarStyle: profile.themeSettings?.avatarStyle,
-          background: profile.themeSettings?.background
-        } 
+        themeSettings: mergedSettings
       })
     } catch (err) {
       console.error('[Lanvip] theme update failed:', err)
@@ -118,11 +119,12 @@ export default function ProfilePage() {
         avatarUrl:   avatarUrl.trim(),
         themeSettings: {
           ...profile!.themeSettings,
-          avatarStyle,
-          background: {
-            type: (bgUrl.trim() ? 'image' : 'color') as 'image' | 'color',
+          background: bgUrl.trim() ? {
+            type: 'image' as const,
             url: bgUrl.trim(),
             overlayOpacity: bgOverlayOpacity
+          } : {
+            type: 'color' as const
           }
         }
       })
@@ -146,11 +148,12 @@ export default function ProfilePage() {
         avatarUrl,
         themeSettings: {
           ...profile.themeSettings,
-          avatarStyle,
-          background: {
-            type: (bgUrl.trim() ? 'image' : 'color') as 'image' | 'color',
+          background: bgUrl.trim() ? {
+            type: 'image' as const,
             url: bgUrl.trim(),
             overlayOpacity: bgOverlayOpacity
+          } : {
+            type: 'color' as const
           }
         }
       }
@@ -245,20 +248,6 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-            
-            <div className="space-y-1 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-              <label htmlFor="prof-avatar-style" className="label-dark">Estilo visual de la foto</label>
-              <select
-                id="prof-avatar-style"
-                value={avatarStyle}
-                onChange={e => setAvatarStyle(e.target.value as 'classic' | 'shape' | 'hero')}
-                className="input-dark w-full"
-              >
-                <option value="classic">Clásico (Redondo)</option>
-                <option value="shape">Moderno (Cuadrado curvo)</option>
-                <option value="hero">Banner Hero (Ancho completo)</option>
-              </select>
-            </div>
           </div>
 
           {/* Identity */}
@@ -349,6 +338,12 @@ export default function ProfilePage() {
                   placeholder="https://ejemplo.com/tu-fondo.jpg"
                   className="input-dark"
                 />
+                <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#A3A3A3' }}>
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Recomendación: Imágenes verticales (ej. 1080x1920) y optimizadas (menos de 1MB).
+                </p>
               </div>
               
               {bgUrl.trim() !== '' && (

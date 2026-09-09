@@ -14,7 +14,6 @@ export interface ThemeSettings {
   darkMode: boolean
   
   // ── Sprint 4: Visuals ──
-  avatarStyle?: 'classic' | 'shape' | 'hero'
   background?: {
     type: 'color' | 'image'
     url?: string
