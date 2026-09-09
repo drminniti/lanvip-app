@@ -24,10 +24,11 @@ import type { Block } from '@/types'
 
 interface BlocksGridProps {
   blocks:  Block[]
+  accent:  string
   onEdit?: (block: Block) => void
 }
 
-export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
+export function BlocksGrid({ blocks: liveBlocks, accent, onEdit }: BlocksGridProps) {
   // Local copy for optimistic updates — stays in sync with liveBlocks
   // when not dragging, and holds the reordered state after a drag until
   // Firestore confirms the new order via onSnapshot.
@@ -101,6 +102,7 @@ export function BlocksGrid({ blocks: liveBlocks, onEdit }: BlocksGridProps) {
             <BlockCard
               key={block.id}
               block={block}
+              accent={accent}
               onEdit={onEdit}
               onToggle={handleToggle}
               onDelete={handleDelete}

@@ -197,12 +197,12 @@ function BentoTile({
       animate={{ 
         opacity: 1, 
         y: 0,
-        boxShadow: isFeatured ? '0 0 12px rgba(212,175,55,0.15)' : 'none'
+        boxShadow: isFeatured ? `0 0 12px ${accent}26` : 'none'
       }}
       transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
       whileHover={{ 
         scale: 1.02,
-        boxShadow: isFeatured ? '0 0 24px rgba(212,175,55,0.4)' : 'none'
+        boxShadow: isFeatured ? `0 0 24px ${accent}66` : 'none'
       }}
       whileTap={{ scale: 0.96 }}
       onClick={() => { if (block.content.url) void incrementClickCount(block.id) }}
@@ -210,7 +210,7 @@ function BentoTile({
       style={{
         textDecoration: 'none',
         cursor:         block.content.url ? 'pointer' : 'default',
-        borderColor:    isFeatured ? 'rgba(212,175,55,0.45)' : `${tileColor}28`,
+        borderColor:    isFeatured ? `${accent}73` : `${tileColor}28`,
       }}
       aria-label={block.content.title}
     >

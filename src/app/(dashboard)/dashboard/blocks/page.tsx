@@ -9,6 +9,7 @@ import { addBlock, updateBlockContent } from '@/lib/blocks'
 import { BlockFormModal, type BlockFormData } from '@/components/blocks/BlockFormModal'
 import { BlocksGrid } from '@/components/blocks/BlocksGrid'
 import { LandingPreview } from '@/components/profile/LandingPreview'
+import { getThemeById, matchThemeId } from '@/lib/themes'
 import type { Block } from '@/types'
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -177,7 +178,11 @@ export default function BlocksPage() {
             {blocksLoading ? (
               <Skeleton />
             ) : (
-              <BlocksGrid blocks={blocks} onEdit={openEdit} />
+              <BlocksGrid 
+                blocks={blocks} 
+                accent={getThemeById(profile ? matchThemeId(profile.themeSettings) : 'obsidian')?.accent || '#D4AF37'} 
+                onEdit={openEdit} 
+              />
             )}
 
             {/* Add CTA if empty */}
