@@ -97,13 +97,14 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleCustomColorChange(key: 'background' | 'accent', value: string) {
+  async function handleCustomColorChange(key: 'background' | 'accent' | 'textColor', value: string) {
     if (!user?.uid || !profile) return
     try {
       const currentThemeSettings = profile.themeSettings
       const newCustomColors = {
         background: currentThemeSettings.customColors?.background ?? '#0a0a0a',
         accent: currentThemeSettings.customColors?.accent ?? '#D4AF37',
+        textColor: currentThemeSettings.customColors?.textColor ?? '#ffffff',
         [key]: value
       }
       

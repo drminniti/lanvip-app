@@ -113,11 +113,11 @@ function BentoTile({
         )}
         {/* Text */}
         <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
-          <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+          <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--theme-text, #F0F0F0)' }}>
             {block.content.title}
           </p>
           {block.content.description && (
-            <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(163,163,163,0.85)' }}>
+            <p className="text-xs mt-0.5 truncate opacity-80" style={{ color: 'var(--theme-text, #A3A3A3)' }}>
               {block.content.description}
             </p>
           )}
@@ -171,11 +171,11 @@ function BentoTile({
         <span className="text-xl flex-shrink-0 leading-none" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>📅</span>
         {/* Text */}
         <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
-          <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+          <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--theme-text, #F0F0F0)' }}>
             {block.content.title}
           </p>
           {block.content.description && (
-            <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(163,163,163,0.85)' }}>
+            <p className="text-xs mt-0.5 truncate opacity-80" style={{ color: 'var(--theme-text, #A3A3A3)' }}>
               {block.content.description}
             </p>
           )}
@@ -289,11 +289,11 @@ function BentoTile({
           </span>
           {/* Text */}
           <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
-            <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+            <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--theme-text, #F0F0F0)' }}>
               {block.content.title || 'Video de YouTube'}
             </p>
             {block.content.description && (
-              <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(163,163,163,0.85)' }}>
+              <p className="text-xs mt-0.5 truncate opacity-80" style={{ color: 'var(--theme-text, #A3A3A3)' }}>
                 {block.content.description}
               </p>
             )}
@@ -392,11 +392,11 @@ function BentoTile({
 
       {/* Text group */}
       <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
-        <p className="text-sm font-semibold leading-tight truncate" style={{ color: '#F0F0F0' }}>
+        <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--theme-text, #F0F0F0)' }}>
           {block.content.title}
         </p>
         {block.content.description && (
-          <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(163,163,163,0.85)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <p className="text-xs mt-0.5 leading-snug opacity-80" style={{ color: 'var(--theme-text, #A3A3A3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {block.content.description}
           </p>
         )}
@@ -473,6 +473,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         background: isImageBg ? undefined : bg,
         '--theme-bg': isCustomTheme ? bg : undefined,
         '--theme-accent': isCustomTheme ? accent : undefined,
+        '--theme-text': isCustomTheme ? (profile.themeSettings.customColors?.textColor ?? '#ffffff') : undefined,
       } as React.CSSProperties}
     >
       {isImageBg && (
@@ -534,7 +535,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         >
           <h1
             className="text-2xl font-bold tracking-tight"
-            style={{ color: '#F5F5F5' }}
+            style={{ color: 'var(--theme-text, #F5F5F5)' }}
           >
             {profile.displayName}
           </h1>
@@ -547,7 +548,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.14 }}
             className="text-sm text-center leading-relaxed max-w-xs"
-            style={{ color: '#A3A3A3' }}
+            style={{ color: 'var(--theme-text, #A3A3A3)' }}
           >
             {profile.bio}
           </motion.p>
@@ -566,7 +567,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
                     {block.content.title && (
                       <span
                         className="text-xs uppercase tracking-widest flex-shrink-0"
-                        style={{ color: 'rgba(255,255,255,0.18)', fontSize: '0.6rem' }}
+                        style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.5, fontSize: '0.6rem' }}
                       >
                         {block.content.title}
                       </span>
@@ -588,7 +589,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
                   >
                     <p
                       className="text-xs font-semibold uppercase tracking-widest"
-                      style={{ color: 'rgba(255,255,255,0.28)', letterSpacing: '0.12em' }}
+                      style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.7, letterSpacing: '0.12em' }}
                     >
                       {block.content.title}
                     </p>
@@ -618,9 +619,11 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           className="mt-8 flex items-center gap-1.5"
         >
           <a
-            href="/"
-            className="text-xs flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-            style={{ color: 'rgba(255,255,255,0.2)', textDecoration: 'none' }}
+            href="https://lanvip.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 transition-opacity hover:opacity-100"
+            style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.2, textDecoration: 'none' }}
           >
             <LanvipLogo size={14} />
             <span>Creado con</span>

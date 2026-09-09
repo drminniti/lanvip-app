@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { VIP_THEMES, matchThemeId, type VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
@@ -12,7 +13,7 @@ interface CustomThemePayload {
 interface ThemePickerProps {
   currentSettings: ThemeSettings
   onChange: (theme: VipTheme | CustomThemePayload) => void
-  onCustomColorChange?: (key: 'background' | 'accent', value: string) => void
+  onCustomColorChange?: (key: 'background' | 'accent' | 'textColor', value: string) => void
   disabled?: boolean
 }
 
@@ -23,12 +24,14 @@ export function ThemePicker({
   disabled 
 }: ThemePickerProps) {
   const activeId = matchThemeId(currentSettings)
+  const [showAll, setShowAll] = useState(false)
+  const visibleThemes = showAll ? VIP_THEMES : VIP_THEMES.slice(0, 4)
 
   return (
     <div className="space-y-3">
       <p className="label-dark">Temas estándar</p>
       <div className="grid grid-cols-2 gap-3">
-        {VIP_THEMES.map((theme, i) => {
+        {visibleThemes.map((theme, i) => {
           const isActive = theme.id === activeId
           return (
             <motion.button
@@ -91,11 +94,24 @@ export function ThemePicker({
           )
         })}
 
+        {!showAll && (
+          <motion.button
+            type="button"
+            className="col-span-2 py-3 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2"
+            style={{ color: '#A3A3A3', background: 'rgba(26,26,26,0.5)', border: '1px solid #333' }}
+            onClick={() => setShowAll(true)}
+            whileTap={{ scale: 0.98 }}
+          >
+            Ver más temas (VIP) ⬇️
+          </motion.button>
+        )}
+
         {/* Custom Theme Button */}
         {(() => {
           const isActive = activeId === 'custom'
           const customBg = currentSettings.customColors?.background ?? '#0a0a0a'
           const customAccent = currentSettings.customColors?.accent ?? '#D4AF37'
+          const customText = currentSettings.customColors?.textColor ?? '#ffffff'
           
           return (
             <motion.div className="col-span-2 space-y-3 mt-2">
@@ -113,7 +129,8 @@ export function ThemePicker({
                         themeId: 'custom',
                         customColors: {
                           background: customBg,
-                          accent: customAccent
+                          accent: customAccent,
+                          textColor: customText
                         }
                       }
                     })
@@ -184,6 +201,16 @@ export function ThemePicker({
                         value={customAccent}
                         disabled={disabled}
                         onChange={e => onCustomColorChange?.('accent', e.target.value)}
+                        className="w-full h-10 rounded cursor-pointer border-0 p-0"
+                      />
+                    </div>
+                    <div className="flex-1 w-full space-y-1">
+                      <label className="text-xs font-semibold block" style={{ color: '#F5F5F5' }}>Color de Texto</label>
+                      <input 
+                        type="color" 
+                        value={customText}
+                        disabled={disabled}
+                        onChange={e => onCustomColorChange?.('textColor', e.target.value)}
                         className="w-full h-10 rounded cursor-pointer border-0 p-0"
                       />
                     </div>

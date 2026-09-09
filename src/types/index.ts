@@ -18,6 +18,7 @@ export interface ThemeSettings {
   customColors?: {
     background: string
     accent: string
+    textColor: string
   }
   
   // ── Sprint 4: Visuals ──
