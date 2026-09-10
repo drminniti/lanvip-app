@@ -573,6 +573,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         '--theme-bg': isCustomTheme ? bg : undefined,
         '--theme-accent': isCustomTheme ? accent : undefined,
         '--theme-text': textColor,
+        backgroundColor: bg,
       } as React.CSSProperties}
     >
       {/* Capa de Fondo (Capa 0) */}
