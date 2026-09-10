@@ -15,6 +15,7 @@ interface ThemePickerProps {
   currentSettings: ThemeSettings
   onChange: (theme: VipTheme | CustomThemePayload) => void
   onCustomColorChange?: (updates: Partial<NonNullable<ThemeSettings['customColors']>>) => void
+  onBackgroundChange?: (overlayOpacity: number) => void
   disabled?: boolean
 }
 
@@ -39,6 +40,7 @@ export function ThemePicker({
   currentSettings, 
   onChange, 
   onCustomColorChange,
+  onBackgroundChange,
   disabled 
 }: ThemePickerProps) {
   const activeId = matchThemeId(currentSettings)
@@ -343,12 +345,10 @@ export function ThemePicker({
                             step="5"
                             value={currentSettings.background?.overlayOpacity ?? 50}
                             onChange={e => {
-                              // We don't have a direct callback for background updates from ThemePicker.
-                              // Since we removed it from page.tsx, we should probably add it, or rely on saving.
-                              // Actually, we can just omit it for now or keep it read-only unless we add the callback.
+                              onBackgroundChange?.(Number(e.target.value))
                             }}
                             className="w-full accent-[#D4AF37]"
-                            disabled={true}
+                            disabled={disabled}
                           />
                         </div>
                       )}

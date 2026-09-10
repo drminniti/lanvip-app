@@ -150,6 +150,22 @@ export default function ProfilePage() {
       console.error('[Lanvip] custom color update failed:', err)
     }
   }
+  async function handleBackgroundChange(overlayOpacity: number) {
+    if (!user?.uid || !profile || !profile.themeSettings) return
+    try {
+      await updateUserProfile(user.uid, {
+        themeSettings: {
+          ...profile.themeSettings,
+          background: profile.themeSettings.background ? {
+            ...profile.themeSettings.background,
+            overlayOpacity
+          } : undefined
+        }
+      })
+    } catch (err) {
+      console.error('[Lanvip] background overlay update failed:', err)
+    }
+  }
 
   // Save identity fields
   async function handleSave(e: React.FormEvent) {
@@ -381,6 +397,7 @@ export default function ProfilePage() {
               currentSettings={previewProfile?.themeSettings ?? profile.themeSettings}
               onChange={handleThemeChange}
               onCustomColorChange={handleCustomColorChange}
+              onBackgroundChange={handleBackgroundChange}
               disabled={saving}
             />
           </div>

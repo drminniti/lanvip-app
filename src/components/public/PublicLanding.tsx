@@ -598,10 +598,10 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
             <img 
               src={bgUrl}
               alt="Fondo personalizado"
-              className="fixed inset-0 w-full h-full object-cover" 
+              className="fixed inset-0 w-full h-full object-cover sm:max-w-md sm:mx-auto" 
             />
             <div 
-              className="fixed inset-0 bg-black" 
+              className="fixed inset-0 bg-black sm:max-w-md sm:mx-auto" 
               style={{ opacity: overlayOpacity }} 
             />
           </>
