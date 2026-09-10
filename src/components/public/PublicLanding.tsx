@@ -475,7 +475,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   }
 
   // Custom logic for text color
-  let textColor = isCustomTheme ? (customColors?.textColor ?? '#ffffff') : undefined
+  let textColor = isCustomTheme ? (customColors?.textColor ?? '#ffffff') : (theme?.textColor ?? '#F0F0F0')
   if (isCustomTheme && (customColors?.autoContrast ?? true)) {
     const baseBg = customColors?.background ?? '#0a0a0a'
     textColor = getAutoContrastTextColor(baseBg)

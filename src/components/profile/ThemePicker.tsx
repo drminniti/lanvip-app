@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { VIP_THEMES, matchThemeId, type VipTheme } from '@/lib/themes'
+import { THEME_CATEGORIES, getThemeById, matchThemeId, type VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
 
 interface CustomThemePayload {
@@ -41,87 +41,117 @@ export function ThemePicker({
   disabled 
 }: ThemePickerProps) {
   const activeId = matchThemeId(currentSettings)
-  const [showAll, setShowAll] = useState(false)
-  const visibleThemes = showAll ? VIP_THEMES : VIP_THEMES.slice(0, 4)
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({
+    'Esenciales': true,
+  })
+
+  function toggleCat(catName: string) {
+    setExpandedCats(prev => ({ ...prev, [catName]: !prev[catName] }))
+  }
 
   return (
-    <div className="space-y-3">
-      <p className="label-dark">Temas estándar</p>
-      <div className="grid grid-cols-2 gap-3">
-        {visibleThemes.map((theme, i) => {
-          const isActive = theme.id === activeId
+    <div className="space-y-4">
+      <div className="space-y-3">
+        {THEME_CATEGORIES.map(cat => {
+          const isExpanded = expandedCats[cat.name]
           return (
-            <motion.button
-              key={theme.id}
-              id={`theme-${theme.id}`}
-              type="button"
-              disabled={disabled}
-              onClick={() => onChange(theme)}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, type: 'spring', stiffness: 300 }}
-              className="relative rounded-2xl overflow-hidden text-left transition-all"
-              style={{
-                border: isActive
-                  ? `2px solid ${theme.accent}`
-                  : '2px solid #333333',
-                boxShadow: isActive
-                  ? `0 0 20px ${theme.accent}33`
-                  : 'none',
-              }}
-              aria-pressed={isActive}
-              aria-label={`Seleccionar tema ${theme.name}`}
-            >
-              {/* Color swatch */}
-              <div
-                className="h-14 w-full"
-                style={{
-                  background: `linear-gradient(135deg, ${theme.settings.colors[0]} 0%, ${theme.settings.colors[1]} 100%)`,
-                }}
+            <div key={cat.name} className="space-y-2 rounded-2xl p-2 transition-colors" style={{ background: 'rgba(26,26,26,0.3)', border: '1px solid rgba(255,255,255,0.03)' }}>
+              <button
+                type="button"
+                onClick={() => toggleCat(cat.name)}
+                className="flex items-center justify-between w-full px-2 py-1 rounded-xl"
               >
-                {/* Accent dot */}
-                <div
-                  className="absolute top-2 right-2 w-3 h-3 rounded-full"
-                  style={{ background: theme.accent }}
-                />
-                {/* Active check */}
-                {isActive && (
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#A3A3A3' }}>{cat.name}</span>
+                <motion.svg
+                  animate={{ rotate: isExpanded ? 180 : 0 }}
+                  className="w-4 h-4 text-neutral-400"
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </motion.svg>
+              </button>
+              
+              <AnimatePresence>
+                {isExpanded && (
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-2 left-2 w-5 h-5 rounded-full flex items-center justify-center text-xs"
-                    style={{ background: theme.accent, color: '#0A0A0A' }}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
                   >
-                    ✓
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      {cat.themeIds.map((id, i) => {
+                        const theme = getThemeById(id)
+                        if (!theme) return null
+                        const isActive = theme.id === activeId
+                        return (
+                          <motion.button
+                            key={theme.id}
+                            id={`theme-${theme.id}`}
+                            type="button"
+                            disabled={disabled}
+                            onClick={() => onChange(theme)}
+                            whileTap={{ scale: 0.95 }}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.05, type: 'spring', stiffness: 300 }}
+                            className="relative rounded-2xl overflow-hidden text-left transition-all"
+                            style={{
+                              border: isActive
+                                ? `2px solid ${theme.accent}`
+                                : '2px solid #333333',
+                              boxShadow: isActive
+                                ? `0 0 20px ${theme.accent}33`
+                                : 'none',
+                            }}
+                            aria-pressed={isActive}
+                            aria-label={`Seleccionar tema ${theme.name}`}
+                          >
+                            {/* Color swatch */}
+                            <div
+                              className="h-14 w-full"
+                              style={{
+                                background: `linear-gradient(135deg, ${theme.settings.colors[0]} 0%, ${theme.settings.colors[1]} 100%)`,
+                              }}
+                            >
+                              {/* Accent dot */}
+                              <div
+                                className="absolute top-2 right-2 w-3 h-3 rounded-full"
+                                style={{ background: theme.accent }}
+                              />
+                              {/* Active check */}
+                              {isActive && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="absolute top-2 left-2 w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                                  style={{ background: theme.accent, color: '#0A0A0A' }}
+                                >
+                                  ✓
+                                </motion.div>
+                              )}
+                            </div>
+
+                            {/* Theme info */}
+                            <div className="px-3 py-2" style={{ background: 'rgba(26,26,26,0.9)' }}>
+                              <p className="text-xs font-semibold" style={{ color: '#F5F5F5' }}>
+                                {theme.name}
+                              </p>
+                              <p className="text-xs" style={{ color: '#A3A3A3' }}>
+                                {theme.description}
+                              </p>
+                            </div>
+                          </motion.button>
+                        )
+                      })}
+                    </div>
                   </motion.div>
                 )}
-              </div>
-
-              {/* Theme info */}
-              <div className="px-3 py-2" style={{ background: 'rgba(26,26,26,0.9)' }}>
-                <p className="text-xs font-semibold" style={{ color: '#F5F5F5' }}>
-                  {theme.name}
-                </p>
-                <p className="text-xs" style={{ color: '#A3A3A3' }}>
-                  {theme.description}
-                </p>
-              </div>
-            </motion.button>
+              </AnimatePresence>
+            </div>
           )
         })}
-
-        {!showAll && (
-          <motion.button
-            type="button"
-            className="col-span-2 py-3 rounded-2xl text-xs font-semibold flex items-center justify-center gap-2"
-            style={{ color: '#A3A3A3', background: 'rgba(26,26,26,0.5)', border: '1px solid #333' }}
-            onClick={() => setShowAll(true)}
-            whileTap={{ scale: 0.98 }}
-          >
-            Ver más temas (VIP) ⬇️
-          </motion.button>
-        )}
+      </div>
 
         {/* Custom Theme Button */}
         {(() => {
@@ -287,7 +317,6 @@ export function ThemePicker({
             </motion.div>
           )
         })()}
-      </div>
     </div>
   )
 }
