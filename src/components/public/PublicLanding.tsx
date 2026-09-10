@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getThemeById, matchThemeId } from '@/lib/themes'
 import { getAutoContrastTextColor } from '@/lib/colorUtils'
@@ -234,7 +235,9 @@ function BentoTile({
               className="w-full relative cursor-pointer group" 
               style={{ paddingTop: '56.25%' }}
               onClick={() => {
-                setIsPlaying(true)
+                flushSync(() => {
+                  setIsPlaying(true)
+                })
                 void incrementClickCount(block.id)
               }}
             >
@@ -647,11 +650,11 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           className="mt-8 flex items-center gap-1.5"
         >
           <a
-            href="https://lanvip.com"
+            href="https://lanvip.app"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 transition-opacity hover:opacity-100"
-            style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.2, textDecoration: 'none' }}
+            style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.75, textDecoration: 'none' }}
           >
             <LanvipLogo size={14} />
             <span>Creado con</span>
