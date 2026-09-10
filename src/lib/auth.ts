@@ -277,22 +277,27 @@ export async function changeUsernameTransaction(
       throw new Error('El nombre de usuario ya está ocupado.')
     }
 
-    // 3. Write new username
+    // 3. READ old doc if it exists BEFORE any writes!
+    let oldUsernameRef = null
+    let oldDocExists = false
+    if (oldUsername && oldUsername !== normalizedNew) {
+      oldUsernameRef = doc(db, 'usernames', oldUsername)
+      const oldDoc = await transaction.get(oldUsernameRef)
+      oldDocExists = oldDoc.exists()
+    }
+
+    // 4. Write new username
     transaction.set(newUsernameRef, {
       uid,
       createdAt: new Date().toISOString()
     })
 
-    // 4. Update user doc
+    // 5. Update user doc
     transaction.update(userRef, { username: newUsername })
 
-    // 5. Release old username if it existed
-    if (oldUsername && oldUsername !== normalizedNew) {
-      const oldUsernameRef = doc(db, 'usernames', oldUsername)
-      const oldDoc = await transaction.get(oldUsernameRef)
-      if (oldDoc.exists()) {
-        transaction.delete(oldUsernameRef)
-      }
+    // 6. Release old username if it existed
+    if (oldUsernameRef && oldDocExists) {
+      transaction.delete(oldUsernameRef)
     }
   })
 }
