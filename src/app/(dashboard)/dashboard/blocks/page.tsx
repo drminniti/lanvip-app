@@ -214,7 +214,7 @@ export default function BlocksPage() {
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="hidden lg:flex lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] items-start justify-center w-full"
+            className="hidden lg:flex lg:sticky lg:top-6 self-start justify-center w-full"
           >
             {!profileLoading && previewProfile && (
               <div className="w-full max-w-[340px] xl:max-w-sm">
