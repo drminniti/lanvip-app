@@ -63,17 +63,16 @@ function NavItem({
       href={item.href}
       id={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
       title={item.label}
-      className="relative flex items-center justify-center w-12 h-12 mx-auto rounded-2xl transition-all duration-200"
-      style={{
-        color: isActive ? '#F5F5F5' : '#A3A3A3',
-      }}
+      className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-2xl transition-all duration-200 ${
+        isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
+      }`}
     >
       {/* Active indicator pill */}
       {isActive && (
         <motion.div
-          layoutId="nav-active"
+          layoutId="nav-active-desktop"
           className="absolute inset-0 rounded-2xl"
-          style={{ background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.20)' }}
+          style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.05)' }}
           transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
         />
       )}
@@ -152,16 +151,7 @@ export default function DashboardNav() {
           id="btn-logout"
           onClick={handleLogoutClick}
           title="Cerrar sesión"
-          className="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200"
-          style={{ color: '#A3A3A3' }}
-          onMouseEnter={e => {
-            e.currentTarget.style.color = '#EF4444'
-            e.currentTarget.style.background = 'rgba(239,68,68,0.08)'
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.color = '#A3A3A3'
-            e.currentTarget.style.background = 'transparent'
-          }}
+          className="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 text-red-500 hover:bg-red-500/10 hover:text-red-400"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -179,20 +169,32 @@ export default function DashboardNav() {
             boxShadow:  '0 8px 30px rgb(0 0 0 / 0.40)',
           }}
         >
-          {NAV_ITEMS.map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              id={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
-              title={item.label}
-              className="flex items-center justify-center p-3 rounded-2xl transition-all duration-200"
-              style={{ color: pathname === item.href ? '#F5F5F5' : '#A3A3A3' }}
-            >
-              <motion.span whileTap={{ scale: 0.85 }} className="block">
-                {item.icon}
-              </motion.span>
-            </Link>
-          ))}
+          {NAV_ITEMS.map(item => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                id={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                title={item.label}
+                className={`relative flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 ${
+                  isActive ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="nav-active-mobile"
+                    className="absolute inset-0 rounded-2xl"
+                    style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.05)' }}
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
+                  />
+                )}
+                <motion.span whileTap={{ scale: 0.85 }} className="block relative z-10">
+                  {item.icon}
+                </motion.span>
+              </Link>
+            )
+          })}
           {/* Ver landing pública — mobile */}
           {username && (
             <a
@@ -216,10 +218,9 @@ export default function DashboardNav() {
             id="btn-logout-mobile"
             onClick={handleLogoutClick}
             title="Cerrar sesión"
-            className="flex items-center justify-center p-3 rounded-2xl transition-all duration-200"
-            style={{ color: '#A3A3A3' }}
+            className="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 text-red-500 hover:bg-red-500/10 hover:text-red-400"
           >
-            <motion.span whileTap={{ scale: 0.85 }} className="block">
+            <motion.span whileTap={{ scale: 0.85 }} className="block relative z-10">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
