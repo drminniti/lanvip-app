@@ -594,9 +594,11 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         )}
         {isImageBg && (
           <>
-            <div 
-              className="absolute inset-0 bg-cover bg-center" 
-              style={{ backgroundImage: `url(${bgUrl})` }} 
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src={bgUrl}
+              alt="Fondo personalizado"
+              className="absolute inset-0 w-full h-full object-cover" 
             />
             <div 
               className="absolute inset-0 bg-black" 
