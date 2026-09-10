@@ -37,6 +37,18 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
   {
     name: 'Dynamic & Avant-Garde',
     themeIds: ['aurora', 'cyber_grid', 'floating_orbs', 'bauhaus']
+  },
+  {
+    name: 'Clean & Pro',
+    themeIds: ['pure_snow', 'corporate_slate', 'warm_vanilla', 'geometric_trust']
+  },
+  {
+    name: 'Creator & Pop',
+    themeIds: ['bubblegum', 'y2k_dream', 'sunset_vibe', 'kinetic_pop']
+  },
+  {
+    name: 'Dev & Studio',
+    themeIds: ['terminal_matrix', 'monokai', 'noir_gallery', 'cyber_canvas']
   }
 ]
 
@@ -310,6 +322,174 @@ export const VIP_THEMES: VipTheme[] = [
       bgType:    'mesh',
       bgEffect:  'bauhaus-shapes',
       colors:    ['#121212', '#1A1A1A'],
+      cardStyle: 'glass',
+      darkMode:  true,
+    },
+  },
+
+  // ── Clean & Pro ──
+  {
+    id:          'pure_snow',
+    name:        'Pure Snow',
+    description: 'Blanco puro, minimalismo corporativo',
+    accent:      '#475569',
+    textColor:   '#0F172A',
+    settings: {
+      bgType:    'solid',
+      colors:    ['#FFFFFF'],
+      cardStyle: 'glass',
+      darkMode:  false,
+    },
+  },
+  {
+    id:          'corporate_slate',
+    name:        'Corporate Slate',
+    description: 'Gris hielo dinámico con esferas',
+    accent:      '#2563EB',
+    textColor:   '#1E293B',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'floating-orbs',
+      colors:    ['#F1F5F9', '#E2E8F0'],
+      cardStyle: 'glass',
+      darkMode:  false,
+    },
+  },
+  {
+    id:          'warm_vanilla',
+    name:        'Warm Vanilla',
+    description: 'Crema suave, calidez elegante',
+    accent:      '#D97757',
+    textColor:   '#292524',
+    settings: {
+      bgType:    'mesh',
+      colors:    ['#FFFBF0', '#F5F0E6'],
+      cardStyle: 'glass',
+      darkMode:  false,
+    },
+  },
+  {
+    id:          'geometric_trust',
+    name:        'Geometric Trust',
+    description: 'Geometría sutil sobre perla',
+    accent:      '#059669',
+    textColor:   '#064E3B',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'bauhaus-shapes',
+      colors:    ['#F8FAFC', '#F1F5F9'],
+      cardStyle: 'glass',
+      darkMode:  false,
+    },
+  },
+
+  // ── Creator & Pop ──
+  {
+    id:          'bubblegum',
+    name:        'Bubblegum',
+    description: 'Rosa chicle y energía vibrante',
+    accent:      '#DB2777',
+    textColor:   '#4A044E',
+    settings: {
+      bgType:    'mesh',
+      colors:    ['#FDF2F8', '#FCE7F3'],
+      cardStyle: 'glass',
+      darkMode:  false,
+    },
+  },
+  {
+    id:          'y2k_dream',
+    name:        'Y2K Dream',
+    description: 'Lavanda con mesh gradient cian',
+    accent:      '#06B6D4',
+    textColor:   '#312E81',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'aurora',
+      colors:    ['#E0E7FF', '#C7D2FE'],
+      cardStyle: 'glass',
+      darkMode:  false,
+    },
+  },
+  {
+    id:          'sunset_vibe',
+    name:        'Sunset Vibe',
+    description: 'Degradado naranja a durazno',
+    accent:      '#FCD34D',
+    textColor:   '#451A03',
+    settings: {
+      bgType:    'mesh',
+      colors:    ['#FFEDD5', '#FED7AA'],
+      cardStyle: 'glass',
+      darkMode:  false,
+    },
+  },
+  {
+    id:          'kinetic_pop',
+    name:        'Kinetic Pop',
+    description: 'Púrpura vibrante geométrico',
+    accent:      '#FBBF24',
+    textColor:   '#F3F4F6',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'bauhaus-shapes',
+      colors:    ['#6D28D9', '#5B21B6'],
+      cardStyle: 'glass',
+      darkMode:  true,
+    },
+  },
+
+  // ── Dev & Studio ──
+  {
+    id:          'terminal_matrix',
+    name:        'Terminal Matrix',
+    description: 'Negro absoluto, grilla animada',
+    accent:      '#10B981',
+    textColor:   '#10B981',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'grid-motion',
+      colors:    ['#000000', '#050505'],
+      cardStyle: 'glass',
+      darkMode:  true,
+    },
+  },
+  {
+    id:          'monokai',
+    name:        'Monokai',
+    description: 'Gris puro, acento neón',
+    accent:      '#F43F5E',
+    textColor:   '#F1F5F9',
+    settings: {
+      bgType:    'mesh',
+      colors:    ['#1E1E1E', '#2D2D2D'],
+      cardStyle: 'glass',
+      darkMode:  true,
+    },
+  },
+  {
+    id:          'noir_gallery',
+    name:        'Noir Gallery',
+    description: 'Blanco y negro radical',
+    accent:      '#171717',
+    textColor:   '#000000',
+    settings: {
+      bgType:    'solid',
+      colors:    ['#FFFFFF'],
+      cardStyle: 'glass',
+      darkMode:  false,
+    },
+  },
+  {
+    id:          'cyber_canvas',
+    name:        'Cyber Canvas',
+    description: 'Azul noche con esferas levitantes',
+    accent:      '#F97316',
+    textColor:   '#F8FAFC',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'floating-orbs',
+      colors:    ['#0F172A', '#020617'],
       cardStyle: 'glass',
       darkMode:  true,
     },

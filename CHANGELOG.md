@@ -11,3 +11,7 @@
   - Incorporación de una 5ta categoría exclusiva en el Motor de Temas 2.0.
   - Soporte de renderizado de `bgEffect` animado para fondos altamente inmersivos (Aurora Flow, Cyber Grid, Floating Orbs, Bauhaus Shapes).
   - Efectos creados nativamente con CSS, Data URI y Framer Motion (cero dependencias externas pesadas) garantizando 60 FPS y aceleración por hardware.
+- **Expansión de Nichos Estratégicos (Motor de Temas 2.0 Completado)**:
+  - Adición de 3 nuevas categorías orientadas a públicos específicos ("Clean & Pro", "Creator & Pop", "Dev & Studio").
+  - El catálogo ahora cuenta con 32 temas VIP en total.
+  - Los temas claros ahora adaptan los efectos dinámicos (`bgEffect`) garantizando legibilidad y estética sin perder la esencia VIP.

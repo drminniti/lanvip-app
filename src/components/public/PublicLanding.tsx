@@ -488,19 +488,21 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const overlayOpacity = (profile.themeSettings.background?.overlayOpacity ?? 50) / 100
 
   const bgEffect = theme?.settings?.bgEffect
+  const isDark = profile.themeSettings.darkMode
+  const blendMode = isDark ? 'mix-blend-screen' : 'mix-blend-multiply'
 
   const renderBgEffect = () => {
     if (bgEffect === 'aurora') {
       return (
         <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
           <motion.div
-            className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen filter blur-[80px] opacity-40"
+            className={`absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full ${blendMode} filter blur-[80px] opacity-40`}
             style={{ background: accent }}
             animate={{ x: [0, 50, -30, 0], y: [0, 30, -50, 0] }}
             transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
           />
           <motion.div
-            className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen filter blur-[100px] opacity-30"
+            className={`absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] rounded-full ${blendMode} filter blur-[100px] opacity-30`}
             style={{ background: theme?.settings.colors[1] ?? accent }}
             animate={{ x: [0, -50, 30, 0], y: [0, -30, 50, 0] }}
             transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
@@ -531,14 +533,14 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute rounded-full mix-blend-screen filter blur-[60px]"
+              className={`absolute rounded-full ${blendMode} filter blur-[60px]`}
               style={{
                 background: i % 2 === 0 ? accent : (theme?.settings.colors[1] ?? accent),
                 width: `${(i * 5) + 15}vw`,
                 height: `${(i * 5) + 15}vw`,
                 left: `${(i * 15)}%`,
                 top: `${(i * 15)}%`,
-                opacity: 0.4
+                opacity: isDark ? 0.4 : 0.6
               }}
               animate={{ y: [0, -60, 0], x: [0, 40, 0] }}
               transition={{ duration: (i * 2) + 8, repeat: Infinity, ease: 'easeInOut' }}
