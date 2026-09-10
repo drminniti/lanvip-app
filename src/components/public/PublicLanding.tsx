@@ -154,7 +154,17 @@ function BentoTile({
         transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.96 }}
-        onClick={() => void incrementClickCount(block.id)}
+        onClick={(e) => {
+          if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+            e.preventDefault() // prevent mailto on desktop
+            if (emailAddress) {
+              navigator.clipboard.writeText(emailAddress)
+              setCopiedEmail(true)
+              setTimeout(() => setCopiedEmail(false), 2000)
+            }
+          }
+          void incrementClickCount(block.id)
+        }}
         className={`${colClass} bento-tile flex items-center justify-between gap-3 px-4 py-4`}
         style={{ textDecoration: 'none', borderColor: `${tileColor}35`, cursor: 'pointer' }}
         aria-label={`Enviar correo a ${emailAddress}`}
@@ -181,8 +191,8 @@ function BentoTile({
           )}
           {/* Text */}
           <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
-            <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--theme-text, #F0F0F0)' }}>
-              {block.content.title}
+            <p className="text-sm font-semibold leading-tight truncate" style={{ color: copiedEmail ? '#22c55e' : 'var(--theme-text, #F0F0F0)' }}>
+              {copiedEmail ? '¡Correo copiado!' : block.content.title}
             </p>
             {block.content.description && (
               <p className="text-xs mt-0.5 truncate opacity-80" style={{ color: 'var(--theme-text, #A3A3A3)' }}>
