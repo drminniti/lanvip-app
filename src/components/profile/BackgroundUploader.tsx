@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { uploadUserBackground, removeUserBackground } from '@/services/storage'
 import { useAuth } from '@/context/AuthContext'
+import { ImageCropperModal, type CropPixels } from '@/components/profile/ImageCropperModal'
 
 interface Props {
   currentUrl: string
@@ -15,25 +16,43 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
   const { user } = useAuth()
   const [isUploading, setIsUploading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user?.uid) return
+    if (!file) return
 
+    setSelectedFile(file)
+    const url = URL.createObjectURL(file)
+    setPreviewSrc(url)
+    
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleConfirmCrop = async (cropPixels: CropPixels) => {
+    if (!user?.uid || !selectedFile) return
+    
+    setPreviewSrc(null)
     setIsUploading(true)
     setErrorMsg(null)
-
+    
     try {
-      const url = await uploadUserBackground(user.uid, file)
+      const url = await uploadUserBackground(user.uid, selectedFile, cropPixels)
       onUploadSuccess(url)
     } catch (err: any) {
       console.error('[BackgroundUploader] upload failed:', err)
       setErrorMsg(err.message || 'Error al optimizar/subir el fondo.')
     } finally {
       setIsUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      setSelectedFile(null)
     }
+  }
+
+  const handleCancelCrop = () => {
+    setPreviewSrc(null)
+    setSelectedFile(null)
   }
 
   const handleRemove = async () => {
@@ -98,12 +117,21 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
         )}
       </AnimatePresence>
 
-      <input
+        <input
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
         accept="image/jpeg, image/png, image/webp, image/heic, image/heif, .heic, .heif"
         className="hidden"
+      />
+
+      <ImageCropperModal
+        isOpen={!!previewSrc}
+        imageSrc={previewSrc}
+        aspectRatio={16 / 9}
+        cropShape="rect"
+        onCancel={handleCancelCrop}
+        onConfirm={handleConfirmCrop}
       />
     </div>
   )

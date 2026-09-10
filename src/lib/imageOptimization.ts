@@ -2,6 +2,7 @@ export interface OptimizeImageOptions {
   maxWidth?: number
   maxHeight?: number
   quality?: number
+  cropPixels?: { x: number; y: number; width: number; height: number }
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
@@ -43,6 +44,21 @@ export async function optimizeImage(
       img.onerror = () => reject(new Error('Error cargando la imagen.'))
       img.onload = () => {
         let { width, height } = img
+        
+        let cropX = 0
+        let cropY = 0
+        let sourceW = width
+        let sourceH = height
+
+        if (options.cropPixels) {
+          cropX = options.cropPixels.x
+          cropY = options.cropPixels.y
+          sourceW = options.cropPixels.width
+          sourceH = options.cropPixels.height
+          
+          width = sourceW
+          height = sourceH
+        }
 
         // Calculate new dimensions preserving aspect ratio
         if (width > maxWidth) {
@@ -62,7 +78,7 @@ export async function optimizeImage(
         if (!ctx) return reject(new Error('Canvas ctx no disponible.'))
 
         // Draw image onto canvas
-        ctx.drawImage(img, 0, 0, width, height)
+        ctx.drawImage(img, cropX, cropY, sourceW, sourceH, 0, 0, width, height)
 
         // Convert to WebP
         canvas.toBlob(

@@ -5,8 +5,8 @@ import { optimizeImage } from '@/lib/imageOptimization'
 
 const CACHE_CONTROL = 'public, max-age=31536000' // 1 year cache
 
-export async function uploadUserAvatar(userId: string, file: File): Promise<string> {
-  const optimizedBlob = await optimizeImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.8 })
+export async function uploadUserAvatar(userId: string, file: File, cropPixels?: { x: number; y: number; width: number; height: number }): Promise<string> {
+  const optimizedBlob = await optimizeImage(file, { maxWidth: 400, maxHeight: 400, quality: 0.8, cropPixels })
   
   const storage = getFirebaseStorage()
   const avatarRef = ref(storage, `users/${userId}/avatar.webp`)
@@ -28,8 +28,8 @@ export async function uploadUserAvatar(userId: string, file: File): Promise<stri
   return downloadUrl
 }
 
-export async function uploadUserBackground(userId: string, file: File): Promise<string> {
-  const optimizedBlob = await optimizeImage(file, { maxWidth: 1920, maxHeight: 1920, quality: 0.8 })
+export async function uploadUserBackground(userId: string, file: File, cropPixels?: { x: number; y: number; width: number; height: number }): Promise<string> {
+  const optimizedBlob = await optimizeImage(file, { maxWidth: 1920, maxHeight: 1920, quality: 0.8, cropPixels })
   
   const storage = getFirebaseStorage()
   const backgroundRef = ref(storage, `users/${userId}/background.webp`)

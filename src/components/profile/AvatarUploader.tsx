@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { uploadUserAvatar, removeUserAvatar } from '@/services/storage'
 import { useAuth } from '@/context/AuthContext'
+import { ImageCropperModal, type CropPixels } from '@/components/profile/ImageCropperModal'
 
 interface Props {
   currentUrl: string
@@ -16,26 +17,44 @@ export function AvatarUploader({ currentUrl, displayName, onUploadSuccess, onRem
   const { user } = useAuth()
   const [isUploading, setIsUploading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewSrc, setPreviewSrc] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file || !user?.uid) return
+    if (!file) return
 
+    setSelectedFile(file)
+    const url = URL.createObjectURL(file)
+    setPreviewSrc(url)
+    
+    // clear input so same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleConfirmCrop = async (cropPixels: CropPixels) => {
+    if (!user?.uid || !selectedFile) return
+    
+    setPreviewSrc(null)
     setIsUploading(true)
     setErrorMsg(null)
-
+    
     try {
-      const url = await uploadUserAvatar(user.uid, file)
+      const url = await uploadUserAvatar(user.uid, selectedFile, cropPixels)
       onUploadSuccess(url)
     } catch (err: any) {
       console.error('[AvatarUploader] upload failed:', err)
       setErrorMsg(err.message || 'Error al optimizar/subir la imagen.')
     } finally {
       setIsUploading(false)
-      // reset input so the same file can be selected again if needed
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      setSelectedFile(null)
     }
+  }
+
+  const handleCancelCrop = () => {
+    setPreviewSrc(null)
+    setSelectedFile(null)
   }
 
   const handleRemove = async () => {
@@ -131,6 +150,15 @@ export function AvatarUploader({ currentUrl, displayName, onUploadSuccess, onRem
           className="hidden"
         />
       </div>
+
+      <ImageCropperModal
+        isOpen={!!previewSrc}
+        imageSrc={previewSrc}
+        aspectRatio={1}
+        cropShape="round"
+        onCancel={handleCancelCrop}
+        onConfirm={handleConfirmCrop}
+      />
     </div>
   )
 }
