@@ -1,9 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { logout } from '@/lib/auth'
 import { useAuth } from '@/context/AuthContext'
 import { useDashboard } from '@/context/DashboardContext'
@@ -89,12 +90,16 @@ export default function DashboardNav() {
   const { profile } = useDashboard()
   const username = profile?.username ?? null
 
-  async function handleLogout() {
-    if (!window.confirm("¿Estás seguro de que deseas cerrar sesión?")) return
-    
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
+
+  async function handleLogoutConfirm() {
     await logout()
     document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     router.push('/login')
+  }
+
+  function handleLogoutClick() {
+    setIsLogoutModalOpen(true)
   }
 
   return (
@@ -145,7 +150,7 @@ export default function DashboardNav() {
         {/* Logout */}
         <button
           id="btn-logout"
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           title="Cerrar sesión"
           className="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200"
           style={{ color: '#A3A3A3' }}
@@ -209,7 +214,7 @@ export default function DashboardNav() {
           {/* Cerrar sesión — mobile */}
           <button
             id="btn-logout-mobile"
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
             title="Cerrar sesión"
             className="flex items-center justify-center p-3 rounded-2xl transition-all duration-200"
             style={{ color: '#A3A3A3' }}
@@ -222,6 +227,47 @@ export default function DashboardNav() {
           </button>
         </div>
       </nav>
+
+      {/* ── Logout Modal (Glassmorphism) ────────────────────────────── */}
+      <AnimatePresence>
+        {isLogoutModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md"
+            onClick={() => setIsLogoutModalOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-[90%] max-w-sm flex flex-col gap-4 shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div>
+                <h3 className="text-white font-semibold text-lg">Cerrar sesión</h3>
+                <p className="text-neutral-400 text-sm mt-1">¿Estás seguro de que deseas salir de LanVip?</p>
+              </div>
+              <div className="flex justify-end gap-3 mt-2">
+                <button
+                  onClick={() => setIsLogoutModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleLogoutConfirm}
+                  className="px-4 py-2 text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
+                >
+                  Salir
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
