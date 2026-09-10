@@ -488,9 +488,9 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
     !!profile.themeSettings.background?.mobileUrl || 
     !!profile.themeSettings.background?.desktopUrl
   )
-  const bgUrl = profile.themeSettings.background?.url
-  const mobileBgUrl = profile.themeSettings.background?.mobileUrl || bgUrl
-  const desktopBgUrl = profile.themeSettings.background?.desktopUrl || bgUrl
+  const legacyUrl = profile.themeSettings.background?.url
+  const mobileBgUrl = profile.themeSettings.background?.mobileUrl || legacyUrl
+  const desktopBgUrl = profile.themeSettings.background?.desktopUrl || legacyUrl
   const overlayOpacity = (profile.themeSettings.background?.overlayOpacity ?? 50) / 100
 
   const bgEffect = theme?.settings?.bgEffect
@@ -616,12 +616,12 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
               <img 
                 src={desktopBgUrl}
                 alt="Fondo escritorio personalizado"
-                className="hidden md:block fixed inset-0 w-full h-full object-cover sm:max-w-md sm:mx-auto" 
+                className="hidden md:block fixed inset-0 w-full h-full object-cover" 
               />
             )}
 
             <div 
-              className="fixed inset-0 bg-black sm:max-w-md sm:mx-auto" 
+              className="fixed inset-0 bg-black" 
               style={{ opacity: overlayOpacity }} 
             />
           </>
