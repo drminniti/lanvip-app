@@ -128,7 +128,7 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
       <ImageCropperModal
         isOpen={!!previewSrc}
         imageSrc={previewSrc}
-        aspectRatio={16 / 9}
+        aspectRatio={9 / 16}
         cropShape="rect"
         onCancel={handleCancelCrop}
         onConfirm={handleConfirmCrop}

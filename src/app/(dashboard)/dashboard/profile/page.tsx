@@ -26,9 +26,7 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl]     = useState('')
 
   // Sprint 4: Visuals
-  const [bgType, setBgType]           = useState<'color' | 'image'>('color')
-  const [bgUrl, setBgUrl]             = useState('')
-  const [bgOverlayOpacity, setBgOverlayOpacity] = useState(50)
+  // background state removed to rely on live profile state as it's saved immediately
 
   const [usernameStatus, setUsernameStatus] = useState<
     'idle' | 'checking' | 'available' | 'taken' | 'too-short' | 'unchanged'
@@ -60,9 +58,7 @@ export default function ProfilePage() {
     setAvatarUrl(profile.avatarUrl || user?.photoURL || '')
     
     // Sprint 4 Visuals
-    setBgType(profile.themeSettings?.background?.type ?? 'color')
-    setBgUrl(profile.themeSettings?.background?.url ?? '')
-    setBgOverlayOpacity(profile.themeSettings?.background?.overlayOpacity ?? 50)
+    // (background is now handled purely via ThemePicker and BackgroundUploader saving directly)
   }, [profile?.uid, user?.photoURL]) // only on uid change to avoid overwriting in-progress edits
 
   // Username availability check (debounced)
@@ -176,16 +172,7 @@ export default function ProfilePage() {
         username,
         bio:         bio.trim(),
         avatarUrl:   avatarUrl.trim(),
-        themeSettings: {
-          ...profile!.themeSettings,
-          background: bgUrl.trim() ? {
-            type: 'image' as const,
-            url: bgUrl.trim(),
-            overlayOpacity: bgOverlayOpacity
-          } : {
-            type: 'color' as const
-          }
-        }
+        themeSettings: profile!.themeSettings
       })
       setSaveMsg({ type: 'ok', text: '¡Perfil y apariencia actualizados!' })
     } catch (err) {
@@ -205,16 +192,7 @@ export default function ProfilePage() {
         username, 
         bio, 
         avatarUrl,
-        themeSettings: {
-          ...profile.themeSettings,
-          background: bgUrl.trim() ? {
-            type: 'image' as const,
-            url: bgUrl.trim(),
-            overlayOpacity: bgOverlayOpacity
-          } : {
-            type: 'color' as const
-          }
-        }
+        themeSettings: profile.themeSettings
       }
     : null
 
