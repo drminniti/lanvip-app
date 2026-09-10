@@ -423,7 +423,8 @@ function BentoTile({
 
 interface PublicLandingProps {
   profile: UserProfile
-  blocks:  Block[]
+  blocks?: Block[]
+  isPreview?: boolean
 }
 
 /**
@@ -436,7 +437,7 @@ interface PublicLandingProps {
  *   - block.isFeatured = false → col-span-1 (compact tile)
  *   - Heights: content-driven via py-4 padding — no fixed heights.
  */
-export function PublicLanding({ profile, blocks }: PublicLandingProps) {
+export function PublicLanding({ profile, blocks = [], isPreview = false }: PublicLandingProps) {
   const themeId = matchThemeId(profile.themeSettings)
   const isCustomTheme = themeId === 'custom'
   const customColors = profile.themeSettings.customColors
@@ -568,7 +569,11 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
 
   return (
     <div 
-      className="relative w-full min-h-full flex flex-col"
+      className={
+        isPreview 
+          ? "absolute inset-0 overflow-hidden w-full h-full" 
+          : "relative w-full min-h-screen flex flex-col"
+      }
       style={{ 
         '--theme-bg': isCustomTheme ? bg : undefined,
         '--theme-accent': isCustomTheme ? accent : undefined,
@@ -577,7 +582,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
       } as React.CSSProperties}
     >
       {/* Capa de Fondo (Capa 0) */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      <div className={isPreview ? "absolute inset-0 z-0 pointer-events-none" : "fixed inset-0 z-0 pointer-events-none"}>
         <div className="absolute inset-0" style={{ background: bg }} />
         {useTexture && !bgEffect && (
           <div 
@@ -593,8 +598,38 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
       </div>
 
       {/* Capa de Contenido (Capa 10) */}
-      <main className="relative z-10 w-full flex flex-col items-center flex-grow">
-        <div className="w-full max-w-md mx-auto px-4 py-12 pb-24 flex flex-col items-center gap-6">
+      <main className={
+        isPreview 
+          ? "absolute inset-0 z-10 overflow-y-auto" 
+          : "relative z-10 w-full flex flex-col items-center flex-grow"
+      }>
+        <div className={
+          isPreview 
+            ? "w-full min-h-full flex flex-col items-center" 
+            : "w-full max-w-md mx-auto px-4 py-12 pb-24 flex flex-col items-center gap-6"
+        }>
+          {isPreview ? (
+            <div className="w-full max-w-md mx-auto px-4 py-12 pb-24 flex flex-col items-center gap-6">
+              <Content profile={profile} blocks={blocks} isCustomTheme={isCustomTheme} accent={accent} theme={theme} />
+            </div>
+          ) : (
+            <Content profile={profile} blocks={blocks} isCustomTheme={isCustomTheme} accent={accent} theme={theme} />
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+function Content({ profile, blocks, isCustomTheme, accent, theme }: {
+  profile: UserProfile
+  blocks: Block[]
+  isCustomTheme: boolean
+  accent: string
+  theme: any
+}) {
+  return (
+    <>
 
           {/* Avatar */}
         <motion.div
@@ -736,9 +771,6 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
             <span style={{ color: `${accent}66`, fontWeight: 600 }}>Lanvip</span>
           </a>
           </motion.div>
-
-          </div>
-      </main>
-    </div>
+    </>
   )
 }

@@ -93,7 +93,7 @@ export function LandingPreview({ profile, blocks = [] }: LandingPreviewProps) {
               scrollbarWidth:  'thin',
             }}
           >
-            <PublicLanding profile={profile} blocks={activeBlocks} />
+            <PublicLanding profile={profile} blocks={activeBlocks} isPreview={true} />
           </div>
         </div>
       </div>
