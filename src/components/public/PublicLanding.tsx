@@ -569,15 +569,18 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   }
 
   return (
-    <main
-      className="min-h-screen flex flex-col items-center relative"
-      style={{ 
-        background: isImageBg ? undefined : bg,
-        '--theme-bg': isCustomTheme ? bg : undefined,
-        '--theme-accent': isCustomTheme ? accent : undefined,
-        '--theme-text': textColor,
-      } as React.CSSProperties}
-    >
+    <>
+      {!isImageBg && (
+        <div className="fixed inset-0 -z-10" style={{ background: bg }} />
+      )}
+      <main
+        className="min-h-screen flex flex-col items-center relative"
+        style={{ 
+          '--theme-bg': isCustomTheme ? bg : undefined,
+          '--theme-accent': isCustomTheme ? accent : undefined,
+          '--theme-text': textColor,
+        } as React.CSSProperties}
+      >
       {useTexture && !isImageBg && !bgEffect && (
         <div 
           className="fixed inset-0 z-0 pointer-events-none"
@@ -676,16 +679,16 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
               if (block.type === 'divider') {
                 return (
                   <div key={block.id} className="col-span-2 flex items-center gap-3 py-1" aria-hidden="true">
-                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                    <div className="flex-1 h-px opacity-20" style={{ background: 'var(--theme-text, #F0F0F0)' }} />
                     {block.content.title && (
                       <span
                         className="text-xs uppercase tracking-widest flex-shrink-0"
-                        style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.5, fontSize: '0.6rem' }}
+                        style={{ color: 'var(--theme-text, #F0F0F0)', opacity: 0.5, fontSize: '0.6rem' }}
                       >
                         {block.content.title}
                       </span>
                     )}
-                    <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+                    <div className="flex-1 h-px opacity-20" style={{ background: 'var(--theme-text, #F0F0F0)' }} />
                   </div>
                 )
               }
@@ -745,6 +748,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         </motion.div>
 
       </div>
-    </main>
+      </main>
+    </>
   )
 }
