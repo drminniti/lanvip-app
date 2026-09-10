@@ -23,7 +23,11 @@ const NAV_ITEMS = [
   {
     href:  '/dashboard/profile',
     label: 'Perfil',
-    icon:  null,
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
   },
   {
     href:  '/dashboard/blocks',
@@ -37,7 +41,11 @@ const NAV_ITEMS = [
   {
     href:  '/dashboard/analytics',
     label: 'Analíticas',
-    icon:  null,
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
   },
 ]
 
@@ -53,7 +61,8 @@ function NavItem({
     <Link
       href={item.href}
       id={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-      className="relative flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200"
+      title={item.label}
+      className="relative flex items-center justify-center w-12 h-12 mx-auto rounded-2xl transition-all duration-200"
       style={{
         color: isActive ? '#F5F5F5' : '#A3A3A3',
       }}
@@ -67,10 +76,7 @@ function NavItem({
           transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
         />
       )}
-      {item.icon && <span className="relative z-10">{item.icon}</span>}
-      <span className={`relative z-10 flex items-center gap-2 ${!item.icon ? 'ml-8' : ''}`}>
-        {item.label}
-      </span>
+      <span className="relative z-10">{item.icon}</span>
     </Link>
   )
 }
@@ -93,22 +99,19 @@ export default function DashboardNav() {
     <>
       {/* ── Desktop Sidebar ───────────────────────────────────────────── */}
       <aside
-        className="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 p-4 gap-2 backdrop-blur-xl"
+        className="hidden md:flex flex-col w-[88px] shrink-0 h-screen sticky top-0 py-6 items-center gap-4 backdrop-blur-xl"
         style={{
           background:  'rgba(26,26,26,0.80)',
           borderRight: '1px solid #333333',
         }}
       >
         {/* Logo */}
-        <div className="px-3 py-3 mb-2">
-          <div className="flex items-center gap-2">
-            <LanvipLogo size={30} />
-            <span className="text-xl font-bold gradient-text tracking-tight">Lanvip</span>
-          </div>
+        <div className="mb-4">
+          <LanvipLogo size={32} />
         </div>
 
         {/* Nav items */}
-        <nav className="flex-1 space-y-1">
+        <nav className="flex-1 space-y-3 w-full">
           {NAV_ITEMS.map(item => (
             <NavItem
               key={item.href}
@@ -125,12 +128,15 @@ export default function DashboardNav() {
             href={`/${username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200 group"
+            title="Mi link"
+            className="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 group mb-2"
             style={{ color: '#D4AF37', background: 'rgba(212,175,55,0.07)', border: '1px solid rgba(212,175,55,0.18)' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(212,175,55,0.14)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(212,175,55,0.07)' }}
           >
-            <span className="flex-1 truncate text-center">/{username}</span>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
           </a>
         )}
 
@@ -138,7 +144,8 @@ export default function DashboardNav() {
         <button
           id="btn-logout"
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-200"
+          title="Cerrar sesión"
+          className="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200"
           style={{ color: '#A3A3A3' }}
           onMouseEnter={e => {
             e.currentTarget.style.color = '#EF4444'
@@ -152,7 +159,6 @@ export default function DashboardNav() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Cerrar sesión
         </button>
       </aside>
 
@@ -171,15 +177,13 @@ export default function DashboardNav() {
               key={item.href}
               href={item.href}
               id={`mobile-nav-${item.label.toLowerCase().replace(' ', '-')}`}
-              className={`flex flex-col items-center justify-start gap-1 px-1 py-2 rounded-2xl text-[11px] leading-tight text-center font-medium transition-all duration-200 ${!item.icon ? 'pt-4' : ''}`}
-              style={{ color: pathname === item.href ? '#F5F5F5' : '#A3A3A3', width: '4.5rem' }}
+              title={item.label}
+              className="flex items-center justify-center p-3 rounded-2xl transition-all duration-200"
+              style={{ color: pathname === item.href ? '#F5F5F5' : '#A3A3A3' }}
             >
-              {item.icon && (
-                <motion.span whileTap={{ scale: 0.85 }} className="block flex-shrink-0">
-                  {item.icon}
-                </motion.span>
-              )}
-              <span>{item.label}</span>
+              <motion.span whileTap={{ scale: 0.85 }} className="block">
+                {item.icon}
+              </motion.span>
             </Link>
           ))}
           {/* Ver landing pública — mobile */}
@@ -189,25 +193,30 @@ export default function DashboardNav() {
               href={`/${username}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center justify-start gap-1 px-1 py-2 pt-4 rounded-2xl text-[11px] leading-tight text-center font-medium transition-all duration-200"
-              style={{ color: '#D4AF37', width: '4.5rem' }}
+              title="Mi link"
+              className="flex items-center justify-center p-3 rounded-2xl transition-all duration-200"
+              style={{ color: '#D4AF37' }}
             >
-              <span>Mi link</span>
+              <motion.span whileTap={{ scale: 0.85 }} className="block">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </motion.span>
             </a>
           )}
           {/* Cerrar sesión — mobile */}
           <button
             id="btn-logout-mobile"
             onClick={handleLogout}
-            className="flex flex-col items-center justify-start gap-1 px-1 py-2 rounded-2xl text-[11px] leading-tight text-center font-medium transition-all duration-200"
-            style={{ color: '#A3A3A3', width: '4.5rem' }}
+            title="Cerrar sesión"
+            className="flex items-center justify-center p-3 rounded-2xl transition-all duration-200"
+            style={{ color: '#A3A3A3' }}
           >
-            <motion.span whileTap={{ scale: 0.85 }} className="block flex-shrink-0">
+            <motion.span whileTap={{ scale: 0.85 }} className="block">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </motion.span>
-            <span>Salir</span>
           </button>
         </div>
       </nav>
