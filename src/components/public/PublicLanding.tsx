@@ -570,7 +570,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
 
   return (
     <div 
-      className="relative w-full h-[100dvh] overflow-hidden"
+      className="absolute inset-0 overflow-hidden w-full h-full"
       style={{ 
         '--theme-bg': isCustomTheme ? bg : undefined,
         '--theme-accent': isCustomTheme ? accent : undefined,
@@ -608,10 +608,11 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
       </div>
 
       {/* Capa de Contenido (Capa 10) */}
-      <main className="relative z-10 w-full h-full overflow-y-auto pb-20 flex flex-col items-center">
-        <div className="w-full max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6">
+      <main className="absolute inset-0 z-10 overflow-y-auto">
+        <div className="w-full h-full flex flex-col items-center">
+          <div className="w-full max-w-md mx-auto px-4 py-12 pb-24 flex flex-col items-center gap-6">
 
-        {/* Avatar */}
+          {/* Avatar */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -750,8 +751,9 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
             <span>Creado con</span>
             <span style={{ color: `${accent}66`, fontWeight: 600 }}>Lanvip</span>
           </a>
-        </motion.div>
+          </motion.div>
 
+          </div>
         </div>
       </main>
     </div>
