@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Cropper from 'react-easy-crop'
 import type { Area } from 'react-easy-crop'
@@ -43,9 +44,15 @@ export function ImageCropperModal({
     }
   }
 
-  if (!isOpen || !imageSrc) return null
+  const [mounted, setMounted] = useState(false)
 
-  return (
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!isOpen || !imageSrc || !mounted) return null
+
+  const modalContent = (
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
@@ -114,4 +121,6 @@ export function ImageCropperModal({
       </motion.div>
     </AnimatePresence>
   )
+
+  return createPortal(modalContent, document.body)
 }
