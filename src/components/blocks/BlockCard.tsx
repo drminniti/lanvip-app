@@ -110,9 +110,9 @@ export function BlockCard({ block, accent, onToggle, onDelete, onEdit }: BlockCa
             {block.content.title}
           </p>
         </div>
-        {block.content.url && (
+        {(block.content.url || block.content.email) && (
           <p className="text-xs truncate mt-0.5" style={{ color: '#444' }}>
-            {block.content.url}
+            {block.content.url || block.content.email}
           </p>
         )}
       </div>

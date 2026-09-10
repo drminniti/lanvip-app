@@ -61,6 +61,7 @@ export type BlockType =
   | 'vcard'
   | 'calendly'
   | 'youtube'
+  | 'email'
   | 'video'
   | 'image'
   | 'text'

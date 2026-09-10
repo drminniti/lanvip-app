@@ -54,14 +54,18 @@ function BentoTile({
   const isVCard     = block.type === 'vcard'
   const isCalendly  = block.type === 'calendly'
   const isYouTube   = block.type === 'youtube'
+  const isEmail     = block.type === 'email'
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
   const [isPlaying, setIsPlaying] = useState(false)
   const [showLightbox, setShowLightbox] = useState(false)
+  const [copiedEmail, setCopiedEmail] = useState(false)
 
   // Color per type
   const tileColor = isVCard
     ? '#22c55e'
-    : isCalendly
+    : isEmail
+      ? '#3b82f6'
+      : isCalendly
       ? '#0069FF'
       : isYouTube
         ? '#ef4444'
@@ -136,6 +140,86 @@ function BentoTile({
           VCF
         </span>
       </motion.button>
+    )
+  }
+
+  // ── Email tile — mailto action + copy action ─────────────────────────────
+  if (isEmail) {
+    const emailAddress = block.content.email || ''
+    return (
+      <motion.a
+        href={`mailto:${emailAddress}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.96 }}
+        onClick={() => void incrementClickCount(block.id)}
+        className={`${colClass} bento-tile flex items-center justify-between gap-3 px-4 py-4`}
+        style={{ textDecoration: 'none', borderColor: `${tileColor}35`, cursor: 'pointer' }}
+        aria-label={`Enviar correo a ${emailAddress}`}
+      >
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {/* Glow */}
+          <motion.span
+            aria-hidden="true"
+            initial={{ opacity: isFeatured ? 0.55 : 0 }}
+            whileHover={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              position: 'absolute', top: '-20%', right: '-10%',
+              width: '65%', height: '140%',
+              background: `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
+              filter: 'blur(18px)', pointerEvents: 'none', zIndex: 0,
+            }}
+          />
+          {/* Icon */}
+          {block.content.icon && (
+            <span className="text-xl flex-shrink-0 leading-none" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
+              {block.content.icon}
+            </span>
+          )}
+          {/* Text */}
+          <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
+            <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--theme-text, #F0F0F0)' }}>
+              {block.content.title}
+            </p>
+            {block.content.description && (
+              <p className="text-xs mt-0.5 truncate opacity-80" style={{ color: 'var(--theme-text, #A3A3A3)' }}>
+                {block.content.description}
+              </p>
+            )}
+          </div>
+        </div>
+        
+        {/* Secondary Action: Copy Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!emailAddress) return
+            navigator.clipboard.writeText(emailAddress)
+            setCopiedEmail(true)
+            setTimeout(() => setCopiedEmail(false), 2000)
+            void incrementClickCount(block.id)
+          }}
+          className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 active:bg-white/20"
+          style={{ background: copiedEmail ? '#22c55e22' : 'rgba(255,255,255,0.06)', position: 'relative', zIndex: 2 }}
+          aria-label="Copiar correo"
+          title="Copiar al portapapeles"
+        >
+          {copiedEmail ? (
+            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" style={{ color: 'var(--theme-text, #F0F0F0)' }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+          )}
+        </button>
+      </motion.a>
     )
   }
 

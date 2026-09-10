@@ -47,7 +47,7 @@ const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon
 
 /** The block types the user can choose in step 1 */
 const BLOCK_TYPES: {
-  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube'
+  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email'
   emoji:    string
   label:    string
   subtitle: string
@@ -109,6 +109,14 @@ const BLOCK_TYPES: {
     subtitle: 'Video interactivo',
     bg:       'rgba(239,68,68,0.08)',
     border:   'rgba(239,68,68,0.20)',
+  },
+  {
+    id:       'email',
+    emoji:    '📧',
+    label:    'Email',
+    subtitle: 'Botón de contacto',
+    bg:       'rgba(59,130,246,0.08)',
+    border:   'rgba(59,130,246,0.20)',
   },
 ]
 
@@ -424,9 +432,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const isEditMode = Boolean(initialData)
 
   // Derive initial block type — clamp to the supported UI types
-  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube'
+  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email'
   function toUIType(t?: BlockType): UIBlockType {
-    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube') return t
+    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube' || t === 'email') return t
     return 'link'
   }
 
@@ -434,6 +442,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const initPlatform = initType === 'social' ? platformFromIcon(initialData?.content.icon ?? '') : 'instagram' as SocialPlatform
   const initHandle   = initType === 'social' ? handleFromUrl(initPlatform, initialData?.content.url ?? '') : ''
   const initUrl      = (initType === 'link' || initType === 'calendly' || initType === 'youtube') ? (initialData?.content.url ?? '') : ''
+  const initEmail    = initType === 'email' ? (initialData?.content.email ?? '') : (initType === 'vcard' ? (initialData?.content.email ?? '') : '')
 
   // ── State ────────────────────────────────────────────────────────────────
   const [step, setStep]           = useState<'type' | 'details'>(isEditMode ? 'details' : 'type')
@@ -454,7 +463,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   )
   // vCard fields
   const [phone, setPhone]       = useState(initialData?.content.phone    ?? '')
-  const [email, setEmail]       = useState(initialData?.content.email    ?? '')
+  const [email, setEmail]       = useState(initEmail)
   const [company, setCompany]   = useState(initialData?.content.company  ?? '')
   const [jobTitle, setJobTitle] = useState(initialData?.content.jobTitle ?? '')
   const [autoplay, setAutoplay] = useState(initialData?.content.autoplay ?? false)
@@ -482,7 +491,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setIsFeatured(initialData.isFeatured ?? false)
       setBlockWidth(initialData.width ?? (initialData.isFeatured ? 'full' : 'half'))
       setPhone(initialData.content.phone    ?? '')
-      setEmail(initialData.content.email    ?? '')
+      setEmail(uit === 'email' || uit === 'vcard' ? (initialData.content.email ?? '') : '')
       setCompany(initialData.content.company  ?? '')
       setJobTitle(initialData.content.jobTitle ?? '')
       setAutoplay(initialData.content.autoplay ?? false)
@@ -538,6 +547,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     if (type === 'social')        setIcon(platform)
     if (type === 'vcard')         setIcon('👤')
     if (type === 'calendly')      setIcon('📅')
+    if (type === 'email')         setIcon('📧')
     if (type === 'divider')       { setIcon(''); setBlockWidth('full') }
     if (type === 'section_title') { setIcon(''); setBlockWidth('full') }
     setStep('details')
@@ -602,6 +612,15 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       resolvedUrl = `https://youtu.be/${parsedId}`
       resolvedIcon = '▶️'
       if (!resolvedTitle) resolvedTitle = 'Video de YouTube'
+    } else if (blockType === 'email') {
+      resolvedUrl = ''
+      resolvedIcon = icon || '📧'
+      if (!resolvedTitle) resolvedTitle = 'Enviar correo'
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!email.trim() || !emailPattern.test(email.trim())) {
+        setError('Por favor ingresa un correo válido.')
+        return
+      }
     } else {
       resolvedUrl = url.trim()
     }
@@ -609,7 +628,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     // Structural blocks don't need a URL or a mandatory title
     const isStructural = blockType === 'divider' || blockType === 'section_title'
     if (!resolvedTitle && !isStructural) { setError('El título es obligatorio.'); return }
-    if (!resolvedUrl && !isStructural && blockType !== 'vcard') { setError('La URL es obligatoria.'); return }
+    if (!resolvedUrl && !isStructural && blockType !== 'vcard' && blockType !== 'email') { setError('La URL es obligatoria.'); return }
 
     // Auto-format URLs: prepend https:// if missing
     let formattedUrl = resolvedUrl.trim()
@@ -629,7 +648,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         isFeatured,
         platform:    blockType === 'social' ? platform : undefined,
         phone:       blockType === 'vcard' ? phone.trim()    : undefined,
-        email:       blockType === 'vcard' ? email.trim()    : undefined,
+        email:       (blockType === 'vcard' || blockType === 'email') ? email.trim() : undefined,
         company:     blockType === 'vcard' ? company.trim()  : undefined,
         jobTitle:    blockType === 'vcard' ? jobTitle.trim() : undefined,
         embedId:     blockType === 'youtube' ? parseYouTubeId(formattedUrl) || undefined : undefined,
@@ -649,6 +668,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       if (blockType === 'vcard')         return 'Editar tarjeta VIP'
       if (blockType === 'calendly')      return 'Editar Calendly'
       if (blockType === 'social')        return 'Editar red social'
+      if (blockType === 'email')         return 'Editar correo'
       if (blockType === 'divider')       return 'Editar divisor'
       if (blockType === 'section_title') return 'Editar sección'
       return 'Editar enlace'
@@ -657,6 +677,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     if (blockType === 'vcard')         return 'Tarjeta VIP'
     if (blockType === 'calendly')      return 'Calendly'
     if (blockType === 'social')        return 'Red Social'
+    if (blockType === 'email')         return 'Correo'
     if (blockType === 'divider')       return 'Divisor'
     if (blockType === 'section_title') return 'Sección'
     return 'Enlace'
@@ -990,6 +1011,38 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             placeholder="30 min · Videollamada" className="input-dark"
                             style={{ resize: 'none', minHeight: '3rem' }} maxLength={120} rows={2} />
                         </div>
+                      </>
+                    )}
+                    {/* ── EMAIL ──────────────────────────────────────────── */}
+                    {blockType === 'email' && (
+                      <>
+                        <div
+                          className="flex items-start gap-2 px-3 py-2.5 rounded-xl"
+                          style={{ background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)' }}
+                        >
+                          <span className="text-lg mt-0.5">📧</span>
+                          <p className="text-xs leading-relaxed" style={{ color: '#93c5fd' }}>
+                            Agrega un botón para que tus visitantes te envíen un correo o copien tu dirección.
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="label-dark">Título del botón *</label>
+                          <input id="block-title" type="text" value={title} onChange={e => setTitle(e.target.value)}
+                            placeholder="Escribime un correo" className="input-dark" maxLength={60} />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Correo electrónico *</label>
+                          <input id="block-email" type="email" value={email} onChange={e => setEmail(e.target.value.trim())}
+                            placeholder="usuario@dominio.com" className="input-dark" required />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Descripción (opcional)</label>
+                          <textarea value={description} onChange={e => setDescription(e.target.value)}
+                            placeholder="Subtítulo breve" className="input-dark"
+                            style={{ resize: 'none', minHeight: '3.5rem' }} maxLength={120} rows={2} />
+                        </div>
+                        <EmojiPicker value={icon} onChange={setIcon} />
                       </>
                     )}
 
