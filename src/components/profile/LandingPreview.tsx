@@ -86,7 +86,7 @@ export function LandingPreview({ profile, blocks = [] }: LandingPreviewProps) {
               height:          `${VIRTUAL_HEIGHT}px`,
               transformOrigin: 'top left',
               transform:       `scale(${scale})`,
-              overflowY:       'auto',
+              overflowY:       'hidden',
               overflowX:       'hidden',
               userSelect:      'none',
               // Custom scrollbar — subtle, matches dark theme
