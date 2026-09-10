@@ -51,9 +51,9 @@ export function ImageCropperModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-4 pb-12"
       >
-        <div className="w-full max-w-lg bg-[#111] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div className="w-full max-w-lg bg-[#111] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-full">
           <div className="p-4 border-b border-white/10 flex justify-between items-center">
             <h3 className="text-white font-semibold">Ajustar Imagen</h3>
             <button
@@ -64,7 +64,7 @@ export function ImageCropperModal({
             </button>
           </div>
 
-          <div className="relative w-full h-[60vh] bg-black">
+          <div className="relative w-full flex-1 min-h-[40vh] bg-black">
             <Cropper
               image={imageSrc}
               crop={crop}
