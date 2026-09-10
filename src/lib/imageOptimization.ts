@@ -16,9 +16,23 @@ export async function optimizeImage(
     throw new Error('El archivo excede el límite de 10 MB.')
   }
 
-  const validTypes = ['image/jpeg', 'image/png', 'image/webp']
-  if (!validTypes.includes(file.type)) {
-    throw new Error('Formato no soportado. Usa JPEG, PNG o WebP.')
+  const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
+  if (!validTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.heic') && !file.name.toLowerCase().endsWith('.heif')) {
+    throw new Error('Formato no soportado. Usa JPEG, PNG, WebP o HEIC.')
+  }
+
+  let processFile: Blob = file
+
+  // If HEIC/HEIF, transcode to JPEG first
+  if (file.type === 'image/heic' || file.type === 'image/heif' || file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+    try {
+      const heic2any = (await import('heic2any')).default
+      const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 })
+      processFile = Array.isArray(converted) ? converted[0] : converted
+    } catch (err) {
+      console.error('[imageOptimization] heic2any error:', err)
+      throw new Error('Fallo al convertir imagen HEIC/HEIF de iOS.')
+    }
   }
 
   return new Promise((resolve, reject) => {
@@ -62,6 +76,6 @@ export async function optimizeImage(
       }
       img.src = e.target?.result as string
     }
-    reader.readAsDataURL(file)
+    reader.readAsDataURL(processFile)
   })
 }

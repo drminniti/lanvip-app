@@ -107,7 +107,7 @@ export function AvatarUploader({ currentUrl, displayName, onUploadSuccess, onRem
           )}
         </div>
         <p className="text-[10px] text-neutral-400">
-          JPEG, PNG o WebP (max 10MB). Se comprimirá automáticamente a ~80KB.
+          JPEG, PNG, WebP o HEIC (max 10MB). Se comprimirá automáticamente a ~80KB.
         </p>
 
         <AnimatePresence>
@@ -127,7 +127,7 @@ export function AvatarUploader({ currentUrl, displayName, onUploadSuccess, onRem
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
-          accept="image/jpeg, image/png, image/webp"
+          accept="image/jpeg, image/png, image/webp, image/heic, image/heif, .heic, .heif"
           className="hidden"
         />
       </div>

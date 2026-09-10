@@ -82,7 +82,7 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
       </div>
 
       <p className="text-[10px] text-neutral-400">
-        JPEG, PNG o WebP (max 10MB). Se comprimirá a un máximo de 1920px (~250KB).
+        JPEG, PNG, WebP o HEIC (max 10MB). Se comprimirá a un máximo de 1920px (~250KB).
       </p>
 
       <AnimatePresence>
@@ -102,7 +102,7 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept="image/jpeg, image/png, image/webp"
+        accept="image/jpeg, image/png, image/webp, image/heic, image/heif, .heic, .heif"
         className="hidden"
       />
     </div>
