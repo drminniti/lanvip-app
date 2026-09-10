@@ -61,7 +61,7 @@ export interface AddBlockPayload {
 
 export async function addBlock(
   userId: string,
-  { type, content, spanSize, width = 'half', isFeatured = false, currentCount }: AddBlockPayload,
+  { type, content, spanSize, width = 'full', isFeatured = false, currentCount }: AddBlockPayload,
 ): Promise<string> {
   // Firestore rejects documents that contain explicit `undefined` values.
   // Strip them before writing so optional fields (phone, email, etc.) are omitted.

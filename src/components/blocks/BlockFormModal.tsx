@@ -449,6 +449,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const [blockWidth, setBlockWidth]   = useState<BlockWidth>(
     initialData ? (initialData.width ?? (initialData.isFeatured ? 'full' : 'half')) : 'full'
   )
+  const [linkedinType, setLinkedinType] = useState<'personal' | 'company'>(
+    initPlatform === 'linkedin' && initHandle.startsWith('company/') ? 'company' : 'personal'
+  )
   // vCard fields
   const [phone, setPhone]       = useState(initialData?.content.phone    ?? '')
   const [email, setEmail]       = useState(initialData?.content.email    ?? '')
@@ -470,7 +473,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setBlockType(uit)
       setPlatform(pt)
       setTitle(initialData.content.title ?? '')
-      setHandle(uit === 'social' ? handleFromUrl(pt, initialData.content.url ?? '') : '')
+      const resolvedHandle = uit === 'social' ? handleFromUrl(pt, initialData.content.url ?? '') : ''
+      setHandle(resolvedHandle)
+      setLinkedinType(pt === 'linkedin' && resolvedHandle.startsWith('company/') ? 'company' : 'personal')
       setUrl((uit === 'link' || uit === 'calendly' || uit === 'youtube') ? (initialData.content.url ?? '') : '')
       setIcon(initialData.content.icon ?? '🔗')
       setDescription(initialData.content.description ?? '')
@@ -514,9 +519,16 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
       setAutoplay(false)
       setDisplayMode('player')
+      setLinkedinType('personal')
     }
     setError('')
     setShowLabelWarning(false)
+  }
+
+  function handleUrlBlur() {
+    if (url && !url.match(/^https?:\/\//) && !url.startsWith('mailto:') && !url.startsWith('tel:')) {
+      setUrl(`https://${url}`)
+    }
   }
 
   function handleClose() { reset(); onClose() }
@@ -567,7 +579,11 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       resolvedUrl   = ''
       resolvedIcon  = ''
     } else if (blockType === 'social') {
-      resolvedUrl   = socialUrl(platform, handle)
+      let finalHandle = handle.toLowerCase().trim()
+      if (platform === 'linkedin' && linkedinType === 'company' && !finalHandle.startsWith('company/')) {
+        finalHandle = `company/${finalHandle}`
+      }
+      resolvedUrl   = socialUrl(platform, finalHandle)
       resolvedIcon  = platform
       resolvedTitle = resolvedTitle || (SOCIAL_PLATFORMS.find(p => p.id === platform)?.label ?? '')
     } else if (blockType === 'calendly') {
@@ -807,11 +823,32 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                           ) : (
                             /* Instagram, LinkedIn, X — handle with @ prefix or URL */
                             <>
-                              <label className="label-dark">
-                                {platform === 'linkedin'
-                                  ? 'Usuario o URL *'
-                                  : 'Usuario / Handle *'}
-                              </label>
+                              <div className="flex items-center justify-between">
+                                <label className="label-dark">
+                                  {platform === 'linkedin'
+                                    ? 'Usuario o URL *'
+                                    : 'Usuario / Handle *'}
+                                </label>
+                                {platform === 'linkedin' && (
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setLinkedinType('personal')
+                                        if (handle.startsWith('company/')) setHandle(handle.replace('company/', ''))
+                                      }}
+                                      className="text-xs px-2 py-1 rounded-md transition-colors"
+                                      style={{ background: linkedinType === 'personal' ? 'rgba(255,255,255,0.1)' : 'transparent', color: linkedinType === 'personal' ? '#FFF' : '#A3A3A3' }}
+                                    >Personal</button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setLinkedinType('company')}
+                                      className="text-xs px-2 py-1 rounded-md transition-colors"
+                                      style={{ background: linkedinType === 'company' ? 'rgba(255,255,255,0.1)' : 'transparent', color: linkedinType === 'company' ? '#FFF' : '#A3A3A3' }}
+                                    >Empresa</button>
+                                  </div>
+                                )}
+                              </div>
                               <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm pointer-events-none" style={{ color: '#555' }}>
                                   {platform === 'linkedin' ? <FaLink /> : '@'}
@@ -820,7 +857,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                                   id="block-url"
                                   type="text"
                                   value={handle}
-                                  onChange={e => setHandle(e.target.value)}
+                                  onChange={e => setHandle(e.target.value.toLowerCase().trim())}
                                   placeholder={platform === 'linkedin' ? 'Ej: tu-perfil o pegá tu URL completa' : 'Ej: tu_usuario o pegá tu URL completa'}
                                   className="input-dark"
                                   style={{ paddingLeft: platform === 'linkedin' ? '2.5rem' : '2rem' }}
@@ -849,7 +886,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                         </div>
                         <div className="space-y-1">
                           <label className="label-dark">URL *</label>
-                          <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)}
+                          <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)} onBlur={handleUrlBlur}
                             placeholder="https://ejemplo.com" className="input-dark" required />
                         </div>
                         <div className="space-y-1">
@@ -891,7 +928,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                           <div className="space-y-1">
                             <label className="label-dark">Empresa (opcional)</label>
                             <input type="text" value={company} onChange={e => setCompany(e.target.value)}
-                              placeholder="Zripi Labs" className="input-dark" maxLength={50} />
+                              placeholder="Mi empresa" className="input-dark" maxLength={50} />
                           </div>
                         </div>
                         <div className="space-y-1">
@@ -906,7 +943,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                         </div>
                         <div className="space-y-1">
                           <label className="label-dark">Sitio web (opcional)</label>
-                          <input type="url" value={url} onChange={e => setUrl(e.target.value)}
+                          <input type="url" value={url} onChange={e => setUrl(e.target.value)} onBlur={handleUrlBlur}
                             placeholder="https://ejemplo.com" className="input-dark" />
                         </div>
                         <div className="space-y-1">
@@ -941,7 +978,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                         </div>
                         <div className="space-y-1">
                           <label className="label-dark">URL de Calendly *</label>
-                          <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)}
+                          <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)} onBlur={handleUrlBlur}
                             placeholder="https://calendly.com/usuario/reunión-30min" className="input-dark" required />
                           <p className="text-xs" style={{ color: '#555' }}>
                             Encontrala en tu dashboard de Calendly → Compartir.
@@ -960,9 +997,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                     {blockType === 'youtube' && (
                       <>
                         <div className="space-y-1">
-                          <label className="label-dark">URL del Video *</label>
-                          <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)}
-                            placeholder="https://youtu.be/..." className="input-dark" required />
+                          <label className="label-dark">Enlace del video de YouTube *</label>
+                          <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)} onBlur={handleUrlBlur}
+                            placeholder="https://youtube.com/watch?v=..." className="input-dark" required />
                         </div>
                         {displayMode === 'button' && (
                           <>

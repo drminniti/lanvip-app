@@ -18,7 +18,7 @@ const SOCIAL_COLORS: Record<string, string> = {
   x:         '#888888',
   whatsapp:  '#25D366',
   youtube:   '#FF0000',
-  tiktok:    '#000000', // or an accent like #FF0050
+  tiktok:    '#FFFFFF', // or an accent like #FF0050
   facebook:  '#1877F2',
 }
 
