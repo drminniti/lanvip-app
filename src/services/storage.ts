@@ -28,11 +28,17 @@ export async function uploadUserAvatar(userId: string, file: File, cropPixels?: 
   return downloadUrl
 }
 
-export async function uploadUserBackground(userId: string, file: File, cropPixels?: { x: number; y: number; width: number; height: number }): Promise<string> {
+export async function uploadUserBackground(
+  userId: string, 
+  file: File, 
+  deviceType: 'mobile' | 'desktop',
+  cropPixels?: { x: number; y: number; width: number; height: number }
+): Promise<string> {
   const optimizedBlob = await optimizeImage(file, { maxWidth: 1920, maxHeight: 1920, quality: 0.8, cropPixels })
   
   const storage = getFirebaseStorage()
-  const backgroundRef = ref(storage, `users/${userId}/background.webp`)
+  const filename = deviceType === 'mobile' ? 'background_mobile.webp' : 'background_desktop.webp'
+  const backgroundRef = ref(storage, `users/${userId}/${filename}`)
   
   await uploadBytes(backgroundRef, optimizedBlob, {
     contentType: 'image/webp',
@@ -46,7 +52,7 @@ export async function uploadUserBackground(userId: string, file: File, cropPixel
   const userRef = doc(db, 'users', userId)
   await updateDoc(userRef, {
     'themeSettings.background.type': 'image',
-    'themeSettings.background.url': downloadUrl
+    [`themeSettings.background.${deviceType}Url`]: downloadUrl
   })
   
   return downloadUrl
@@ -62,11 +68,21 @@ export async function removeUserAvatar(userId: string): Promise<void> {
   })
 }
 
-export async function removeUserBackground(userId: string): Promise<void> {
+export async function removeUserBackground(userId: string, deviceType?: 'mobile' | 'desktop'): Promise<void> {
   const db = getFirebaseDb()
   const userRef = doc(db, 'users', userId)
-  await updateDoc(userRef, {
-    'themeSettings.background.type': 'none',
-    'themeSettings.background.url': ''
-  })
+  
+  if (deviceType) {
+    await updateDoc(userRef, {
+      [`themeSettings.background.${deviceType}Url`]: ''
+    })
+  } else {
+    // Remove all backgrounds
+    await updateDoc(userRef, {
+      'themeSettings.background.type': 'none',
+      'themeSettings.background.url': '',
+      'themeSettings.background.mobileUrl': '',
+      'themeSettings.background.desktopUrl': ''
+    })
+  }
 }

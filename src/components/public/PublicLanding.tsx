@@ -483,8 +483,14 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
 
   const useTexture = isCustomTheme && (customColors?.useTexture ?? false)
 
-  const isImageBg = profile.themeSettings.background?.type === 'image' && !!profile.themeSettings.background?.url
+  const isImageBg = profile.themeSettings.background?.type === 'image' && (
+    !!profile.themeSettings.background?.url || 
+    !!profile.themeSettings.background?.mobileUrl || 
+    !!profile.themeSettings.background?.desktopUrl
+  )
   const bgUrl = profile.themeSettings.background?.url
+  const mobileBgUrl = profile.themeSettings.background?.mobileUrl || bgUrl
+  const desktopBgUrl = profile.themeSettings.background?.desktopUrl || bgUrl
   const overlayOpacity = (profile.themeSettings.background?.overlayOpacity ?? 50) / 100
 
   const bgEffect = theme?.settings?.bgEffect
@@ -594,12 +600,26 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         )}
         {isImageBg && (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img 
-              src={bgUrl}
-              alt="Fondo personalizado"
-              className="fixed inset-0 w-full h-full object-cover sm:max-w-md sm:mx-auto" 
-            />
+            {/* Mobile Background */}
+            {mobileBgUrl && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img 
+                src={mobileBgUrl}
+                alt="Fondo móvil personalizado"
+                className="block md:hidden fixed inset-0 w-full h-full object-cover" 
+              />
+            )}
+            
+            {/* Desktop Background */}
+            {desktopBgUrl && (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img 
+                src={desktopBgUrl}
+                alt="Fondo escritorio personalizado"
+                className="hidden md:block fixed inset-0 w-full h-full object-cover sm:max-w-md sm:mx-auto" 
+              />
+            )}
+
             <div 
               className="fixed inset-0 bg-black sm:max-w-md sm:mx-auto" 
               style={{ opacity: overlayOpacity }} 

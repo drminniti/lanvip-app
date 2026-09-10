@@ -30,7 +30,9 @@ export interface ThemeSettings {
   // ── Sprint 4: Visuals ──
   background?: {
     type: 'color' | 'image'
-    url?: string
+    url?: string // legacy fallback
+    mobileUrl?: string
+    desktopUrl?: string
     overlayOpacity?: number
   }
 }

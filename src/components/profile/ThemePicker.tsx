@@ -317,22 +317,33 @@ export function ThemePicker({
 
                     {/* Background Settings */}
                     <div className="pt-4 border-t space-y-4" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                      <h3 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>Imagen de Fondo</h3>
-                      <BackgroundUploader
-                        currentUrl={currentSettings.background?.url || ''}
-                        onUploadSuccess={(url) => {
-                          // The upload function already saves to Firebase, 
-                          // but we trigger a local update to immediately see the change
-                          // in the preview. We can pass a fake update or if onCustomColorChange is available
-                          // wait, changing `background` here in customBg would overwrite color.
-                          // The parent handles background url if we just pass a dummy to trigger re-render
-                        }}
-                        onRemoveSuccess={() => {
-                          // Handled in backend, local refresh can happen via profile listener
-                        }}
-                      />
+                      <h3 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>Imágenes de Fondo</h3>
+                      <div className="space-y-4">
+                        <BackgroundUploader
+                          currentUrl={currentSettings.background?.mobileUrl || currentSettings.background?.url || ''}
+                          deviceType="mobile"
+                          aspectRatio={9 / 16}
+                          label="Fondo Móvil"
+                          description="Vertical (9:16) ideal para celulares."
+                          onUploadSuccess={(url) => {
+                            // Sincronización manejada por Firestore en tiempo real
+                          }}
+                          onRemoveSuccess={() => {}}
+                        />
+                        <BackgroundUploader
+                          currentUrl={currentSettings.background?.desktopUrl || currentSettings.background?.url || ''}
+                          deviceType="desktop"
+                          aspectRatio={16 / 9}
+                          label="Fondo Escritorio"
+                          description="Horizontal (16:9) ideal para monitores."
+                          onUploadSuccess={(url) => {
+                            // Sincronización manejada por Firestore en tiempo real
+                          }}
+                          onRemoveSuccess={() => {}}
+                        />
+                      </div>
                       
-                      {currentSettings.background?.url && (
+                      {(currentSettings.background?.url || currentSettings.background?.mobileUrl || currentSettings.background?.desktopUrl) && (
                         <div className="space-y-2 mt-4 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
                           <div className="flex justify-between items-center">
                             <label className="text-xs font-semibold" style={{ color: '#A3A3A3' }}>Oscurecimiento (Overlay)</label>

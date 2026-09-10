@@ -10,9 +10,21 @@ interface Props {
   currentUrl: string
   onUploadSuccess: (url: string) => void
   onRemoveSuccess: () => void
+  deviceType: 'mobile' | 'desktop'
+  aspectRatio: number
+  label: string
+  description?: string
 }
 
-export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSuccess }: Props) {
+export function BackgroundUploader({ 
+  currentUrl, 
+  onUploadSuccess, 
+  onRemoveSuccess,
+  deviceType,
+  aspectRatio,
+  label,
+  description
+}: Props) {
   const { user } = useAuth()
   const [isUploading, setIsUploading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -39,7 +51,7 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
     setErrorMsg(null)
     
     try {
-      const url = await uploadUserBackground(user.uid, selectedFile, cropPixels)
+      const url = await uploadUserBackground(user.uid, selectedFile, deviceType, cropPixels)
       onUploadSuccess(url)
     } catch (err: any) {
       console.error('[BackgroundUploader] upload failed:', err)
@@ -60,7 +72,7 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
     setIsUploading(true)
     setErrorMsg(null)
     try {
-      await removeUserBackground(user.uid)
+      await removeUserBackground(user.uid, deviceType)
       onRemoveSuccess()
     } catch (err: any) {
       console.error('[BackgroundUploader] remove failed:', err)
@@ -72,36 +84,41 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          disabled={isUploading}
-          onClick={() => fileInputRef.current?.click()}
-          className="flex-1 px-4 py-2 text-sm font-semibold rounded-xl bg-white/10 hover:bg-white/15 text-white transition-colors relative overflow-hidden"
-        >
-          {isUploading ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-              Optimizando...
-            </span>
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>
+            {label}
+          </span>
+          {currentUrl ? (
+            <button
+              type="button"
+              disabled={isUploading}
+              onClick={handleRemove}
+              className="text-xs text-red-400 hover:text-red-300 transition-colors"
+            >
+              Eliminar {deviceType === 'mobile' ? 'fondo celular' : 'fondo escritorio'}
+            </button>
           ) : (
-            'Subir Imagen de Fondo'
+            <button
+              type="button"
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs font-semibold px-3 py-1 rounded-full bg-[#D4AF37] text-black hover:brightness-110 transition-all disabled:opacity-50"
+            >
+              {isUploading ? 'Subiendo...' : 'Subir Fondo'}
+            </button>
           )}
-        </button>
-        {currentUrl && (
-          <button
-            type="button"
-            disabled={isUploading}
-            onClick={handleRemove}
-            className="px-4 py-2 text-sm font-semibold rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
-          >
-            Quitar
-          </button>
+        </div>
+
+        {description && (
+          <p className="text-[10px] text-neutral-400 mt-1">
+            {description}
+          </p>
         )}
       </div>
 
       <p className="text-[10px] text-neutral-400">
-        JPEG, PNG, WebP o HEIC (max 10MB). Se comprimirá a un máximo de 1920px (~250KB).
+        JPEG, PNG, WebP o HEIC (max 10MB).
       </p>
 
       <AnimatePresence>
@@ -128,7 +145,7 @@ export function BackgroundUploader({ currentUrl, onUploadSuccess, onRemoveSucces
       <ImageCropperModal
         isOpen={!!previewSrc}
         imageSrc={previewSrc}
-        aspectRatio={9 / 16}
+        aspectRatio={aspectRatio}
         cropShape="rect"
         onCancel={handleCancelCrop}
         onConfirm={handleConfirmCrop}
