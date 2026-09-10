@@ -50,7 +50,7 @@ export function LandingPreview({ profile, blocks = [] }: LandingPreviewProps) {
       {/* Outer container — aspect ratio 390:720, clips inner content */}
       <div
         ref={outerRef}
-        className="relative rounded-2xl overflow-hidden w-full"
+        className="relative rounded-2xl overflow-hidden w-full max-h-full mx-auto"
         style={{
           aspectRatio: `${VIRTUAL_WIDTH} / ${VIRTUAL_HEIGHT}`,
           border:      '1px solid rgba(255,255,255,0.08)',

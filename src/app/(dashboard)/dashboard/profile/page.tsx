@@ -424,8 +424,8 @@ export default function ProfilePage() {
                 ✕
               </button>
             </div>
-            <div className="flex-1 overflow-auto bg-black p-4 flex items-center justify-center">
-              <div className="w-full max-w-sm">
+            <div className="flex-1 overflow-hidden bg-black p-4 flex items-center justify-center">
+              <div className="w-full max-w-sm h-full flex flex-col justify-center">
                 <LandingPreview profile={previewProfile} blocks={blocks} />
               </div>
             </div>
