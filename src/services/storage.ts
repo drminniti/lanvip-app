@@ -12,7 +12,7 @@ export async function uploadUserAvatar(userId: string, file: File, cropPixels?: 
   const avatarRef = ref(storage, `users/${userId}/avatar.webp`)
   
   await uploadBytes(avatarRef, optimizedBlob, {
-    contentType: 'image/webp',
+    contentType: optimizedBlob.type || 'image/webp',
     cacheControl: CACHE_CONTROL
   })
   
@@ -41,7 +41,7 @@ export async function uploadUserBackground(
   const backgroundRef = ref(storage, `users/${userId}/${filename}`)
   
   await uploadBytes(backgroundRef, optimizedBlob, {
-    contentType: 'image/webp',
+    contentType: optimizedBlob.type || 'image/webp',
     cacheControl: CACHE_CONTROL
   })
   
