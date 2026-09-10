@@ -88,9 +88,5 @@ export default async function UserPublicPage({
   const safeProfile = serializeProfile(profile)
   const safeBlocks  = serializeBlocks(blocks)
 
-  return (
-    <div className="fixed inset-0 w-full h-[100dvh]">
-      <PublicLanding profile={safeProfile as unknown as UserProfile} blocks={safeBlocks as unknown as Block[]} />
-    </div>
-  )
+  return <PublicLanding profile={safeProfile as unknown as UserProfile} blocks={safeBlocks as unknown as Block[]} />
 }

@@ -568,7 +568,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
 
   return (
     <div 
-      className="absolute inset-0 overflow-hidden w-full h-full"
+      className="relative w-full min-h-full flex flex-col"
       style={{ 
         '--theme-bg': isCustomTheme ? bg : undefined,
         '--theme-accent': isCustomTheme ? accent : undefined,
@@ -577,7 +577,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
       } as React.CSSProperties}
     >
       {/* Capa de Fondo (Capa 0) */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0" style={{ background: bg }} />
         {useTexture && !bgEffect && (
           <div 
@@ -593,9 +593,8 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
       </div>
 
       {/* Capa de Contenido (Capa 10) */}
-      <main className="absolute inset-0 z-10 overflow-y-auto">
-        <div className="w-full h-full flex flex-col items-center">
-          <div className="w-full max-w-md mx-auto px-4 py-12 pb-24 flex flex-col items-center gap-6">
+      <main className="relative z-10 w-full flex flex-col items-center flex-grow">
+        <div className="w-full max-w-md mx-auto px-4 py-12 pb-24 flex flex-col items-center gap-6">
 
           {/* Avatar */}
         <motion.div
@@ -739,7 +738,6 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           </motion.div>
 
           </div>
-        </div>
       </main>
     </div>
   )
