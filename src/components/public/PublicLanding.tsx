@@ -487,6 +487,85 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const bgUrl = profile.themeSettings.background?.url
   const overlayOpacity = (profile.themeSettings.background?.overlayOpacity ?? 50) / 100
 
+  const bgEffect = theme?.settings?.bgEffect
+
+  const renderBgEffect = () => {
+    if (bgEffect === 'aurora') {
+      return (
+        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full mix-blend-screen filter blur-[80px] opacity-40"
+            style={{ background: accent }}
+            animate={{ x: [0, 50, -30, 0], y: [0, 30, -50, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+          />
+          <motion.div
+            className="absolute bottom-[-10%] right-[-10%] w-[70vw] h-[70vw] rounded-full mix-blend-screen filter blur-[100px] opacity-30"
+            style={{ background: theme?.settings.colors[1] ?? accent }}
+            animate={{ x: [0, -50, 30, 0], y: [0, -30, 50, 0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          />
+        </div>
+      )
+    }
+    if (bgEffect === 'grid-motion') {
+      return (
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-end justify-center" style={{ perspective: '1000px', background: theme?.settings.colors[0] ?? '#000' }}>
+          <motion.div
+            className="w-[200vw] h-[150vh] origin-bottom"
+            style={{
+              backgroundImage: `linear-gradient(${accent}33 1px, transparent 1px), linear-gradient(90deg, ${accent}33 1px, transparent 1px)`,
+              backgroundSize: '50px 50px',
+              rotateX: '60deg',
+            }}
+            animate={{ backgroundPositionY: ['0px', '50px'] }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          />
+          <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, ${theme?.settings.colors[0]} 40%, transparent 100%)` }} />
+        </div>
+      )
+    }
+    if (bgEffect === 'floating-orbs') {
+      return (
+        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+          {[...Array(6)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute rounded-full mix-blend-screen filter blur-[60px]"
+              style={{
+                background: i % 2 === 0 ? accent : (theme?.settings.colors[1] ?? accent),
+                width: `${(i * 5) + 15}vw`,
+                height: `${(i * 5) + 15}vw`,
+                left: `${(i * 15)}%`,
+                top: `${(i * 15)}%`,
+                opacity: 0.4
+              }}
+              animate={{ y: [0, -60, 0], x: [0, 40, 0] }}
+              transition={{ duration: (i * 2) + 8, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </div>
+      )
+    }
+    if (bgEffect === 'bauhaus-shapes') {
+      const svg = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800"><circle cx="200" cy="200" r="150" fill="${accent}" opacity="0.15" /><rect x="500" y="100" width="200" height="200" fill="#E2725B" opacity="0.1" transform="rotate(45 600 200)" /><path d="M100 600 L300 600 L200 400 Z" fill="#4A9EFF" opacity="0.1" /><circle cx="650" cy="650" r="100" fill="transparent" stroke="${accent}" stroke-width="20" opacity="0.2" /></svg>`)
+      return (
+        <motion.div 
+          className="fixed inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml;charset=utf-8,${svg}")`,
+            backgroundSize: '800px 800px',
+
+            backgroundPosition: 'center',
+          }}
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )
+    }
+    return null
+  }
+
   return (
     <main
       className="min-h-screen flex flex-col items-center relative"
@@ -497,7 +576,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
         '--theme-text': textColor,
       } as React.CSSProperties}
     >
-      {useTexture && !isImageBg && (
+      {useTexture && !isImageBg && !bgEffect && (
         <div 
           className="fixed inset-0 z-0 pointer-events-none"
           style={{
@@ -519,6 +598,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           />
         </>
       )}
+      {renderBgEffect()}
       <div className="w-full max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6 relative z-10">
 
         {/* Avatar */}

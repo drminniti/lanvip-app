@@ -33,6 +33,10 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
   {
     name: 'Minimal Luxury',
     themeIds: ['silver', 'crimson', 'sapphire', 'copper']
+  },
+  {
+    name: 'Dynamic & Avant-Garde',
+    themeIds: ['aurora', 'cyber_grid', 'floating_orbs', 'bauhaus']
   }
 ]
 
@@ -248,6 +252,64 @@ export const VIP_THEMES: VipTheme[] = [
     settings: {
       bgType:    'mesh',
       colors:    ['#1C1C1C', '#282828'],
+      cardStyle: 'glass',
+      darkMode:  true,
+    },
+  },
+
+  // ── Dynamic & Avant-Garde ──
+  {
+    id:          'aurora',
+    name:        'Aurora Flow',
+    description: 'Movimiento radial y colores nórdicos',
+    accent:      '#FF00FF',
+    textColor:   '#F3E5F5',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'aurora',
+      colors:    ['#050510', '#100520'],
+      cardStyle: 'glass',
+      darkMode:  true,
+    },
+  },
+  {
+    id:          'cyber_grid',
+    name:        'Cyber Grid',
+    description: 'Grilla animada infinita',
+    accent:      '#00FFFF',
+    textColor:   '#E0F2FE',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'grid-motion',
+      colors:    ['#020205', '#0A0A15'],
+      cardStyle: 'glass',
+      darkMode:  true,
+    },
+  },
+  {
+    id:          'floating_orbs',
+    name:        'Floating Orbs',
+    description: 'Esferas levitantes orgánicas',
+    accent:      '#2196F3',
+    textColor:   '#FFFFFF',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'floating-orbs',
+      colors:    ['#0A192F', '#020C1B'],
+      cardStyle: 'glass',
+      darkMode:  true,
+    },
+  },
+  {
+    id:          'bauhaus',
+    name:        'Bauhaus Shapes',
+    description: 'Geometría y colores sofisticados',
+    accent:      '#FF9800',
+    textColor:   '#F5F5F5',
+    settings: {
+      bgType:    'mesh',
+      bgEffect:  'bauhaus-shapes',
+      colors:    ['#121212', '#1A1A1A'],
       cardStyle: 'glass',
       darkMode:  true,
     },

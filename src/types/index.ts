@@ -6,9 +6,11 @@ export type PlanId = 'free' | 'pro' | 'team_member' | 'team_admin'
 // ─── Theme Settings ──────────────────────────────────────────────────────────
 export type BgType = 'mesh' | 'solid' | 'gradient'
 export type CardStyle = 'glass' | 'solid' | 'minimal'
+export type BgEffect = 'aurora' | 'grid-motion' | 'floating-orbs' | 'bauhaus-shapes'
 
 export interface ThemeSettings {
   bgType: BgType
+  bgEffect?: BgEffect
   colors: string[]        // e.g. ['#f0e6ff', '#e0f0ff']
   cardStyle: CardStyle
   darkMode: boolean
