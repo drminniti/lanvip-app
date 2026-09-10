@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useDashboard } from '@/context/DashboardContext'
 import { useUserBlocks } from '@/hooks/useUserBlocks'
@@ -42,6 +42,7 @@ export default function BlocksPage() {
   //   - editingBlock≠null                 → Edit mode (createOpen irrelevant)
   const [createOpen, setCreateOpen]     = useState(false)
   const [editingBlock, setEditingBlock] = useState<Block | null>(null)
+  const [showMobilePreview, setShowMobilePreview] = useState(false)
 
   const modalOpen = createOpen || editingBlock !== null
 
@@ -213,15 +214,56 @@ export default function BlocksPage() {
             initial={{ opacity: 0, x: 16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="lg:sticky lg:top-8"
+            className="hidden lg:flex lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] items-start justify-center w-full"
           >
             {!profileLoading && previewProfile && (
-              <LandingPreview profile={previewProfile} blocks={blocks} />
+              <div className="w-full max-w-[340px] xl:max-w-sm">
+                <LandingPreview profile={previewProfile} blocks={blocks} />
+              </div>
             )}
           </motion.div>
 
         </div>
       </div>
+
+      {/* ── MOBILE: Floating Preview Button ───────────────────────────────── */}
+      <div className="lg:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40">
+        <button
+          onClick={() => setShowMobilePreview(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold shadow-2xl transition-transform active:scale-95"
+          style={{ background: 'rgba(26,26,26,0.85)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F5F5' }}
+        >
+          <span>👁️</span> Ver Vista Previa
+        </button>
+      </div>
+
+      {/* ── MOBILE: Preview Modal ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showMobilePreview && previewProfile && (
+          <motion.div
+            initial={{ opacity: 0, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-0 z-50 bg-[#0A0A0A] flex flex-col"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-[#333] shrink-0" style={{ background: '#111' }}>
+              <h2 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>Vista Previa en Vivo</h2>
+              <button 
+                onClick={() => setShowMobilePreview(false)} 
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto bg-black p-4 flex items-center justify-center">
+              <div className="w-full max-w-sm">
+                <LandingPreview profile={previewProfile} blocks={blocks} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Single BlockFormModal — handles both create and edit */}
       <BlockFormModal
