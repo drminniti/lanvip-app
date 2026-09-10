@@ -8,6 +8,7 @@ import { useUserBlocks } from '@/hooks/useUserBlocks'
 import { updateUserProfile, checkUsernameAvailable } from '@/lib/auth'
 import { ThemePicker } from '@/components/profile/ThemePicker'
 import { LandingPreview } from '@/components/profile/LandingPreview'
+import { AvatarUploader } from '@/components/profile/AvatarUploader'
 import type { VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
 
@@ -263,49 +264,25 @@ export default function ProfilePage() {
           className="space-y-4"
         >
 
-          {/* Avatar URL */}
+          {/* Avatar */}
           <div className="glass-card p-6 space-y-4">
             <h2 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>
               Foto de perfil
             </h2>
-
-            {/* Avatar preview + URL field */}
-            <div className="flex items-center gap-4">
-              <div
-                className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0"
-                style={{ border: `2px solid #D4AF37` }}
-              >
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={avatarUrl}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                  />
-                ) : (
-                  <div
-                    className="w-full h-full flex items-center justify-center text-xl font-bold"
-                    style={{ background: 'rgba(212,175,55,0.15)', color: '#D4AF37' }}
-                  >
-                    {(displayName || user?.displayName || '?')[0].toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 space-y-1">
-                <label htmlFor="prof-avatar" className="label-dark">
-                  URL de imagen pública
-                </label>
-                <input
-                  id="prof-avatar"
-                  type="url"
-                  value={avatarUrl}
-                  onChange={e => setAvatarUrl(e.target.value)}
-                  placeholder="https://ejemplo.com/tu-foto.jpg"
-                  className="input-dark"
-                />
-              </div>
-            </div>
+            <AvatarUploader
+              currentUrl={avatarUrl}
+              displayName={displayName || user?.displayName || ''}
+              onUploadSuccess={(url) => {
+                setAvatarUrl(url)
+                setSaveMsg({ type: 'ok', text: '¡Avatar actualizado exitosamente!' })
+                setTimeout(() => setSaveMsg(null), 3000)
+              }}
+              onRemoveSuccess={() => {
+                setAvatarUrl('')
+                setSaveMsg({ type: 'ok', text: '¡Avatar eliminado!' })
+                setTimeout(() => setSaveMsg(null), 3000)
+              }}
+            />
           </div>
 
           {/* Identity */}
@@ -382,49 +359,6 @@ export default function ProfilePage() {
               <p className="text-xs text-right" style={{ color: '#555' }}>
                 {bio.length}/160
               </p>
-            </div>
-
-            <div className="pt-4 border-t space-y-4" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-              <h3 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>Fondo de Pantalla</h3>
-              <div className="space-y-1">
-                <label htmlFor="prof-bg-url" className="label-dark">URL de imagen (opcional)</label>
-                <input
-                  id="prof-bg-url"
-                  type="url"
-                  value={bgUrl}
-                  onChange={e => setBgUrl(e.target.value)}
-                  placeholder="https://ejemplo.com/tu-fondo.jpg"
-                  className="input-dark"
-                />
-                <p className="text-xs mt-1 flex items-center gap-1" style={{ color: '#A3A3A3' }}>
-                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Recomendación: Imágenes verticales (ej. 1080x1920) y optimizadas (menos de 1MB).
-                </p>
-              </div>
-              
-              {bgUrl.trim() !== '' && (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label htmlFor="prof-bg-opacity" className="label-dark">Oscurecimiento (Overlay)</label>
-                    <span className="text-xs font-mono" style={{ color: '#A3A3A3' }}>{bgOverlayOpacity}%</span>
-                  </div>
-                  <input
-                    id="prof-bg-opacity"
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="5"
-                    value={bgOverlayOpacity}
-                    onChange={e => setBgOverlayOpacity(parseInt(e.target.value))}
-                    className="w-full accent-[#D4AF37]"
-                  />
-                  <p className="text-xs" style={{ color: '#A3A3A3' }}>
-                    Mejora la legibilidad de tus enlaces oscureciendo la imagen.
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Save feedback */}

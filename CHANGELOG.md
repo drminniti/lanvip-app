@@ -15,3 +15,8 @@
   - Adición de 3 nuevas categorías orientadas a públicos específicos ("Clean & Pro", "Creator & Pop", "Dev & Studio").
   - El catálogo ahora cuenta con 32 temas VIP en total.
   - Los temas claros ahora adaptan los efectos dinámicos (`bgEffect`) garantizando legibilidad y estética sin perder la esencia VIP.
+- **Infraestructura de Imágenes Optimizadas (Firebase Storage)**:
+  - Implementación de compresión 100% en cliente usando Canvas API (conversión a WebP moderno).
+  - Redimensionamiento automático de Avatares a 400x400 y Fondos a 1920px (pesos < 80KB y < 250KB respectivamente).
+  - Nuevos componentes UI `AvatarUploader` y `BackgroundUploader` con carga en tiempo real y fallback elegante.
+  - Rutas de almacenamiento deterministas y caché estático agresivo (`max-age=31536000`) para micro-landings súper rápidas.
