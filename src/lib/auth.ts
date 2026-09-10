@@ -20,6 +20,7 @@ import {
   query,
   where,
   serverTimestamp,
+  runTransaction,
 } from 'firebase/firestore'
 import { getFirebaseAuth, getFirebaseDb, browserPopupRedirectResolver } from './firebase'
 import type { UserProfile, ThemeSettings } from '@/types'
@@ -159,6 +160,12 @@ export interface UpdateProfileData {
   themeSettings?:  ThemeSettings
 }
 
+const RESERVED_USERNAMES = [
+  'admin', 'support', 'api', 'lanvip', 'root', 'help', 'app', 'login', 
+  'register', 'auth', 'dashboard', 'settings', 'profile', 'sysadmin', 
+  'info', 'contact', 'terms', 'privacy'
+]
+
 /**
  * Updates the user's Firestore document with the provided fields.
  * Also updates Firebase Auth displayName if provided.
@@ -195,8 +202,11 @@ export async function completeOnboarding(
   const db      = getFirebaseDb()
   const userRef = doc(db, 'users', uid)
 
+  // 1. Atomically reserve username
+  await changeUsernameTransaction(uid, username)
+
+  // 2. Update remaining fields
   await updateDoc(userRef, {
-    username,
     displayName,
     hasCompletedOnboarding: true,
   })
@@ -216,19 +226,72 @@ export async function completeOnboarding(
  */
 export async function checkUsernameAvailable(
   username: string,
-  currentUid: string,
+  currentUid?: string,
 ): Promise<boolean> {
   if (!username || username.length < 3) return false
+  
+  const normalized = username.toLowerCase()
+  if (RESERVED_USERNAMES.includes(normalized)) return false
 
-  const db      = getFirebaseDb()
-  const usersCol = collection(db, 'users')
-  const q        = query(usersCol, where('username', '==', username))
-  const snap     = await getDocs(q)
+  const db = getFirebaseDb()
+  const snap = await getDoc(doc(db, 'usernames', normalized))
 
-  if (snap.empty) return true
+  if (!snap.exists()) return true
 
-  // Allow if the only match is the current user (re-saving same username)
-  return snap.docs.every(d => d.id === currentUid)
+  // Allow if the current user already owns it
+  return snap.data()?.uid === currentUid
+}
+
+/**
+ * Updates a user's username using an atomic transaction.
+ * Creates the new username doc, releases the old one, and updates the user profile.
+ */
+export async function changeUsernameTransaction(
+  uid: string,
+  newUsername: string,
+): Promise<void> {
+  const normalizedNew = newUsername.toLowerCase()
+  if (RESERVED_USERNAMES.includes(normalizedNew)) {
+    throw new Error('El nombre de usuario es reservado o inválido.')
+  }
+
+  const db = getFirebaseDb()
+  const userRef = doc(db, 'users', uid)
+  const newUsernameRef = doc(db, 'usernames', normalizedNew)
+
+  // We use runTransaction to ensure atomicity
+  await runTransaction(db, async (transaction) => {
+    // 1. Check current user doc to get the old username
+    const userDoc = await transaction.get(userRef)
+    if (!userDoc.exists()) throw new Error('User does not exist')
+    
+    const oldUsername = userDoc.data()?.username?.toLowerCase()
+
+    if (oldUsername === normalizedNew) {
+      return // No change needed
+    }
+
+    // 2. Check if new username is taken
+    const newUsernameDoc = await transaction.get(newUsernameRef)
+    if (newUsernameDoc.exists() && newUsernameDoc.data()?.uid !== uid) {
+      throw new Error('El nombre de usuario ya está ocupado.')
+    }
+
+    // 3. Write new username
+    transaction.set(newUsernameRef, {
+      uid,
+      createdAt: new Date().toISOString()
+    })
+
+    // 4. Update user doc
+    transaction.update(userRef, { username: newUsername })
+
+    // 5. Release old username if it existed
+    if (oldUsername && oldUsername !== normalizedNew) {
+      const oldUsernameRef = doc(db, 'usernames', oldUsername)
+      transaction.delete(oldUsernameRef)
+    }
+  })
 }
 
 // ─── Auth Listeners ───────────────────────────────────────────────────────────

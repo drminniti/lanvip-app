@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { useUserBlocks } from '@/hooks/useUserBlocks'
-import { updateUserProfile, checkUsernameAvailable } from '@/lib/auth'
+import { updateUserProfile, checkUsernameAvailable, changeUsernameTransaction } from '@/lib/auth'
 import { ThemePicker } from '@/components/profile/ThemePicker'
 import { LandingPreview } from '@/components/profile/LandingPreview'
 import { AvatarUploader } from '@/components/profile/AvatarUploader'
@@ -31,6 +31,7 @@ export default function ProfilePage() {
   const [usernameStatus, setUsernameStatus] = useState<
     'idle' | 'checking' | 'available' | 'taken' | 'too-short' | 'unchanged'
   >('idle')
+  const [showUsernameConfirm, setShowUsernameConfirm] = useState(false)
   const [saving, setSaving]   = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [showMobilePreview, setShowMobilePreview] = useState(false)
@@ -146,7 +147,7 @@ export default function ProfilePage() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!user?.uid) return
-    if (usernameStatus === 'taken') return
+    if (usernameStatus === 'taken' || usernameStatus === 'checking') return
 
     const canSaveUsername =
       usernameStatus === 'available' ||
@@ -155,20 +156,35 @@ export default function ProfilePage() {
 
     if (!canSaveUsername) return
 
+    if (username !== profile?.username && usernameStatus === 'available') {
+      setShowUsernameConfirm(true)
+      return
+    }
+
+    await executeSave()
+  }
+
+  async function executeSave() {
     setSaving(true)
     setSaveMsg(null)
     try {
-      await updateUserProfile(user.uid, {
+      if (username !== profile?.username) {
+        await changeUsernameTransaction(user!.uid, username)
+      }
+
+      await updateUserProfile(user!.uid, {
         displayName: displayName.trim(),
-        username,
+        // username is handled by transaction if changed
+        ...(username === profile?.username ? { username } : {}),
         bio:         bio.trim(),
         avatarUrl:   avatarUrl.trim(),
         themeSettings: profile!.themeSettings
       })
       setSaveMsg({ type: 'ok', text: '¡Perfil y apariencia actualizados!' })
-    } catch (err) {
+      setShowUsernameConfirm(false)
+    } catch (err: any) {
       console.error('[Lanvip] updateUserProfile failed:', err)
-      setSaveMsg({ type: 'err', text: 'Error al guardar. Inténtalo de nuevo.' })
+      setSaveMsg({ type: 'err', text: err.message || 'Error al guardar. Inténtalo de nuevo.' })
     } finally {
       setSaving(false)
       setTimeout(() => setSaveMsg(null), 3000)
@@ -427,6 +443,52 @@ export default function ProfilePage() {
             <div className="flex-1 overflow-hidden bg-black p-4 flex items-center justify-center">
               <div className="w-full max-w-sm h-full flex flex-col justify-center">
                 <LandingPreview profile={previewProfile} blocks={blocks} />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Username Change Confirmation Modal ────────────────────────────── */}
+      <AnimatePresence>
+        {showUsernameConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm"
+          >
+            <div className="w-full max-w-sm bg-[#111] border border-white/10 rounded-2xl p-6 shadow-2xl space-y-6">
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">¿Cambiar Username?</h3>
+                <p className="text-sm text-neutral-400 leading-relaxed">
+                  Al cambiar tu nombre de usuario, tu enlace anterior dejará de funcionar inmediatamente y cualquier otra persona podrá registrarlo.
+                </p>
+                <div className="mt-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <p className="text-xs text-neutral-500 mb-1">Nuevo enlace:</p>
+                  <p className="font-mono text-sm text-[#D4AF37]">lanvip.app/{username}</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowUsernameConfirm(false)}
+                  className="flex-1 py-3 rounded-xl font-semibold bg-white/10 text-white hover:bg-white/15 transition-colors text-sm"
+                  disabled={saving}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={executeSave}
+                  className="flex-1 py-3 rounded-xl font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm flex justify-center items-center gap-2"
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <span className="w-4 h-4 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
+                  ) : 'Confirmar Cambio'}
+                </button>
               </div>
             </div>
           </motion.div>
