@@ -1,4 +1,4 @@
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { getFirebaseStorage, getFirebaseDb } from '@/lib/firebase'
 import { doc, updateDoc } from 'firebase/firestore'
 import { optimizeImage } from '@/lib/imageOptimization'
@@ -70,11 +70,30 @@ export async function removeUserAvatar(userId: string): Promise<void> {
 
 export async function removeUserBackground(userId: string, deviceType?: 'mobile' | 'desktop'): Promise<void> {
   const db = getFirebaseDb()
+  const storage = getFirebaseStorage()
   const userRef = doc(db, 'users', userId)
   
   if (deviceType) {
+    const filename = deviceType === 'mobile' ? 'background_mobile.webp' : 'background_desktop.webp'
+    const backgroundRef = ref(storage, `users/${userId}/${filename}`)
+    
+    try {
+      await deleteObject(backgroundRef)
+    } catch (err: any) {
+      if (err.code !== 'storage/object-not-found') console.error('[Lanvip] Error deleting background file:', err)
+    }
+
+    // Also delete legacy background.webp to prevent fallback ghosting
+    const legacyRef = ref(storage, `users/${userId}/background.webp`)
+    try {
+      await deleteObject(legacyRef)
+    } catch (err: any) {
+      // Ignore
+    }
+
     await updateDoc(userRef, {
-      [`themeSettings.background.${deviceType}Url`]: ''
+      [`themeSettings.background.${deviceType}Url`]: '',
+      'themeSettings.background.url': ''
     })
   } else {
     // Remove all backgrounds
