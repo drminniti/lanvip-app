@@ -289,7 +289,10 @@ export async function changeUsernameTransaction(
     // 5. Release old username if it existed
     if (oldUsername && oldUsername !== normalizedNew) {
       const oldUsernameRef = doc(db, 'usernames', oldUsername)
-      transaction.delete(oldUsernameRef)
+      const oldDoc = await transaction.get(oldUsernameRef)
+      if (oldDoc.exists()) {
+        transaction.delete(oldUsernameRef)
+      }
     }
   })
 }
