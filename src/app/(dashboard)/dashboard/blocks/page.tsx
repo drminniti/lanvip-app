@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useDashboard } from '@/context/DashboardContext'
@@ -43,6 +43,18 @@ export default function BlocksPage() {
   const [createOpen, setCreateOpen]     = useState(false)
   const [editingBlock, setEditingBlock] = useState<Block | null>(null)
   const [showMobilePreview, setShowMobilePreview] = useState(false)
+
+  // Lock scroll when mobile preview is open
+  useEffect(() => {
+    if (showMobilePreview) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showMobilePreview])
 
   const modalOpen = createOpen || editingBlock !== null
 

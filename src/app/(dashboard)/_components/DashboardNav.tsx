@@ -90,6 +90,8 @@ export default function DashboardNav() {
   const username = profile?.username ?? null
 
   async function handleLogout() {
+    if (!window.confirm("¿Estás seguro de que deseas cerrar sesión?")) return
+    
     await logout()
     document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
     router.push('/login')

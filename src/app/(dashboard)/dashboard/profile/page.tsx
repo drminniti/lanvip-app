@@ -14,8 +14,8 @@ import type { ThemeSettings } from '@/types'
 const DEBOUNCE_MS = 600
 
 export default function ProfilePage() {
-  const { user } = useAuth()
-  const { profile, loading } = useUserProfile(user?.uid)
+  const { user, loading: authLoading } = useAuth()
+  const { profile, loading: profileLoading } = useUserProfile(user?.uid)
   const { blocks }           = useUserBlocks(user?.uid)
 
   // Form state — mirrors profile, editable locally before save
@@ -35,6 +35,18 @@ export default function ProfilePage() {
   const [saving, setSaving]   = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [showMobilePreview, setShowMobilePreview] = useState(false)
+
+  // Lock scroll when mobile preview is open
+  useEffect(() => {
+    if (showMobilePreview) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showMobilePreview])
 
   // Sync form from Firestore on first load.
   // Fallback chain for avatarUrl: Firestore doc → Google photoURL → ''
@@ -222,7 +234,7 @@ export default function ProfilePage() {
     idle:       '',
   }
 
-  if (loading || !profile) {
+  if (authLoading || profileLoading || !profile) {
     return (
       <div className="flex items-center justify-center h-64">
         <span className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin"
