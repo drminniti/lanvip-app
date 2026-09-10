@@ -494,7 +494,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   const renderBgEffect = () => {
     if (bgEffect === 'aurora') {
       return (
-        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <motion.div
             className={`absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] rounded-full ${blendMode} filter blur-[80px] opacity-40`}
             style={{ background: accent }}
@@ -512,7 +512,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
     }
     if (bgEffect === 'grid-motion') {
       return (
-        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-end justify-center" style={{ perspective: '1000px', background: theme?.settings.colors[0] ?? '#000' }}>
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-end justify-center" style={{ perspective: '1000px', background: theme?.settings.colors[0] ?? '#000' }}>
           <motion.div
             className="w-[200vw] h-[150vh] origin-bottom"
             style={{
@@ -529,7 +529,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
     }
     if (bgEffect === 'floating-orbs') {
       return (
-        <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           {[...Array(6)].map((_, i) => (
             <motion.div
               key={i}
@@ -553,7 +553,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
       const svg = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800"><circle cx="200" cy="200" r="150" fill="${accent}" opacity="0.15" /><rect x="500" y="100" width="200" height="200" fill="#E2725B" opacity="0.1" transform="rotate(45 600 200)" /><path d="M100 600 L300 600 L200 400 Z" fill="#4A9EFF" opacity="0.1" /><circle cx="650" cy="650" r="100" fill="transparent" stroke="${accent}" stroke-width="20" opacity="0.2" /></svg>`)
       return (
         <motion.div 
-          className="fixed inset-0 z-0 pointer-events-none"
+          className="absolute inset-0 z-0 pointer-events-none"
           style={{
             backgroundImage: `url("data:image/svg+xml;charset=utf-8,${svg}")`,
             backgroundSize: '800px 800px',
@@ -569,42 +569,47 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
   }
 
   return (
-    <>
-      {!isImageBg && (
-        <div className="fixed inset-0 -z-10" style={{ background: bg }} />
-      )}
-      <main
-        className="min-h-screen flex flex-col items-center relative"
-        style={{ 
-          '--theme-bg': isCustomTheme ? bg : undefined,
-          '--theme-accent': isCustomTheme ? accent : undefined,
-          '--theme-text': textColor,
-        } as React.CSSProperties}
-      >
-      {useTexture && !isImageBg && !bgEffect && (
-        <div 
-          className="fixed inset-0 z-0 pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
-            opacity: 0.15,
-            mixBlendMode: 'overlay',
-          }}
-        />
-      )}
-      {isImageBg && (
-        <>
+    <div 
+      className="relative w-full h-[100dvh] overflow-hidden"
+      style={{ 
+        '--theme-bg': isCustomTheme ? bg : undefined,
+        '--theme-accent': isCustomTheme ? accent : undefined,
+        '--theme-text': textColor,
+      } as React.CSSProperties}
+    >
+      {/* Capa de Fondo (Capa 0) */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {!isImageBg && (
+          <div className="absolute inset-0" style={{ background: bg }} />
+        )}
+        {useTexture && !isImageBg && !bgEffect && (
           <div 
-            className="fixed inset-0 bg-cover bg-center z-0" 
-            style={{ backgroundImage: `url(${bgUrl})` }} 
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+              opacity: 0.15,
+              mixBlendMode: 'overlay',
+            }}
           />
-          <div 
-            className="fixed inset-0 bg-black z-0" 
-            style={{ opacity: overlayOpacity }} 
-          />
-        </>
-      )}
-      {renderBgEffect()}
-      <div className="w-full max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6 relative z-10">
+        )}
+        {isImageBg && (
+          <>
+            <div 
+              className="absolute inset-0 bg-cover bg-center" 
+              style={{ backgroundImage: `url(${bgUrl})` }} 
+            />
+            <div 
+              className="absolute inset-0 bg-black" 
+              style={{ opacity: overlayOpacity }} 
+            />
+          </>
+        )}
+        {renderBgEffect()}
+      </div>
+
+      {/* Capa de Contenido (Capa 10) */}
+      <main className="relative z-10 w-full h-full overflow-y-auto pb-20 flex flex-col items-center">
+        <div className="w-full max-w-md mx-auto px-4 py-12 flex flex-col items-center gap-6">
 
         {/* Avatar */}
         <motion.div
@@ -747,8 +752,8 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
           </a>
         </motion.div>
 
-      </div>
+        </div>
       </main>
-    </>
+    </div>
   )
 }
