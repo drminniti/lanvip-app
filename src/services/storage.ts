@@ -22,7 +22,7 @@ export async function uploadUserAvatar(userId: string, file: File, cropPixels?: 
   const db = getFirebaseDb()
   const userRef = doc(db, 'users', userId)
   await updateDoc(userRef, {
-    'profile.avatarUrl': downloadUrl
+    'avatarUrl': downloadUrl
   })
   
   return downloadUrl
@@ -45,8 +45,8 @@ export async function uploadUserBackground(userId: string, file: File, cropPixel
   const db = getFirebaseDb()
   const userRef = doc(db, 'users', userId)
   await updateDoc(userRef, {
-    'profile.themeSettings.background.type': 'image',
-    'profile.themeSettings.background.url': downloadUrl
+    'themeSettings.background.type': 'image',
+    'themeSettings.background.url': downloadUrl
   })
   
   return downloadUrl
@@ -58,7 +58,7 @@ export async function removeUserAvatar(userId: string): Promise<void> {
   const db = getFirebaseDb()
   const userRef = doc(db, 'users', userId)
   await updateDoc(userRef, {
-    'profile.avatarUrl': ''
+    'avatarUrl': ''
   })
 }
 
@@ -66,7 +66,7 @@ export async function removeUserBackground(userId: string): Promise<void> {
   const db = getFirebaseDb()
   const userRef = doc(db, 'users', userId)
   await updateDoc(userRef, {
-    'profile.themeSettings.background.type': 'none',
-    'profile.themeSettings.background.url': ''
+    'themeSettings.background.type': 'none',
+    'themeSettings.background.url': ''
   })
 }
