@@ -92,13 +92,11 @@ export default function ProfilePage() {
   async function handleThemeChange(theme: VipTheme | { id: 'custom', settings: ThemeSettings }) {
     if (!user?.uid || !profile) return
     try {
-      const mergedSettings: any = { ...theme.settings, themeId: theme.id }
-      if (profile.themeSettings?.background) {
-        const bg = { ...profile.themeSettings.background }
-        if (bg.url === undefined) delete bg.url
-        if (bg.overlayOpacity === undefined) delete bg.overlayOpacity
-        mergedSettings.background = bg
+      const mergedSettings: any = { 
+        ...theme.settings, 
+        themeId: theme.id 
       }
+      
       await updateUserProfile(user.uid, { 
         themeSettings: mergedSettings
       })
@@ -136,34 +134,11 @@ export default function ProfilePage() {
         customColors: newCustomColors
       }
       
-      if (profile.themeSettings?.background) {
-        const bg = { ...profile.themeSettings.background }
-        if (bg.url === undefined) delete bg.url
-        if (bg.overlayOpacity === undefined) delete bg.overlayOpacity
-        mergedSettings.background = bg
-      }
-
       await updateUserProfile(user.uid, { 
         themeSettings: mergedSettings
       })
     } catch (err) {
       console.error('[Lanvip] custom color update failed:', err)
-    }
-  }
-  async function handleBackgroundChange(overlayOpacity: number) {
-    if (!user?.uid || !profile || !profile.themeSettings) return
-    try {
-      await updateUserProfile(user.uid, {
-        themeSettings: {
-          ...profile.themeSettings,
-          background: profile.themeSettings.background ? {
-            ...profile.themeSettings.background,
-            overlayOpacity
-          } : undefined
-        }
-      })
-    } catch (err) {
-      console.error('[Lanvip] background overlay update failed:', err)
     }
   }
 
@@ -397,7 +372,6 @@ export default function ProfilePage() {
               currentSettings={previewProfile?.themeSettings ?? profile.themeSettings}
               onChange={handleThemeChange}
               onCustomColorChange={handleCustomColorChange}
-              onBackgroundChange={handleBackgroundChange}
               disabled={saving}
             />
           </div>

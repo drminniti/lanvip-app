@@ -27,14 +27,6 @@ export interface ThemeSettings {
     autoContrast?: boolean
   }
   
-  // ── Sprint 4: Visuals ──
-  background?: {
-    type: 'color' | 'image'
-    url?: string // legacy fallback
-    mobileUrl?: string
-    desktopUrl?: string
-    overlayOpacity?: number
-  }
 }
 
 // ─── User ────────────────────────────────────────────────────────────────────

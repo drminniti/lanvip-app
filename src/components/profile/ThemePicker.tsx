@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { THEME_CATEGORIES, getThemeById, matchThemeId, type VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
-import { BackgroundUploader } from '@/components/profile/BackgroundUploader'
 
 interface CustomThemePayload {
   id: 'custom'
@@ -15,7 +14,6 @@ interface ThemePickerProps {
   currentSettings: ThemeSettings
   onChange: (theme: VipTheme | CustomThemePayload) => void
   onCustomColorChange?: (updates: Partial<NonNullable<ThemeSettings['customColors']>>) => void
-  onBackgroundChange?: (overlayOpacity: number) => void
   disabled?: boolean
 }
 
@@ -40,7 +38,6 @@ export function ThemePicker({
   currentSettings, 
   onChange, 
   onCustomColorChange,
-  onBackgroundChange,
   disabled 
 }: ThemePickerProps) {
   const activeId = matchThemeId(currentSettings)
@@ -310,56 +307,6 @@ export function ThemePicker({
                             disabled={disabled}
                             onChange={e => onCustomColorChange?.({ textColor: e.target.value })}
                             className="w-full h-10 rounded cursor-pointer border-0 p-0"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Background Settings */}
-                    <div className="pt-4 border-t space-y-4" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                      <h3 className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>Imágenes de Fondo</h3>
-                      <div className="space-y-4">
-                        <BackgroundUploader
-                          currentUrl={currentSettings.background?.mobileUrl || currentSettings.background?.url || ''}
-                          deviceType="mobile"
-                          aspectRatio={9 / 16}
-                          label="Fondo Móvil"
-                          description="Vertical (9:16) ideal para celulares."
-                          onUploadSuccess={(url) => {
-                            // Sincronización manejada por Firestore en tiempo real
-                          }}
-                          onRemoveSuccess={() => {}}
-                        />
-                        <BackgroundUploader
-                          currentUrl={currentSettings.background?.desktopUrl || currentSettings.background?.url || ''}
-                          deviceType="desktop"
-                          aspectRatio={16 / 9}
-                          label="Fondo Escritorio"
-                          description="Horizontal (16:9) ideal para monitores."
-                          onUploadSuccess={(url) => {
-                            // Sincronización manejada por Firestore en tiempo real
-                          }}
-                          onRemoveSuccess={() => {}}
-                        />
-                      </div>
-                      
-                      {(currentSettings.background?.url || currentSettings.background?.mobileUrl || currentSettings.background?.desktopUrl) && (
-                        <div className="space-y-2 mt-4 pt-4 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-                          <div className="flex justify-between items-center">
-                            <label className="text-xs font-semibold" style={{ color: '#A3A3A3' }}>Oscurecimiento (Overlay)</label>
-                            <span className="text-xs font-mono" style={{ color: '#A3A3A3' }}>{currentSettings.background?.overlayOpacity ?? 50}%</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="0"
-                            max="100"
-                            step="5"
-                            value={currentSettings.background?.overlayOpacity ?? 50}
-                            onChange={e => {
-                              onBackgroundChange?.(Number(e.target.value))
-                            }}
-                            className="w-full accent-[#D4AF37]"
-                            disabled={disabled}
                           />
                         </div>
                       )}

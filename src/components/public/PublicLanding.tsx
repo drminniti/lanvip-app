@@ -483,15 +483,7 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
 
   const useTexture = isCustomTheme && (customColors?.useTexture ?? false)
 
-  const isImageBg = profile.themeSettings.background?.type === 'image' && (
-    !!profile.themeSettings.background?.url || 
-    !!profile.themeSettings.background?.mobileUrl || 
-    !!profile.themeSettings.background?.desktopUrl
-  )
-  const legacyUrl = profile.themeSettings.background?.url
-  const mobileBgUrl = profile.themeSettings.background?.mobileUrl || legacyUrl
-  const desktopBgUrl = profile.themeSettings.background?.desktopUrl || legacyUrl
-  const overlayOpacity = (profile.themeSettings.background?.overlayOpacity ?? 50) / 100
+
 
   const bgEffect = theme?.settings?.bgEffect
   const isDark = profile.themeSettings.darkMode
@@ -585,10 +577,8 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
     >
       {/* Capa de Fondo (Capa 0) */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        {!isImageBg && (
-          <div className="absolute inset-0" style={{ background: bg }} />
-        )}
-        {useTexture && !isImageBg && !bgEffect && (
+        <div className="absolute inset-0" style={{ background: bg }} />
+        {useTexture && !bgEffect && (
           <div 
             className="absolute inset-0"
             style={{
@@ -597,34 +587,6 @@ export function PublicLanding({ profile, blocks }: PublicLandingProps) {
               mixBlendMode: 'overlay',
             }}
           />
-        )}
-        {isImageBg && (
-          <>
-            {/* Mobile Background */}
-            {mobileBgUrl && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img 
-                src={mobileBgUrl}
-                alt="Fondo móvil personalizado"
-                className="block md:hidden fixed inset-0 w-full h-full object-cover" 
-              />
-            )}
-            
-            {/* Desktop Background */}
-            {desktopBgUrl && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img 
-                src={desktopBgUrl}
-                alt="Fondo escritorio personalizado"
-                className="hidden md:block fixed inset-0 w-full h-full object-cover" 
-              />
-            )}
-
-            <div 
-              className="fixed inset-0 bg-black" 
-              style={{ opacity: overlayOpacity }} 
-            />
-          </>
         )}
         {renderBgEffect()}
       </div>
