@@ -64,7 +64,7 @@ async function createUserDocument(
         avatarUrl:   user.photoURL ?? '',
         themeSettings:           defaultTheme,
         views:                   0,
-        planId:                  'free',
+        plan:                    'free',
         organizationId:          null,
         isNfcEnabled:            false,
         hasCompletedOnboarding:  withExplicitUsername,

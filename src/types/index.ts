@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore'
 
 // ─── Plan & Roles ────────────────────────────────────────────────────────────
-export type PlanId = 'free' | 'pro' | 'team_member' | 'team_admin'
+export type Plan = 'free' | 'vip'
 
 // ─── Theme Settings ──────────────────────────────────────────────────────────
 export type BgType = 'mesh' | 'solid' | 'gradient'
@@ -49,7 +49,7 @@ export interface UserProfile {
   hasCompletedOnboarding: boolean
 
   // Business Model – Future-proofing fields (docs/core/5_Business_Model.md)
-  planId: PlanId
+  plan: Plan
   organizationId: string | null
   isNfcEnabled: boolean
 }

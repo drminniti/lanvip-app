@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lanvip – Tu Micro-Landing VIP
 
-## Getting Started
+Lanvip es una plataforma premium para crear micro-landings personalizadas en minutos, permitiendo a los creadores agrupar todos sus enlaces, redes sociales y contacto en un solo link elegante.
 
-First, run the development server:
+## Modelo de Monetización (Feature Flags: Free vs VIP)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+La plataforma opera bajo un modelo *Freemium* controlado por **Feature Flags** a nivel de esquema de base de datos. Cada usuario tiene asignado un plan que dicta a qué características tiene acceso.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Plan Free (Gratuito)
+- **Bloques Básicos:** Enlaces, separadores, textos y enlaces de contacto (email).
+- **Temas Limitados:** Acceso a los 4 temas "Esenciales".
+- **Marca de Agua:** Todas las micro-landings públicas tienen la marca de agua obligatoria "Creado con Lanvip".
+- **Sin personalización avanzada:** Colores y tipografías personalizadas bloqueadas.
+- **Métricas:** Acceso básico (vistas totales).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Plan VIP (Premium)
+- **Bloques Premium:** Desbloqueo de bloques enriquecidos (Video de YouTube, Spotify, etc.).
+- **Temas Premium:** Acceso a todos los temas exclusivos de la plataforma.
+- **Personalización de Identidad Visual:** Posibilidad de elegir paletas de colores y fuentes a medida.
+- **Marca de Agua Oculta:** Capacidad de ocultar el branding de Lanvip.
+- **Métricas Avanzadas y Dominio Personalizado:** Acceso total al panel de analíticas y configuración de dominios propios.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Arquitectura Tecnológica
+- **Framework:** Next.js 14+ (App Router)
+- **Styling:** CSS Modules / Vanilla CSS (Sistema de diseño premium)
+- **Base de Datos:** Firebase / Firestore
+- **SEO & Metadatos:** OpenGraph dinámico mediante `next/og`
