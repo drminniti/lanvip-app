@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { THEME_CATEGORIES, getThemeById, matchThemeId, type VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
+import { useSubscription } from '@/hooks/useSubscription'
+import { usePaywall } from '@/context/PaywallContext'
 
 interface CustomThemePayload {
   id: 'custom'
@@ -41,6 +43,8 @@ export function ThemePicker({
   disabled 
 }: ThemePickerProps) {
   const activeId = matchThemeId(currentSettings)
+  const { isVip } = useSubscription()
+  const { openUpgradeModal } = usePaywall()
   const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({
     'Esenciales': true,
   })
@@ -90,7 +94,13 @@ export function ThemePicker({
                             id={`theme-${theme.id}`}
                             type="button"
                             disabled={disabled}
-                            onClick={() => onChange(theme)}
+                            onClick={() => {
+                              if (theme.isPremium && !isVip) {
+                                openUpgradeModal()
+                              } else {
+                                onChange(theme)
+                              }
+                            }}
                             whileTap={{ scale: 0.95 }}
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -124,11 +134,19 @@ export function ThemePicker({
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
-                                  className="absolute top-2 left-2 w-5 h-5 rounded-full flex items-center justify-center text-xs"
+                                  className="absolute top-2 left-2 w-5 h-5 rounded-full flex items-center justify-center text-xs z-10"
                                   style={{ background: theme.accent, color: '#0A0A0A' }}
                                 >
                                   ✓
                                 </motion.div>
+                              )}
+                              {/* Lock Icon for non-VIP */}
+                              {theme.isPremium && !isVip && (
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                  </svg>
+                                </div>
                               )}
                             </div>
 
@@ -172,6 +190,10 @@ export function ThemePicker({
                 type="button"
                 disabled={disabled}
                 onClick={() => {
+                  if (!isVip) {
+                    openUpgradeModal()
+                    return
+                  }
                   if (!isActive) {
                     onChange({
                       id: 'custom',
@@ -219,6 +241,14 @@ export function ThemePicker({
                     >
                       ✓
                     </motion.div>
+                  )}
+                  {/* Lock Icon for non-VIP Custom Theme */}
+                  {!isVip && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
                   )}
                 </div>
                 <div className="px-3 py-2" style={{ background: 'rgba(26,26,26,0.9)' }}>

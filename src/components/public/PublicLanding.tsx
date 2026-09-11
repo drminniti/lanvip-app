@@ -847,24 +847,26 @@ function Content({ profile, blocks, isCustomTheme, accent, theme }: {
         )}
 
         {/* Lanvip badge */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 flex items-center gap-1.5"
-        >
-          <a
-            href="https://lanvip.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 transition-opacity hover:opacity-100"
-            style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.75, textDecoration: 'none' }}
+        {!(profile.plan === 'vip' && profile.themeSettings.hideWatermark) && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8 flex items-center gap-1.5"
           >
-            <LanvipLogo size={14} />
-            <span>Creado con</span>
-            <span style={{ color: `${accent}66`, fontWeight: 600 }}>Lanvip</span>
-          </a>
+            <a
+              href="https://lanvip.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 transition-opacity hover:opacity-100"
+              style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.75, textDecoration: 'none' }}
+            >
+              <LanvipLogo size={14} />
+              <span>Creado con</span>
+              <span style={{ color: `${accent}66`, fontWeight: 600 }}>Lanvip</span>
+            </a>
           </motion.div>
+        )}
     </>
   )
 }

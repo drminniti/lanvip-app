@@ -9,6 +9,7 @@ export interface VipTheme {
   description: string
   accent:      string
   textColor:   string
+  isPremium:   boolean
   settings:    ThemeSettings
 }
 
@@ -60,6 +61,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Negro puro con dorado VIP',
     accent:      '#D4AF37',
     textColor:   '#F0F0F0',
+    isPremium:   false,
     settings: {
       bgType:    'mesh',
       colors:    ['#0A0A0A', '#141208'],
@@ -73,6 +75,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Azul profundo con acento eléctrico',
     accent:      '#4A9EFF',
     textColor:   '#F0F0F0',
+    isPremium:   false,
     settings: {
       bgType:    'mesh',
       colors:    ['#070B14', '#0D1426'],
@@ -86,6 +89,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Verde esmeralda y misterio',
     accent:      '#4CAF72',
     textColor:   '#E8F5E9',
+    isPremium:   false,
     settings: {
       bgType:    'mesh',
       colors:    ['#081A0E', '#0E2415'],
@@ -99,6 +103,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Calor rosado con lujo atemporal',
     accent:      '#E8959B',
     textColor:   '#FDF0F3',
+    isPremium:   false,
     settings: {
       bgType:    'mesh',
       colors:    ['#1A0A0F', '#250E16'],
@@ -114,6 +119,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Fondo negro, Acento verde neón',
     accent:      '#39FF14',
     textColor:   '#FFFFFF',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#050505', '#111111'],
@@ -127,6 +133,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Fondo azul marino, Acento cyan',
     accent:      '#00FFFF',
     textColor:   '#E0F2FE',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#011126', '#03234F'],
@@ -140,6 +147,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Casi negro con verde flúor',
     accent:      '#00FF41',
     textColor:   '#E8F5E9',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#0A0F0D', '#031408'],
@@ -153,6 +161,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Violeta oscuro con fucsia',
     accent:      '#FF00FF',
     textColor:   '#F3E5F5',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#1A0524', '#2D0A3D'],
@@ -168,6 +177,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Fondo arena oscuro, Acento terracota',
     accent:      '#E2725B',
     textColor:   '#FAFAFA',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#3B2F2F', '#52433D'],
@@ -181,6 +191,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Verde oscuro, Acento verde té',
     accent:      '#C5E1A5',
     textColor:   '#F1F8E9',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#182A1B', '#2C4A31'],
@@ -194,6 +205,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Arcilla oscura, Acento naranja quemado',
     accent:      '#D84315',
     textColor:   '#FBE9E7',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#4E342E', '#3E2723'],
@@ -207,6 +219,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Marrón oscuro, Acento musgo',
     accent:      '#8BC34A',
     textColor:   '#F1F8E9',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#263238', '#1C2529'],
@@ -222,6 +235,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Gris grafito, Plata y Blanco',
     accent:      '#E0E0E0',
     textColor:   '#FFFFFF',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#1A1A1A', '#2D2D2D'],
@@ -235,6 +249,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Rojo muy oscuro, Dorado',
     accent:      '#D4AF37',
     textColor:   '#FFF5F5',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#200508', '#380B12'],
@@ -248,6 +263,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Azul zafiro, Oro rosa',
     accent:      '#B76E79',
     textColor:   '#E8EAF6',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#07142E', '#0F2C61'],
@@ -261,6 +277,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Carbón y Cobre',
     accent:      '#B87333',
     textColor:   '#F5F5F5',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#1C1C1C', '#282828'],
@@ -276,6 +293,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Movimiento radial y colores nórdicos',
     accent:      '#FF00FF',
     textColor:   '#F3E5F5',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'aurora',
@@ -290,6 +308,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Grilla animada infinita',
     accent:      '#00FFFF',
     textColor:   '#E0F2FE',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'grid-motion',
@@ -304,6 +323,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Esferas levitantes orgánicas',
     accent:      '#2196F3',
     textColor:   '#FFFFFF',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'floating-orbs',
@@ -318,6 +338,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Geometría y colores sofisticados',
     accent:      '#FF9800',
     textColor:   '#F5F5F5',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'bauhaus-shapes',
@@ -334,6 +355,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Blanco puro, minimalismo corporativo',
     accent:      '#475569',
     textColor:   '#0F172A',
+    isPremium:   true,
     settings: {
       bgType:    'solid',
       colors:    ['#FFFFFF'],
@@ -347,6 +369,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Gris hielo dinámico con esferas',
     accent:      '#2563EB',
     textColor:   '#1E293B',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'floating-orbs',
@@ -361,6 +384,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Crema suave, calidez elegante',
     accent:      '#D97757',
     textColor:   '#292524',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#FFFBF0', '#F5F0E6'],
@@ -374,6 +398,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Geometría sutil sobre perla',
     accent:      '#059669',
     textColor:   '#064E3B',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'bauhaus-shapes',
@@ -390,6 +415,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Rosa chicle y energía vibrante',
     accent:      '#DB2777',
     textColor:   '#4A044E',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#FDF2F8', '#FCE7F3'],
@@ -403,6 +429,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Lavanda con mesh gradient cian',
     accent:      '#06B6D4',
     textColor:   '#312E81',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'aurora',
@@ -417,6 +444,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Degradado naranja a durazno',
     accent:      '#FCD34D',
     textColor:   '#451A03',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#FFEDD5', '#FED7AA'],
@@ -430,6 +458,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Púrpura vibrante geométrico',
     accent:      '#FBBF24',
     textColor:   '#F3F4F6',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'bauhaus-shapes',
@@ -446,6 +475,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Negro absoluto, grilla animada',
     accent:      '#10B981',
     textColor:   '#10B981',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'grid-motion',
@@ -460,6 +490,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Gris puro, acento neón',
     accent:      '#F43F5E',
     textColor:   '#F1F5F9',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       colors:    ['#1E1E1E', '#2D2D2D'],
@@ -473,6 +504,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Blanco y negro radical',
     accent:      '#171717',
     textColor:   '#000000',
+    isPremium:   true,
     settings: {
       bgType:    'solid',
       colors:    ['#FFFFFF'],
@@ -486,6 +518,7 @@ export const VIP_THEMES: VipTheme[] = [
     description: 'Azul noche con esferas levitantes',
     accent:      '#F97316',
     textColor:   '#F8FAFC',
+    isPremium:   true,
     settings: {
       bgType:    'mesh',
       bgEffect:  'floating-orbs',

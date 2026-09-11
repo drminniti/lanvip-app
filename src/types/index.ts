@@ -16,6 +16,7 @@ export interface ThemeSettings {
   darkMode: boolean
   
   // ── Sprint 5: Custom Themes ──
+  hideWatermark?: boolean
   themeId?: string // e.g. 'obsidian', 'custom'
   customColors?: {
     background: string

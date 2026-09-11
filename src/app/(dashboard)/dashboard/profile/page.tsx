@@ -11,6 +11,8 @@ import { LandingPreview } from '@/components/profile/LandingPreview'
 import { AvatarUploader } from '@/components/profile/AvatarUploader'
 import type { VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
+import { useSubscription } from '@/hooks/useSubscription'
+import { usePaywall } from '@/context/PaywallContext'
 
 const DEBOUNCE_MS = 600
 
@@ -18,6 +20,8 @@ export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useUserProfile(user?.uid)
   const { blocks }           = useUserBlocks(user?.uid)
+  const { isVip }            = useSubscription()
+  const { openUpgradeModal } = usePaywall()
 
   // Form state — mirrors profile, editable locally before save
   const [displayName, setDisplayName] = useState('')
@@ -390,6 +394,43 @@ export default function ProfilePage() {
               onCustomColorChange={handleCustomColorChange}
               disabled={saving}
             />
+            
+            <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-white">Ocultar Marca de Agua</h3>
+                  {!isVip && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold tracking-wider">VIP</span>
+                  )}
+                </div>
+                <p className="text-xs text-neutral-400 mt-1">Elimina el logo de Lanvip de tu landing pública.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isVip) {
+                    openUpgradeModal()
+                    return
+                  }
+                  const currentThemeSettings = profile.themeSettings
+                  updateUserProfile(user!.uid, { 
+                    themeSettings: {
+                      ...currentThemeSettings,
+                      hideWatermark: !currentThemeSettings.hideWatermark
+                    }
+                  })
+                }}
+                className={`relative w-12 h-6 rounded-full transition-colors flex items-center px-1 ${
+                  (profile.themeSettings.hideWatermark && isVip) ? 'bg-[#D4AF37]' : 'bg-[#333]'
+                }`}
+              >
+                <motion.div
+                  className="w-4 h-4 bg-white rounded-full shadow-md"
+                  animate={{ x: (profile.themeSettings.hideWatermark && isVip) ? 24 : 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                />
+              </button>
+            </div>
           </div>
 
         </motion.div>
