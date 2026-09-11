@@ -12,6 +12,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [planFilter, setPlanFilter] = useState<'all' | 'vip' | 'free'>('all')
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [trialDays, setTrialDays] = useState('14')
   const [isUpdating, setIsUpdating] = useState(false)
@@ -97,11 +98,20 @@ export default function AdminUsersPage() {
     await handleUpdateUser(selectedUser.uid, { role })
   }
 
-  const filteredUsers = users.filter(u => 
-    u.username?.toLowerCase().includes(search.toLowerCase()) || 
-    u.displayName?.toLowerCase().includes(search.toLowerCase()) ||
-    u.uid.includes(search)
-  )
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.username?.toLowerCase().includes(search.toLowerCase()) || 
+                          u.displayName?.toLowerCase().includes(search.toLowerCase()) ||
+                          u.uid.includes(search);
+    
+    let matchesPlan = true;
+    if (planFilter === 'vip') {
+      matchesPlan = u.plan === 'vip';
+    } else if (planFilter === 'free') {
+      matchesPlan = !u.plan || u.plan === 'free';
+    }
+
+    return matchesSearch && matchesPlan;
+  })
 
   return (
     <div className="p-8 space-y-8">
@@ -112,15 +122,24 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+      {/* Search & Filters */}
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col md:flex-row gap-4">
         <input
           type="text"
           placeholder="Buscar por username, nombre o UID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 transition-colors"
+          className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 transition-colors"
         />
+        <select
+          value={planFilter}
+          onChange={(e) => setPlanFilter(e.target.value as any)}
+          className="w-full md:w-48 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 transition-colors appearance-none"
+        >
+          <option value="all">Todos los planes</option>
+          <option value="vip">Solo VIP / Trial</option>
+          <option value="free">Solo Free</option>
+        </select>
       </div>
 
       {/* Table */}
@@ -132,6 +151,7 @@ export default function AdminUsersPage() {
                 <th className="px-6 py-4 font-medium">Usuario</th>
                 <th className="px-6 py-4 font-medium">Rol</th>
                 <th className="px-6 py-4 font-medium">Estado / Plan</th>
+                <th className="px-6 py-4 font-medium">Ingreso</th>
                 <th className="px-6 py-4 font-medium">Acciones</th>
               </tr>
             </thead>
@@ -190,6 +210,11 @@ export default function AdminUsersPage() {
                             Expira: {(u.subscriptionEndsAt as any).toDate().toLocaleDateString()}
                           </p>
                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-neutral-300 text-sm">
+                          {u.createdAt ? (typeof (u.createdAt as any).toDate === 'function' ? (u.createdAt as any).toDate().toLocaleDateString() : new Date((u.createdAt as any).seconds * 1000).toLocaleDateString()) : '-'}
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <button 
