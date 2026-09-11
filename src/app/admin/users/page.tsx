@@ -87,7 +87,8 @@ export default function AdminUsersPage() {
     
     await handleUpdateUser(selectedUser.uid, {
       plan: 'vip',
-      subscriptionEndsAt: Timestamp.fromDate(end)
+      subscriptionEndsAt: Timestamp.fromDate(end),
+      planNotification: 'trial'
     })
   }
 
@@ -292,14 +293,14 @@ export default function AdminUsersPage() {
                   <h3 className="text-sm font-semibold text-white mb-4">Modificar Plan Manualmente</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <button 
-                      onClick={() => handleUpdateUser(selectedUser.uid, { plan: 'vip', subscriptionEndsAt: null })}
+                      onClick={() => handleUpdateUser(selectedUser.uid, { plan: 'vip', subscriptionEndsAt: null, planNotification: 'upgraded' })}
                       disabled={isUpdating || selectedUser.plan === 'vip' && !selectedUser.subscriptionEndsAt}
                       className="bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 px-4 py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Hacer VIP (Lifetime)
                     </button>
                     <button 
-                      onClick={() => handleUpdateUser(selectedUser.uid, { plan: 'free', subscriptionEndsAt: null })}
+                      onClick={() => handleUpdateUser(selectedUser.uid, { plan: 'free', subscriptionEndsAt: null, planNotification: 'downgraded' })}
                       disabled={isUpdating || selectedUser.plan === 'free'}
                       className="bg-white/5 text-white hover:bg-white/10 border border-white/10 px-4 py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >

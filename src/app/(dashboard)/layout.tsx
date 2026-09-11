@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { DashboardContext } from '@/context/DashboardContext'
 import { PaywallProvider } from '@/context/PaywallContext'
+import PlanNotificationModal from './_components/PlanNotificationModal'
 
 /**
  * Dashboard layout guard: checks hasCompletedOnboarding after mount.
@@ -53,6 +54,7 @@ export default function DashboardLayout({
               {children}
             </div>
           </main>
+          {profile && <PlanNotificationModal profile={profile} />}
         </div>
       </PaywallProvider>
     </DashboardContext.Provider>
