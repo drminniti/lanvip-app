@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { Payment, PreApproval } from 'mercadopago'
 import { mpClient } from '@/lib/mercadopago'
+import { adminDb } from '@/lib/firebase-admin'
+import { FieldValue } from 'firebase-admin/firestore'
 
 export async function POST(req: Request) {
   try {
@@ -77,6 +79,37 @@ export async function POST(req: Request) {
     console.log(`- PLAN:   ${planType}`)
     console.log(`- ESTADO: ${status}`)
     console.log('=============================================\n')
+
+    // 3. Lógica de Actualización en Base de Datos
+    if (uid) {
+      const userRef = adminDb.collection('users').doc(uid)
+      
+      if (status === 'approved' || status === 'authorized') {
+        const isAnnual = planType.toLowerCase().includes('anual')
+        const daysToAdd = isAnnual ? 365 : 30
+        const endsAt = new Date()
+        endsAt.setDate(endsAt.getDate() + daysToAdd)
+
+        await userRef.update({
+          plan: 'vip',
+          subscriptionEndsAt: FieldValue.serverTimestamp(), // Usamos la fecha del server
+          planNotification: 'upgraded'
+        })
+        
+        // Ajustamos la fecha sumando los días sobre la fecha actual
+        await userRef.update({
+          subscriptionEndsAt: endsAt
+        })
+        
+        console.log(`✅ User ${uid} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'})`)
+      } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded') {
+        await userRef.update({
+          plan: 'free',
+          planNotification: 'downgraded'
+        })
+        console.log(`❌ User ${uid} downgraded to Free (Status: ${status})`)
+      }
+    }
 
     // Responder 200 rápido para que MP no reintente
     return NextResponse.json({ received: true })
