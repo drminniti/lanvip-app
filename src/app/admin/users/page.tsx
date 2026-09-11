@@ -36,7 +36,7 @@ export default function AdminUsersPage() {
   }, [])
 
   function getLicenseState(user: UserProfile) {
-    if (user.plan === 'free') {
+    if (!user.plan || user.plan === 'free') {
       return { label: 'Free', color: 'bg-neutral-500/20 text-neutral-400' }
     }
     
