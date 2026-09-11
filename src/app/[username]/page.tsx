@@ -48,6 +48,9 @@ export async function generateMetadata({
   const description = profile.bio
     ? profile.bio
     : `Mirá la Micro-Landing VIP de ${profile.displayName} en Lanvip.`
+    
+  // Dynamic OG Image using the new endpoint
+  const ogImageUrl = `https://lanvip.app/api/og?title=${encodeURIComponent(title)}${profile.avatarUrl ? `&image=${encodeURIComponent(profile.avatarUrl)}` : ''}`
 
   return {
     title,
@@ -57,15 +60,20 @@ export async function generateMetadata({
       description,
       url:    `https://lanvip.app/${profile.username}`,
       type:   'profile',
-      images: profile.avatarUrl
-        ? [{ url: profile.avatarUrl, alt: `Foto de ${profile.displayName}` }]
-        : [],
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `Perfil de ${profile.displayName}`,
+        }
+      ],
     },
     twitter: {
-      card:        'summary',
+      card:        'summary_large_image',
       title,
       description,
-      images:      profile.avatarUrl ? [profile.avatarUrl] : [],
+      images:      [ogImageUrl],
     },
   }
 }
