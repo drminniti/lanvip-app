@@ -1,7 +1,7 @@
 import { Timestamp } from 'firebase/firestore'
 
-// ─── Plan & Roles ────────────────────────────────────────────────────────────
 export type Plan = 'free' | 'vip'
+export type UserRole = 'user' | 'admin' | 'superadmin'
 
 // ─── Theme Settings ──────────────────────────────────────────────────────────
 export type BgType = 'mesh' | 'solid' | 'gradient'
@@ -53,6 +53,12 @@ export interface UserProfile {
   plan: Plan
   organizationId: string | null
   isNfcEnabled: boolean
+
+  // ── Admin & Seguridad ──
+  role?: UserRole                 // Por defecto asume 'user' si no existe
+  
+  // ── Suscripción & Trials ──
+  subscriptionEndsAt?: Timestamp | null  // Timestamp de fin de VIP o Trial
 }
 
 // ─── Block (Bento Card) ──────────────────────────────────────────────────────
