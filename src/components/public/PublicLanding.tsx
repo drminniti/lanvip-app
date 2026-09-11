@@ -532,11 +532,33 @@ interface PublicLandingProps {
  *   - Heights: content-driven via py-4 padding — no fixed heights.
  */
 export function PublicLanding({ profile, blocks = [], isPreview = false }: PublicLandingProps) {
-  const themeId = matchThemeId(profile.themeSettings)
-  const isCustomTheme = themeId === 'custom'
-  const customColors = profile.themeSettings.customColors
+  // ─── Enforce VIP Restrictions for Downgraded / Expired users ────────────
+  const now = new Date()
+  let isVipActive = profile.plan === 'vip'
+  if (isVipActive && profile.subscriptionEndsAt) {
+    const ends = typeof (profile.subscriptionEndsAt as any).toDate === 'function' 
+      ? (profile.subscriptionEndsAt as any).toDate() 
+      : new Date((profile.subscriptionEndsAt as any).seconds * 1000)
+    if (ends < now) {
+      isVipActive = false
+    }
+  }
+
+  // Filter premium blocks
+  const visibleBlocks = isVipActive ? blocks : blocks.filter(b => b.type !== 'youtube')
+
+  let themeId = matchThemeId(profile.themeSettings)
+  let isCustomTheme = themeId === 'custom'
+  let theme = isCustomTheme ? undefined : getThemeById(themeId)
   
-  const theme = isCustomTheme ? undefined : getThemeById(themeId)
+  // Enforce theme fallback
+  if (!isVipActive && (isCustomTheme || theme?.isPremium)) {
+    themeId = 'obsidian'
+    isCustomTheme = false
+    theme = getThemeById('obsidian')
+  }
+
+  const customColors = profile.themeSettings.customColors
   
   const accent = isCustomTheme
     ? (customColors?.accent ?? '#D4AF37')
@@ -704,10 +726,10 @@ export function PublicLanding({ profile, blocks = [], isPreview = false }: Publi
         }>
           {isPreview ? (
             <div className="w-full max-w-md mx-auto px-4 py-12 pb-24 flex flex-col items-center gap-6">
-              <Content profile={profile} blocks={blocks} isCustomTheme={isCustomTheme} accent={accent} theme={theme} />
+              <Content profile={profile} blocks={visibleBlocks} isCustomTheme={isCustomTheme} accent={accent} theme={theme} isVipActive={isVipActive} />
             </div>
           ) : (
-            <Content profile={profile} blocks={blocks} isCustomTheme={isCustomTheme} accent={accent} theme={theme} />
+            <Content profile={profile} blocks={visibleBlocks} isCustomTheme={isCustomTheme} accent={accent} theme={theme} isVipActive={isVipActive} />
           )}
         </div>
       </main>
@@ -715,12 +737,13 @@ export function PublicLanding({ profile, blocks = [], isPreview = false }: Publi
   )
 }
 
-function Content({ profile, blocks, isCustomTheme, accent, theme }: {
+function Content({ profile, blocks, isCustomTheme, accent, theme, isVipActive }: {
   profile: UserProfile
   blocks: Block[]
   isCustomTheme: boolean
   accent: string
   theme: any
+  isVipActive: boolean
 }) {
   return (
     <>
@@ -847,7 +870,7 @@ function Content({ profile, blocks, isCustomTheme, accent, theme }: {
         )}
 
         {/* Lanvip badge */}
-        {!(profile.plan === 'vip' && profile.themeSettings.hideWatermark) && (
+        {!(isVipActive && profile.themeSettings.hideWatermark) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
