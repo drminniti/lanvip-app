@@ -324,7 +324,20 @@ export default function DashboardPage() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium" style={{ color: '#A3A3A3' }}>Plan actual</p>
-          <p className="text-base font-bold" style={{ color: '#F5F5F5' }}>Free</p>
+          <p className="text-base font-bold" style={{ color: '#F5F5F5' }}>
+            {(() => {
+              let isVipActive = profile?.plan === 'vip'
+              if (isVipActive && profile?.subscriptionEndsAt) {
+                const ends = typeof (profile.subscriptionEndsAt as any).toDate === 'function' 
+                  ? (profile.subscriptionEndsAt as any).toDate() 
+                  : new Date((profile.subscriptionEndsAt as any).seconds * 1000)
+                if (ends < new Date()) {
+                  isVipActive = false
+                }
+              }
+              return isVipActive ? 'VIP' : 'Free'
+            })()}
+          </p>
         </div>
         <span
           className="text-xs font-medium px-2.5 py-1 rounded-full"
