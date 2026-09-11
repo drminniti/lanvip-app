@@ -45,12 +45,13 @@ export async function generateMetadata({
   }
 
   const title       = `${profile.displayName} | Lanvip`
+  const ogImageTitle = profile.displayName // Only the name for the OG image
   const description = profile.bio
     ? profile.bio
     : `Mirá la Micro-Landing VIP de ${profile.displayName} en Lanvip.`
     
   // Dynamic OG Image using the new endpoint
-  const ogImageUrl = `https://lanvip.app/api/og?title=${encodeURIComponent(title)}${profile.avatarUrl ? `&image=${encodeURIComponent(profile.avatarUrl)}` : ''}`
+  const ogImageUrl = `https://lanvip.app/api/og?title=${encodeURIComponent(ogImageTitle)}${profile.avatarUrl ? `&image=${encodeURIComponent(profile.avatarUrl)}` : ''}`
 
   return {
     title,
