@@ -586,9 +586,10 @@ export function PublicLanding({ profile, blocks = [], isPreview = false }: Publi
     const useGradient = customColors?.useGradient ?? false
     bg = useGradient ? `linear-gradient(135deg, ${bg1} 0%, ${bg2} 100%)` : bg1
   } else {
-    bg = profile.themeSettings.bgType === 'solid'
-      ? profile.themeSettings.colors[0]
-      : `linear-gradient(145deg, ${profile.themeSettings.colors[0]} 0%, ${profile.themeSettings.colors[1] ?? profile.themeSettings.colors[0]} 100%)`
+    const activeSettings = theme?.settings ?? profile.themeSettings
+    bg = activeSettings.bgType === 'solid'
+      ? activeSettings.colors[0]
+      : `linear-gradient(145deg, ${activeSettings.colors[0]} 0%, ${activeSettings.colors[1] ?? activeSettings.colors[0]} 100%)`
   }
 
   // Custom logic for text color
@@ -600,10 +601,8 @@ export function PublicLanding({ profile, blocks = [], isPreview = false }: Publi
 
   const useTexture = isCustomTheme && (customColors?.useTexture ?? false)
 
-
-
   const bgEffect = theme?.settings?.bgEffect
-  const isDark = profile.themeSettings.darkMode
+  const isDark = isCustomTheme ? profile.themeSettings.darkMode : (theme?.settings?.darkMode ?? profile.themeSettings.darkMode)
   const blendMode = isDark ? 'mix-blend-screen' : 'mix-blend-multiply'
 
   const renderBgEffect = () => {

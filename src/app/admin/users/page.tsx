@@ -15,6 +15,7 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [trialDays, setTrialDays] = useState('14')
   const [isUpdating, setIsUpdating] = useState(false)
+  const [successMsg, setSuccessMsg] = useState('')
 
   async function fetchUsers() {
     setLoading(true)
@@ -64,6 +65,10 @@ export default function AdminUsersPage() {
       await updateDoc(doc(db, 'users', uid), data)
       // Update local state
       setUsers(prev => prev.map(u => u.uid === uid ? { ...u, ...data } : u))
+      
+      // Show success message
+      setSuccessMsg('¡Usuario actualizado con éxito!')
+      setTimeout(() => setSuccessMsg(''), 3000)
     } catch (err) {
       console.error('Error updating user:', err)
       alert('Error al actualizar usuario')
@@ -219,6 +224,23 @@ export default function AdminUsersPage() {
               onClick={e => e.stopPropagation()}
               className="bg-[#141414] border border-[#333333] rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
             >
+              {/* Success Alert */}
+              <AnimatePresence>
+                {successMsg && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="bg-green-500/20 border-b border-green-500/30 px-6 py-3"
+                  >
+                    <p className="text-sm text-green-400 font-medium flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      {successMsg}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Header */}
               <div className="p-6 border-b border-[#333333] flex justify-between items-center bg-white/5">
                 <div className="flex items-center gap-3">
@@ -291,9 +313,27 @@ export default function AdminUsersPage() {
                   <h3 className="text-sm font-semibold text-white mb-2 text-red-400">Moderación</h3>
                   <p className="text-xs text-neutral-400 mb-4">Liberar el @username permite que otro usuario lo registre.</p>
                   <button 
-                    onClick={() => {
+                    onClick={async () => {
                       if(confirm('¿Seguro que deseas liberar la URL de este usuario?')) {
-                        handleUpdateUser(selectedUser.uid, { username: '', hasCompletedOnboarding: false })
+                        setIsUpdating(true)
+                        try {
+                          const db = getFirebaseDb()
+                          // 1. Borrar de la colección de usernames
+                          if (selectedUser.username) {
+                            const { deleteDoc } = await import('firebase/firestore')
+                            await deleteDoc(doc(db, 'usernames', selectedUser.username))
+                          }
+                          // 2. Limpiar del perfil
+                          await updateDoc(doc(db, 'users', selectedUser.uid), { username: '', hasCompletedOnboarding: false })
+                          // Actualizar estado local
+                          setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, username: '', hasCompletedOnboarding: false } : u))
+                          setSelectedUser(prev => prev ? { ...prev, username: '', hasCompletedOnboarding: false } : null)
+                        } catch (err) {
+                          console.error('Error al liberar URL:', err)
+                          alert('Error al liberar la URL')
+                        } finally {
+                          setIsUpdating(false)
+                        }
                       }
                     }}
                     disabled={isUpdating || !selectedUser.username}

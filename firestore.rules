@@ -2,21 +2,56 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Perfiles públicos: lectura abierta, escritura solo del dueño
-    match /users/{userId} {
-      allow read:  if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // Funciones de validación de roles
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+    }
+    
+    function isSuperAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
     }
 
-    // Bloques Bento: lectura pública, escritura solo del dueño del bloque
+    // ─── RESERVA DE USERNAMES ──────────────────────────────────────────
+    match /usernames/{username} {
+      // Lectura pública para validación rápida de disponibilidad (debounce)
+      allow read: if true;
+      
+      // Creación permitida si el usuario asigna su propio UID (o si es Admin liberando una url, pero el admin borraría la URL del perfil, y este documento se borra. Sin embargo, para crear, siempre es su propio UID)
+      allow create: if request.auth != null 
+                    && request.resource.data.uid == request.auth.uid;
+                    
+      // Actualización denegada para evitar secuestro de identidad
+      allow update: if false;
+      
+      // Borrado permitido por el dueño actual, O por un administrador para moderación
+      allow delete: if request.auth != null 
+                    && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+
+    // ─── PERFILES DE USUARIO ───────────────────────────────────────────
+    match /users/{userId} {
+      allow read:  if true;
+      
+      allow create: if request.auth != null && (
+        (request.auth.uid == userId && !('role' in request.resource.data)) ||
+        (isAdmin() && (!('role' in request.resource.data) || isSuperAdmin()))
+      );
+      
+      allow update: if request.auth != null && (
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
+        (isAdmin() && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || isSuperAdmin()))
+      );
+      
+      allow delete: if request.auth != null && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // ─── BLOQUES BENTO ─────────────────────────────────────────────────
     match /blocks/{blockId} {
       allow read:   if true;
-      // CREATE: el doc no existe aún — se usa request.resource.data (el nuevo doc)
-      allow create: if request.auth != null
-                    && request.auth.uid == request.resource.data.userId;
-      // UPDATE / DELETE: el doc ya existe — se usa resource.data (el doc actual)
-      allow update, delete: if request.auth != null
-                            && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && (request.auth.uid == request.resource.data.userId || isAdmin());
+      allow update, delete: if request.auth != null && (request.auth.uid == resource.data.userId || isAdmin());
     }
   }
 }
