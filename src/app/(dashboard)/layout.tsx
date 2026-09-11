@@ -6,6 +6,7 @@ import DashboardNav from './_components/DashboardNav'
 import { useAuth } from '@/context/AuthContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { DashboardContext } from '@/context/DashboardContext'
+import { PaywallProvider } from '@/context/PaywallContext'
 
 /**
  * Dashboard layout guard: checks hasCompletedOnboarding after mount.
@@ -44,14 +45,16 @@ export default function DashboardLayout({
 
   return (
     <DashboardContext.Provider value={{ profile, loading: authLoading || profileLoading, error }}>
-      <div className="flex min-h-screen" style={{ background: '#0A0A0A' }}>
-        <DashboardNav />
-        <main className="flex-1 pb-24 md:pb-8">
-          <div className="max-w-5xl mx-auto px-4 md:px-8 py-8">
-            {children}
-          </div>
-        </main>
-      </div>
+      <PaywallProvider>
+        <div className="flex min-h-screen" style={{ background: '#0A0A0A' }}>
+          <DashboardNav />
+          <main className="flex-1 pb-24 md:pb-8">
+            <div className="max-w-5xl mx-auto px-4 md:px-8 py-8">
+              {children}
+            </div>
+          </main>
+        </div>
+      </PaywallProvider>
     </DashboardContext.Provider>
   )
 }
