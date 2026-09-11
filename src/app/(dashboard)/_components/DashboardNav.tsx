@@ -9,6 +9,8 @@ import { logout } from '@/lib/auth'
 import { useAuth } from '@/context/AuthContext'
 import { useDashboard } from '@/context/DashboardContext'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
+import { useSubscription } from '@/hooks/useSubscription'
+import { usePaywall } from '@/context/PaywallContext'
 
 // ─── Nav Items ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
@@ -41,23 +43,57 @@ const NAV_ITEMS = [
   },
   {
     href:  '/dashboard/analytics',
-    label: 'Analíticas',
+    label: 'Métricas Avanzadas',
+    isPremium: true,
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
   },
+  {
+    href:  '#domain', // Placeholder href since it's just a teaser
+    label: 'Dominio Personalizado',
+    isPremium: true,
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+      </svg>
+    ),
+  },
 ]
 
-// ─── NavItem ──────────────────────────────────────────────────────────────────
 function NavItem({
   item,
   isActive,
+  isVip,
+  onUpgradeClick,
 }: {
   item: typeof NAV_ITEMS[number]
   isActive: boolean
+  isVip: boolean
+  onUpgradeClick: () => void
 }) {
+  const isLocked = item.isPremium && !isVip
+
+  if (isLocked) {
+    return (
+      <button
+        onClick={onUpgradeClick}
+        title={item.label}
+        className={`relative flex items-center justify-center w-12 h-12 mx-auto rounded-2xl transition-all duration-200 text-neutral-500 hover:text-neutral-300 group`}
+      >
+        <span className="relative z-10">{item.icon}</span>
+        {/* Lock Icon Overlay */}
+        <div className="absolute top-1 right-1 w-4 h-4 bg-black/80 rounded-full flex items-center justify-center border border-[#D4AF37]/30">
+          <svg className="w-2.5 h-2.5 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+      </button>
+    )
+  }
+
   return (
     <Link
       href={item.href}
@@ -87,6 +123,8 @@ export default function DashboardNav() {
   const router   = useRouter()
   const { user } = useAuth()
   const { profile } = useDashboard()
+  const { isVip } = useSubscription()
+  const { openUpgradeModal } = usePaywall()
   const username = profile?.username ?? null
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
@@ -123,6 +161,8 @@ export default function DashboardNav() {
               key={item.href}
               item={item}
               isActive={pathname === item.href}
+              isVip={isVip}
+              onUpgradeClick={openUpgradeModal}
             />
           ))}
         </nav>
@@ -171,6 +211,28 @@ export default function DashboardNav() {
         >
           {NAV_ITEMS.map(item => {
             const isActive = pathname === item.href
+            const isLocked = item.isPremium && !isVip
+
+            if (isLocked) {
+              return (
+                <button
+                  key={item.href}
+                  onClick={openUpgradeModal}
+                  title={item.label}
+                  className={`relative flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 text-neutral-500 hover:text-neutral-300`}
+                >
+                  <motion.span whileTap={{ scale: 0.85 }} className="block relative z-10">
+                    {item.icon}
+                  </motion.span>
+                  <div className="absolute top-1 right-1 w-4 h-4 bg-black/80 rounded-full flex items-center justify-center border border-[#D4AF37]/30">
+                    <svg className="w-2.5 h-2.5 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                </button>
+              )
+            }
+
             return (
               <Link
                 key={item.href}

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { BlockType, BlockWidth, Block } from '@/types'
 import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook, FaPhone, FaLink } from 'react-icons/fa6'
+import { useSubscription } from '@/hooks/useSubscription'
+import { usePaywall } from '@/context/PaywallContext'
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -430,6 +432,8 @@ interface BlockFormModalProps {
 
 export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFormModalProps) {
   const isEditMode = Boolean(initialData)
+  const { isVip } = useSubscription()
+  const { openUpgradeModal } = usePaywall()
 
   // Derive initial block type — clamp to the supported UI types
   type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email'
@@ -751,19 +755,38 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                     exit={{ opacity: 0, x: -12 }}
                     className="grid grid-cols-2 gap-3"
                   >
-                    {BLOCK_TYPES.map(bt => (
-                      <button
-                        key={bt.id}
-                        id={`btn-block-type-${bt.id}`}
-                        onClick={() => handleTypeNext(bt.id)}
-                        className="flex flex-col items-center gap-2 p-5 rounded-2xl transition-all"
-                        style={{ background: bt.bg, border: `1px solid ${bt.border}` }}
-                      >
-                        <span className="text-2xl">{bt.emoji}</span>
-                        <span className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>{bt.label}</span>
-                        <span className="text-xs text-center" style={{ color: '#A3A3A3' }}>{bt.subtitle}</span>
-                      </button>
-                    ))}
+                    {BLOCK_TYPES.map(bt => {
+                      const isPremium = bt.id === 'youtube'
+                      const isLocked = isPremium && !isVip
+
+                      return (
+                        <button
+                          key={bt.id}
+                          id={`btn-block-type-${bt.id}`}
+                          onClick={() => {
+                            if (isLocked) {
+                              openUpgradeModal()
+                              return
+                            }
+                            handleTypeNext(bt.id)
+                          }}
+                          className="flex flex-col items-center gap-2 p-5 rounded-2xl transition-all relative overflow-hidden"
+                          style={{ background: bt.bg, border: `1px solid ${bt.border}` }}
+                        >
+                          {isLocked && (
+                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-[2px]">
+                              <svg className="w-6 h-6 text-white/80 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                              <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-black/50 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">VIP</span>
+                            </div>
+                          )}
+                          <span className="text-2xl">{bt.emoji}</span>
+                          <span className="text-sm font-semibold" style={{ color: '#F5F5F5' }}>{bt.label}</span>
+                          <span className="text-xs text-center" style={{ color: '#A3A3A3' }}>{bt.subtitle}</span>
+                        </button>
+                      )
+                    })}
                   </motion.div>
                 )}
 
