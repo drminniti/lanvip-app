@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { PreApproval } from 'mercadopago'
-import { mpClient } from '@/lib/mercadopago'
 
 export async function POST(req: Request) {
   try {
@@ -46,21 +44,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Internal Server Error: Plan ID not configured' }, { status: 500 })
     }
 
-    // 4. Crear la Intención de Suscripción (PreApproval) inyectando el UID en external_reference
-    const preApproval = new PreApproval(mpClient)
-    
-    const subscription = await preApproval.create({
-      body: {
-        preapproval_plan_id: preapprovalPlanId,
-        payer_email: userEmail,
-        back_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
-        external_reference: userId, // Este es el truco real: atamos la suscripción al ID del usuario
-        reason: planType === 'monthly' ? 'Suscripción Mensual VIP - Lanvip' : 'Suscripción Anual VIP - Lanvip'
-      }
-    })
+    // 4. Armamos el link directo al checkout de suscripción de MP
+    // Mercado Pago no permite generar init_points dinámicos para suscripciones sin el token de la tarjeta,
+    // así que usamos el enlace de redirección directa inyectando el email.
+    const init_point = `https://www.mercadopago.com.ar/subscriptions/checkout?preapproval_plan_id=${preapprovalPlanId}&payer_email=${encodeURIComponent(userEmail)}`
 
-    // 5. Retornar el init_point para redirigir al checkout de Mercado Pago
-    return NextResponse.json({ init_point: subscription.init_point })
+    // 5. Retornar el init_point para redirigir
+    return NextResponse.json({ init_point })
 
   } catch (error) {
     console.error('Error in /api/checkout:', error)

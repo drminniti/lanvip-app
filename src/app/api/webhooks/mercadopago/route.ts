@@ -28,64 +28,62 @@ export async function POST(req: Request) {
     let planType = ''
 
     // 1. Obtener los detalles reales de la API (Fuente de la verdad)
-    if (type === 'payment') {
-      const paymentClient = new Payment(mpClient)
-      const payment = await paymentClient.get({ id: dataId })
+    if (type === 'subscription_preapproval' || type === 'preapproval') {
+      const mpResponse = await fetch(`https://api.mercadopago.com/preapproval/${dataId}`, {
+        headers: { 'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}` }
+      })
+      const subscriptionData = await mpResponse.json()
       
-      uid = payment.external_reference || ''
-      status = payment.status || ''
-      planType = payment.description || 'Unknown'
-      
-    } else if (type === 'subscription_preapproval' || type === 'preapproval') {
-      const preApprovalClient = new PreApproval(mpClient)
-      const preApproval = await preApprovalClient.get({ id: dataId })
-      
-      uid = preApproval.external_reference || ''
-      status = preApproval.status || ''
-      planType = preApproval.reason || 'Unknown'
-    } else {
-      return NextResponse.json({ status: 'success' }, { status: 200 })
-    }
+      status = subscriptionData.status || ''
+      planType = subscriptionData.reason || 'Unknown'
+      const payerEmail = subscriptionData.payer_email
 
-    console.log('\n=============================================')
-    console.log('✅ WEBHOOK RECIBIDO Y VALIDADO (MERCADO PAGO)')
-    console.log(`- TIPO:   ${type}`)
-    console.log(`- UID:    ${uid}`)
-    console.log(`- PLAN:   ${planType}`)
-    console.log(`- ESTADO: ${status}`)
-    console.log('=============================================\n')
+      console.log('\n=============================================')
+      console.log('✅ WEBHOOK RECIBIDO Y VALIDADO (MERCADO PAGO)')
+      console.log(`- TIPO:   ${type}`)
+      console.log(`- EMAIL P: ${payerEmail}`)
+      console.log(`- PLAN:   ${planType}`)
+      console.log(`- ESTADO: ${status}`)
+      console.log('=============================================\n')
 
-    // 2. Lógica de Actualización en Base de Datos por UID (Segura)
-    if (uid) {
-      const userRef = adminDb.collection('users').doc(uid)
-      
-      if (status === 'approved' || status === 'authorized') {
-        const isAnnual = planType.toLowerCase().includes('anual')
-        const daysToAdd = isAnnual ? 365 : 30
-        const endsAt = new Date()
-        endsAt.setDate(endsAt.getDate() + daysToAdd)
-
-        // Usamos la nomenclatura correcta (plan: 'vip')
-        await userRef.update({
-          plan: 'vip',
-          subscriptionEndsAt: FieldValue.serverTimestamp(),
-          planNotification: 'upgraded'
-        })
+      // 2. Lógica de Actualización en Base de Datos buscando por EMAIL
+      if (payerEmail) {
+        const usersRef = adminDb.collection('users')
+        const userQuery = await usersRef.where('email', '==', payerEmail).get()
         
-        await userRef.update({
-          subscriptionEndsAt: endsAt
-        })
-        
-        console.log(`✅ User ${uid} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'})`)
-      } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded') {
-        await userRef.update({
-          plan: 'free',
-          planNotification: 'downgraded'
-        })
-        console.log(`❌ User ${uid} downgraded to Free (Status: ${status})`)
+        if (!userQuery.empty) {
+          const userDoc = userQuery.docs[0]
+          
+          if (status === 'approved' || status === 'authorized') {
+            const isAnnual = planType.toLowerCase().includes('anual') || subscriptionData.preapproval_plan_id === process.env.MP_ANNUAL_PLAN_ID
+            const daysToAdd = isAnnual ? 365 : 30
+            const endsAt = new Date()
+            endsAt.setDate(endsAt.getDate() + daysToAdd)
+
+            // Usamos la nomenclatura correcta (plan: 'vip')
+            await userDoc.ref.update({
+              plan: 'vip',
+              subscriptionEndsAt: FieldValue.serverTimestamp(),
+              planNotification: 'upgraded',
+              subscriptionId: dataId // Guardamos el id para futuras referencias
+            })
+            
+            await userDoc.ref.update({
+              subscriptionEndsAt: endsAt
+            })
+            
+            console.log(`✅ User ${payerEmail} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'})`)
+          } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded') {
+            await userDoc.ref.update({
+              plan: 'free',
+              planNotification: 'downgraded'
+            })
+            console.log(`❌ User ${payerEmail} downgraded to Free (Status: ${status})`)
+          }
+        } else {
+          console.log(`⚠️ User not found in database for email: ${payerEmail}`)
+        }
       }
-    } else {
-      console.log(`⚠️ No external_reference (uid) found for transaction ${dataId}.`)
     }
 
     // 3. Devolver 200 OK rápido

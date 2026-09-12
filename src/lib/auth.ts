@@ -57,6 +57,7 @@ async function createUserDocument(
 
       const newUser: Omit<UserProfile, 'createdAt'> & { createdAt: unknown } = {
         uid:         user.uid,
+        email:       user.email ?? '',
         username:    username ?? user.email?.split('@')[0] ?? user.uid.slice(0, 8),
         displayName: user.displayName ?? username ?? 'Lanvip User',
         bio:         '',
