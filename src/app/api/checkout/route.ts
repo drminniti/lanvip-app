@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { PreApproval } from 'mercadopago'
 import { mpClient } from '@/lib/mercadopago'
+import { adminAuth } from '@/lib/firebase-admin'
 export async function POST(req: Request) {
   try {
     // 1. Validar la sesión del usuario a través del token de Firebase
@@ -10,22 +11,17 @@ export async function POST(req: Request) {
     }
     
     const idToken = authHeader.split('Bearer ')[1]
-    const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY
     
-    // Verificamos el token usando Google Identity Toolkit (sin necesitar firebase-admin)
-    const verifyRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken })
-    })
-    
-    const verifyData = await verifyRes.json()
-    if (verifyData.error || !verifyData.users?.[0]) {
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.verifyIdToken(idToken)
+    } catch (e: any) {
+      console.error('Firebase Admin Auth Verification Failed:', e.message)
       return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 })
     }
     
-    const userId = verifyData.users[0].localId
-    const userEmail = verifyData.users[0].email
+    const userId = decodedToken.uid
+    const userEmail = decodedToken.email || ''
 
     // 2. Parsear el body para obtener el planType y los datos del token
     const body = await req.json()
