@@ -36,6 +36,7 @@ export async function POST(req: Request) {
       
       status = subscriptionData.status || ''
       planType = subscriptionData.reason || 'Unknown'
+      uid = subscriptionData.external_reference || ''
       const payerEmail = subscriptionData.payer_email
 
       console.log('\n=============================================')
