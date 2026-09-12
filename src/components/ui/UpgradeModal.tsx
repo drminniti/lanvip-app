@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { getAuth } from 'firebase/auth'
+import { PaymentBrick } from './PaymentBrick'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -10,39 +11,51 @@ interface UpgradeModalProps {
 
 export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const [loadingPlan, setLoadingPlan] = useState<'monthly' | 'annual' | null>(null)
+  const [firebaseToken, setFirebaseToken] = useState<string>('')
+  const [checkoutStep, setCheckoutStep] = useState<'selection' | 'payment' | 'success'>('selection')
+
+  useEffect(() => {
+    if (isOpen) {
+      // Reset state when opened
+      setCheckoutStep('selection')
+      setLoadingPlan(null)
+      
+      const fetchToken = async () => {
+        const auth = getAuth()
+        const user = auth.currentUser
+        if (user) {
+          const token = await user.getIdToken()
+          setFirebaseToken(token)
+        }
+      }
+      fetchToken()
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
-  const handleCheckout = async (planType: 'monthly' | 'annual') => {
+  const handleSelectPlan = (planType: 'monthly' | 'annual') => {
     setLoadingPlan(planType)
-    try {
-      const auth = getAuth()
-      const user = auth.currentUser
-      if (!user) throw new Error('No user authenticated')
-      
-      const token = await user.getIdToken()
-      
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ planType })
-      })
-      
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
-      if (data.init_point) {
-        window.location.href = data.init_point
-      } else {
-        throw new Error('No init_point received')
-      }
-    } catch (err) {
-      console.error('Error starting checkout:', err)
-      alert('Hubo un error al iniciar el pago. Intenta de nuevo.')
+    if (!firebaseToken) {
+      alert('Debes estar autenticado para realizar esta acción.')
       setLoadingPlan(null)
+      return
     }
+    setCheckoutStep('payment')
+  }
+
+  const handlePaymentSuccess = () => {
+    setCheckoutStep('success')
+    // Optionally reload the page or update context after a short delay
+    setTimeout(() => {
+      window.location.reload()
+    }, 3000)
+  }
+
+  const handlePaymentError = (errorMsg: string) => {
+    alert(errorMsg)
+    setCheckoutStep('selection')
+    setLoadingPlan(null)
   }
 
   return (
@@ -62,27 +75,38 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
           Actualiza a Lanvip VIP para desbloquear Temas Premium, Marca de Agua Oculta, Dominio Personalizado y Métricas Avanzadas.
         </p>
         <div className="flex flex-col gap-3">
-          <button 
-            onClick={() => handleCheckout('monthly')}
-            disabled={loadingPlan !== null}
-            className="w-full bg-[#D4AF37] hover:bg-[#F5D989] text-black font-semibold py-4 px-6 rounded-xl transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loadingPlan === 'monthly' ? (
-              <span className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
-            ) : null}
-            Suscripción Mensual
-          </button>
+          {checkoutStep === 'selection' && (
+            <>
+              <button 
+                onClick={() => handleSelectPlan('monthly')}
+                className="w-full bg-[#D4AF37] hover:bg-[#F5D989] text-black font-semibold py-4 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                Suscripción Mensual
+              </button>
 
-          <button 
-            onClick={() => handleCheckout('annual')}
-            disabled={loadingPlan !== null}
-            className="w-full bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 font-semibold py-4 px-6 rounded-xl transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loadingPlan === 'annual' ? (
-              <span className="w-5 h-5 border-2 border-[#D4AF37] border-t-transparent rounded-full animate-spin"></span>
-            ) : null}
-            Suscripción Anual
-          </button>
+              <button 
+                onClick={() => handleSelectPlan('annual')}
+                className="w-full bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 font-semibold py-4 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                Suscripción Anual
+              </button>
+            </>
+          )}
+
+          {checkoutStep === 'payment' && loadingPlan && (
+            <PaymentBrick 
+              planType={loadingPlan} 
+              firebaseToken={firebaseToken}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+            />
+          )}
+
+          {checkoutStep === 'success' && (
+            <div className="p-6 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 font-medium">
+              ¡Pago exitoso! Activando tu cuenta VIP...
+            </div>
+          )}
         </div>
 
         <button 

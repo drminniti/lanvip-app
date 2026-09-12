@@ -41,48 +41,43 @@ export async function POST(req: Request) {
       console.log('\n=============================================')
       console.log('✅ WEBHOOK RECIBIDO Y VALIDADO (MERCADO PAGO)')
       console.log(`- TIPO:   ${type}`)
-      console.log(`- EMAIL P: ${payerEmail}`)
+      console.log(`- UID:    ${uid}`)
       console.log(`- PLAN:   ${planType}`)
       console.log(`- ESTADO: ${status}`)
       console.log('=============================================\n')
 
-      // 2. Lógica de Actualización en Base de Datos buscando por EMAIL
-      if (payerEmail) {
-        const usersRef = adminDb.collection('users')
-        const userQuery = await usersRef.where('email', '==', payerEmail).get()
+      // 2. Lógica de Actualización en Base de Datos por UID (Segura)
+      if (uid) {
+        const userRef = adminDb.collection('users').doc(uid)
         
-        if (!userQuery.empty) {
-          const userDoc = userQuery.docs[0]
-          
-          if (status === 'approved' || status === 'authorized') {
-            const isAnnual = planType.toLowerCase().includes('anual') || subscriptionData.preapproval_plan_id === process.env.MP_ANNUAL_PLAN_ID
-            const daysToAdd = isAnnual ? 365 : 30
-            const endsAt = new Date()
-            endsAt.setDate(endsAt.getDate() + daysToAdd)
+        if (status === 'approved' || status === 'authorized') {
+          const isAnnual = planType.toLowerCase().includes('anual') || subscriptionData.preapproval_plan_id === process.env.MP_ANNUAL_PLAN_ID
+          const daysToAdd = isAnnual ? 365 : 30
+          const endsAt = new Date()
+          endsAt.setDate(endsAt.getDate() + daysToAdd)
 
-            // Usamos la nomenclatura correcta (plan: 'vip')
-            await userDoc.ref.update({
-              plan: 'vip',
-              subscriptionEndsAt: FieldValue.serverTimestamp(),
-              planNotification: 'upgraded',
-              subscriptionId: dataId // Guardamos el id para futuras referencias
-            })
-            
-            await userDoc.ref.update({
-              subscriptionEndsAt: endsAt
-            })
-            
-            console.log(`✅ User ${payerEmail} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'})`)
-          } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded') {
-            await userDoc.ref.update({
-              plan: 'free',
-              planNotification: 'downgraded'
-            })
-            console.log(`❌ User ${payerEmail} downgraded to Free (Status: ${status})`)
-          }
-        } else {
-          console.log(`⚠️ User not found in database for email: ${payerEmail}`)
+          // Usamos la nomenclatura correcta (plan: 'vip')
+          await userRef.update({
+            plan: 'vip',
+            subscriptionEndsAt: FieldValue.serverTimestamp(),
+            planNotification: 'upgraded',
+            subscriptionId: dataId
+          })
+          
+          await userRef.update({
+            subscriptionEndsAt: endsAt
+          })
+          
+          console.log(`✅ User ${uid} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'})`)
+        } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded') {
+          await userRef.update({
+            plan: 'free',
+            planNotification: 'downgraded'
+          })
+          console.log(`❌ User ${uid} downgraded to Free (Status: ${status})`)
         }
+      } else {
+        console.log(`⚠️ No external_reference (uid) found for transaction ${dataId}.`)
       }
     }
 
