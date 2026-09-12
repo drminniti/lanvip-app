@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Internal Server Error: Plan ID not configured' }, { status: 500 })
     }
 
-    // 4. Crear la Intención de Suscripción (PreApproval)
+    // 4. Crear la Intención de Suscripción (PreApproval) inyectando el UID en external_reference
     const preApproval = new PreApproval(mpClient)
     
     const subscription = await preApproval.create({
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         preapproval_plan_id: preapprovalPlanId,
         payer_email: userEmail,
         back_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
-        external_reference: userId,
+        external_reference: userId, // Este es el truco real: atamos la suscripción al ID del usuario
         reason: planType === 'monthly' ? 'Suscripción Mensual VIP - Lanvip' : 'Suscripción Anual VIP - Lanvip'
       }
     })
