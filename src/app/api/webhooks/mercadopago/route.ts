@@ -137,12 +137,23 @@ export async function POST(req: Request) {
           let endsAt = new Date()
           if (userData?.subscriptionEndsAt) {
              const currentEndsAt = userData.subscriptionEndsAt.toDate ? userData.subscriptionEndsAt.toDate() : new Date(userData.subscriptionEndsAt)
-             // Only extend from current date if it hasn't expired yet
-             if (currentEndsAt > new Date()) {
+             
+             const paymentDate = paymentData.date_approved ? new Date(paymentData.date_approved) : new Date()
+             const grantedUntil = new Date(paymentDate)
+             grantedUntil.setDate(grantedUntil.getDate() + daysToAdd)
+             
+             // Si el pago otorga más tiempo del que ya tiene, lo extendemos
+             if (grantedUntil > currentEndsAt) {
+                endsAt = grantedUntil
+             } else {
+                console.log(`⚠️ Payment ${dataId} time overlaps with current subscription. No extra time added.`)
                 endsAt = currentEndsAt
              }
+          } else {
+             const paymentDate = paymentData.date_approved ? new Date(paymentData.date_approved) : new Date()
+             endsAt = new Date(paymentDate)
+             endsAt.setDate(endsAt.getDate() + daysToAdd)
           }
-          endsAt.setDate(endsAt.getDate() + daysToAdd)
 
           transaction.update(userRef, {
             subscriptionEndsAt: endsAt,
