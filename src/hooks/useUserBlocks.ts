@@ -14,8 +14,8 @@ export function useUserBlocks(userId: string | undefined) {
 
   useEffect(() => {
     if (!userId) {
-      setBlocks([])
-      setLoading(false)
+      setBlocks(prev => prev.length > 0 ? [] : prev)
+      setLoading(prev => prev ? false : prev)
       return
     }
 

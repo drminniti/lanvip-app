@@ -1,4 +1,4 @@
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { getFirebaseStorage, getFirebaseDb } from '@/lib/firebase'
 import { doc, updateDoc } from 'firebase/firestore'
 import { optimizeImage } from '@/lib/imageOptimization'

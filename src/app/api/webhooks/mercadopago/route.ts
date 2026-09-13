@@ -167,8 +167,9 @@ export async function POST(req: Request) {
 
     // 3. Devolver 200 OK rápido
     return NextResponse.json({ status: 'success' }, { status: 200 })
-  } catch (error: any) {
-    console.error('Error processing webhook:', error?.message || String(error))
-    return NextResponse.json({ status: 'error' }, { status: 200 })
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error)
+    console.error(`[Webhook] Unhandled Error:`, msg)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

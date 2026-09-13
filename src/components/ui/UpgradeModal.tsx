@@ -19,9 +19,9 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
-      setCheckoutStep('selection')
-      setLoadingPlan(null)
-      setPaymentError(null)
+      if (checkoutStep !== 'selection') setCheckoutStep('selection')
+      if (loadingPlan !== null) setLoadingPlan(null)
+      if (paymentError !== null) setPaymentError(null)
       
       const fetchToken = async () => {
         const auth = getAuth()

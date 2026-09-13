@@ -15,8 +15,9 @@ export async function POST(req: Request) {
     let decodedToken;
     try {
       decodedToken = await getAdminAuth().verifyIdToken(idToken)
-    } catch (e: any) {
-      console.error('Firebase Admin Auth Verification Failed:', e.message)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Unknown error'
+      console.error('Firebase Admin Auth Verification Failed:', msg)
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 400 })
     }
     
@@ -58,8 +59,8 @@ export async function POST(req: Request) {
     // 5. Retornamos success
     return NextResponse.json({ success: true, subscription_id: subscription.id })
 
-  } catch (error: any) {
-    const errorMsg = error?.message || String(error)
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error)
     console.error('Error in /api/checkout:', errorMsg)
     // Force a JSON string return using standard Response to completely avoid NextResponse weirdness
     // Return 400 instead of 500 to prevent Vercel from intercepting the error and stripping the body

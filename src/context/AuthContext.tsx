@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
     } catch (err) {
       console.error('[Lanvip] AuthProvider — onAuthChange setup failed:', err)
-      setLoading(false)
+      setTimeout(() => setLoading(false), 0)
     }
 
     return () => {

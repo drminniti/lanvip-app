@@ -26,8 +26,8 @@ export function useUserProfile(uid: string | undefined): UseUserProfileResult {
 
   useEffect(() => {
     if (!uid) {
-      setLoading(false)
-      setProfile(null)
+      setLoading(prev => prev ? false : prev)
+      setProfile(prev => prev !== null ? null : prev)
       return
     }
 

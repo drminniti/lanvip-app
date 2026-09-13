@@ -7,6 +7,7 @@ import { getThemeById, matchThemeId } from '@/lib/themes'
 import { getAutoContrastTextColor } from '@/lib/colorUtils'
 import { trackPageView, incrementClickCount } from '@/lib/analytics'
 import { downloadVCard } from '@/lib/vcard'
+import { sanitizeUrl } from '@/lib/url'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
 import type { UserProfile, Block, SpanSize } from '@/types'
 import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook } from 'react-icons/fa6'
@@ -237,7 +238,7 @@ function BentoTile({
   if (isCalendly) {
     return (
       <motion.a
-        href={block.content.url || undefined}
+        href={sanitizeUrl(block.content.url)}
         target="_blank"
         rel="noopener noreferrer"
         initial={{ opacity: 0, y: 20 }}
@@ -442,7 +443,7 @@ function BentoTile({
   // ── Default tile (link / social) ──────────────────────────────────────────
   return (
     <motion.a
-      href={block.content.url || undefined}
+      href={sanitizeUrl(block.content.url)}
       target={block.content.url ? '_blank' : undefined}
       rel="noopener noreferrer"
       initial={{ opacity: 0, y: 20 }}
