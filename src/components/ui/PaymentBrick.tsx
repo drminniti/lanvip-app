@@ -52,7 +52,7 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
         throw new Error(`Server returned invalid JSON. Status: ${res.status}. Body: ${text.substring(0, 100)}`)
       }
 
-      if (data.error) throw new Error(data.error)
+      if (data.error) throw new Error(data.details || data.error)
       
       // La suscripción fue creada exitosamente
       onSuccess()
