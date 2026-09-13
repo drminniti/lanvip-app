@@ -73,21 +73,21 @@ export default function AdminDashboardPage() {
   }).length
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-white">Métricas y KPIs</h1>
         <p className="text-sm text-neutral-400 mt-1">Visión general del negocio y crecimiento.</p>
       </div>
 
       {/* Date Filters */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl border border-white/10 bg-white/5">
-        <span className="text-sm font-semibold text-white">Filtrar por:</span>
-        <div className="flex gap-2">
+      <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 p-4 rounded-2xl border border-white/10 bg-white/5">
+        <span className="text-sm font-semibold text-white shrink-0">Filtrar por:</span>
+        <div className="flex flex-wrap gap-2">
           {['7', '30', 'all'].map(range => (
             <button
               key={range}
               onClick={() => setDateRange(range as any)}
-              className={`px-4 py-1.5 rounded-xl text-sm font-medium transition-colors ${
+              className={`px-3 md:px-4 py-1.5 rounded-xl text-sm font-medium transition-colors ${
                 dateRange === range ? 'bg-[#D4AF37] text-black' : 'bg-white/10 text-white hover:bg-white/20'
               }`}
             >
@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
           ))}
           <button
             onClick={() => setDateRange('custom')}
-            className={`px-4 py-1.5 rounded-xl text-sm font-medium transition-colors ${
+            className={`px-3 md:px-4 py-1.5 rounded-xl text-sm font-medium transition-colors ${
               dateRange === 'custom' ? 'bg-[#D4AF37] text-black' : 'bg-white/10 text-white hover:bg-white/20'
             }`}
           >
@@ -108,20 +108,20 @@ export default function AdminDashboardPage() {
           <motion.div 
             initial={{ opacity: 0, x: -10 }} 
             animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-2 ml-4"
+            className="flex flex-col sm:flex-row items-center gap-2 xl:ml-4 w-full xl:w-auto"
           >
             <input 
               type="date" 
               value={customStartDate} 
               onChange={e => setCustomStartDate(e.target.value)}
-              className="bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white"
+              className="bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white w-full sm:w-auto"
             />
-            <span className="text-neutral-500">-</span>
+            <span className="text-neutral-500 hidden sm:inline">-</span>
             <input 
               type="date" 
               value={customEndDate} 
               onChange={e => setCustomEndDate(e.target.value)}
-              className="bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white"
+              className="bg-black/50 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white w-full sm:w-auto"
             />
           </motion.div>
         )}
