@@ -92,7 +92,8 @@ export default function BillingPage() {
   }
 
   const isVip = profile.plan === 'vip'
-  const isLifetimeVip = isVip && !profile.subscriptionId
+  // Es lifetime si no tiene ID de suscripción de MP, o si no tiene fecha de fin (asignado manualmente)
+  const isLifetimeVip = isVip && (!profile.subscriptionId || !profile.subscriptionEndsAt)
   const isCancelled = profile.isSubscriptionCancelled && !isLifetimeVip
 
   let formattedDate = 'N/A'
