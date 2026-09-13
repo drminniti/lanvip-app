@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { getAuth } from 'firebase/auth'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
-import { app } from '@/lib/firebase'
+import { getFirebaseAuth, getFirebaseDb } from '@/lib/firebase'
 import { UserProfile } from '@/types'
 
 export default function BillingPage() {
@@ -13,10 +13,10 @@ export default function BillingPage() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const auth = getAuth(app)
+      const auth = getFirebaseAuth()
       auth.onAuthStateChanged(async (user) => {
         if (user) {
-          const db = getFirestore(app)
+          const db = getFirebaseDb()
           const docRef = doc(db, 'users', user.uid)
           const docSnap = await getDoc(docRef)
           if (docSnap.exists()) {
@@ -34,7 +34,7 @@ export default function BillingPage() {
     
     setCancelling(true)
     try {
-      const auth = getAuth(app)
+      const auth = getFirebaseAuth()
       const user = auth.currentUser
       if (!user) throw new Error('No user authenticated')
       
