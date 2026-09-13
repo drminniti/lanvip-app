@@ -5,11 +5,15 @@ import { getAuth } from 'firebase/auth'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import { getFirebaseAuth, getFirebaseDb } from '@/lib/firebase'
 import { UserProfile } from '@/types'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function BillingPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState(false)
+
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [modalMessage, setModalMessage] = useState<{ title: string; desc: string; isError?: boolean } | null>(null)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -29,9 +33,8 @@ export default function BillingPage() {
     fetchProfile()
   }, [])
 
-  const handleCancelSubscription = async () => {
-    if (!confirm('¿Estás seguro de que deseas cancelar tu suscripción automática? Perderás los beneficios VIP cuando finalice tu ciclo actual.')) return
-    
+  const executeCancellation = async () => {
+    setShowCancelConfirm(false)
     setCancelling(true)
     try {
       const auth = getFirebaseAuth()
@@ -50,14 +53,27 @@ export default function BillingPage() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
       
-      alert('Suscripción cancelada exitosamente.')
-      // Refetch profile or just reload
-      window.location.reload()
+      setModalMessage({
+        title: 'Suscripción cancelada',
+        desc: 'Tu suscripción ha sido cancelada exitosamente. Mantendrás tus beneficios hasta que finalice tu ciclo actual.'
+      })
     } catch (err: any) {
       console.error(err)
-      alert(err.message || 'Error al cancelar suscripción.')
+      setModalMessage({
+        title: 'Error',
+        desc: err.message || 'Ocurrió un error al intentar cancelar tu suscripción.',
+        isError: true
+      })
     } finally {
       setCancelling(false)
+    }
+  }
+
+  const handleModalClose = () => {
+    if (modalMessage && !modalMessage.isError) {
+      window.location.reload()
+    } else {
+      setModalMessage(null)
     }
   }
 
@@ -135,7 +151,7 @@ export default function BillingPage() {
             Al cancelar tu suscripción, se detendrán los cobros automáticos. Mantendrás tus beneficios VIP hasta el final de tu ciclo de facturación actual ({formattedDate}).
           </p>
           <button 
-            onClick={handleCancelSubscription}
+            onClick={() => setShowCancelConfirm(true)}
             disabled={cancelling}
             className="px-6 py-3 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center gap-2"
           >
@@ -146,6 +162,86 @@ export default function BillingPage() {
           </button>
         </div>
       )}
+
+      {/* Modals */}
+      <AnimatePresence>
+        {showCancelConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md px-4"
+            onClick={() => setShowCancelConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-white font-semibold text-xl mb-2">Cancelar Suscripción</h3>
+              <p className="text-neutral-400 text-sm mb-6">
+                ¿Estás seguro de que deseas cancelar tu suscripción automática? Perderás los beneficios VIP cuando finalice tu ciclo actual.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white transition-colors"
+                >
+                  Mantener suscripción
+                </button>
+                <button
+                  onClick={executeCancellation}
+                  className="px-4 py-2 text-sm font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
+                >
+                  Sí, cancelar
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {modalMessage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md px-4"
+            onClick={handleModalClose}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4 ${modalMessage.isError ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                {modalMessage.isError ? (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">{modalMessage.title}</h3>
+              <p className="text-neutral-400 text-sm mb-6">{modalMessage.desc}</p>
+              <button
+                onClick={handleModalClose}
+                className="w-full px-4 py-2 font-medium bg-white/10 text-white hover:bg-white/20 rounded-lg transition-colors"
+              >
+                Entendido
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
