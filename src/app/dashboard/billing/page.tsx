@@ -6,11 +6,13 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import { getFirebaseAuth, getFirebaseDb } from '@/lib/firebase'
 import { UserProfile } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePaywall } from '@/context/PaywallContext'
 
 export default function BillingPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState(false)
+  const { openUpgradeModal } = usePaywall()
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [modalMessage, setModalMessage] = useState<{ title: string; desc: string; isError?: boolean } | null>(null)
@@ -105,6 +107,7 @@ export default function BillingPage() {
     <div className="max-w-4xl mx-auto p-6 md:p-10 text-white">
       <h1 className="text-3xl font-bold mb-8">Facturación y Suscripción</h1>
       
+      {/* ── Status Card ── */}
       <div className="bg-[#111] border border-white/10 rounded-3xl p-8 mb-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           
@@ -122,9 +125,17 @@ export default function BillingPage() {
                 )}
               </div>
             ) : (
-              <span className="px-4 py-1.5 bg-white/10 text-white font-bold rounded-full border border-white/20 uppercase tracking-wide text-sm">
-                Plan Gratuito
-              </span>
+              <div className="flex flex-col gap-4 items-start">
+                <span className="px-4 py-1.5 bg-white/10 text-white font-bold rounded-full border border-white/20 uppercase tracking-wide text-sm">
+                  Plan Gratuito
+                </span>
+                <button
+                  onClick={openUpgradeModal}
+                  className="px-6 py-2 bg-[#D4AF37] text-black font-semibold rounded-xl hover:bg-[#F5D989] transition-colors"
+                >
+                  Mejorar a VIP
+                </button>
+              </div>
             )}
           </div>
 
@@ -134,13 +145,62 @@ export default function BillingPage() {
                 <p className="text-sm text-[#A3A3A3] mb-1">
                   {isCancelled ? 'Pierdes el acceso VIP el:' : 'Próxima renovación automática:'}
                 </p>
-                <p className="text-lg font-medium">{formattedDate}</p>
+                <p className="text-lg font-medium mb-3">{formattedDate}</p>
+                
+                {isCancelled && (
+                  <button
+                    onClick={openUpgradeModal}
+                    className="px-6 py-2 bg-[#D4AF37] text-black font-semibold rounded-xl hover:bg-[#F5D989] transition-colors shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+                  >
+                    Reactivar Suscripción
+                  </button>
+                )}
               </>
             ) : (
               <p className="text-sm text-[#A3A3A3]">Disfrutando de las funciones básicas.</p>
             )}
           </div>
 
+        </div>
+      </div>
+
+      {/* ── Features Card ── */}
+      <div className="bg-[#111] border border-white/10 rounded-3xl p-8 mb-8">
+        <h2 className="text-xl font-semibold mb-6">Beneficios de tu Plan</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ul className="space-y-4">
+            <li className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              <span className={!isVip ? 'text-white' : 'text-[#A3A3A3]'}>Múltiples enlaces</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              <span className={!isVip ? 'text-white' : 'text-[#A3A3A3]'}>Temas básicos</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              <span className={!isVip ? 'text-white' : 'text-[#A3A3A3]'}>Bloques integrados</span>
+            </li>
+          </ul>
+          
+          <ul className="space-y-4">
+            <li className="flex items-center gap-3">
+              {isVip ? <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
+              <span className={isVip ? 'text-[#D4AF37] font-medium' : 'text-neutral-500 line-through'}>Sin marca de agua de Lanvip</span>
+            </li>
+            <li className="flex items-center gap-3">
+              {isVip ? <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
+              <span className={isVip ? 'text-[#D4AF37] font-medium' : 'text-neutral-500 line-through'}>Temas Premium y Personalizados</span>
+            </li>
+            <li className="flex items-center gap-3">
+              {isVip ? <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
+              <span className={isVip ? 'text-[#D4AF37] font-medium' : 'text-neutral-500 line-through'}>Dominio personalizado (Pronto)</span>
+            </li>
+            <li className="flex items-center gap-3">
+              {isVip ? <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
+              <span className={isVip ? 'text-[#D4AF37] font-medium' : 'text-neutral-500 line-through'}>Analíticas Avanzadas</span>
+            </li>
+          </ul>
         </div>
       </div>
 
