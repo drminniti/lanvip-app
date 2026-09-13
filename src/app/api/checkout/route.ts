@@ -5,44 +5,54 @@ import { getAdminAuth } from '@/lib/firebase-admin'
 export async function POST(req: Request) {
   try {
     // 1. Validar la sesión del usuario a través del token de Firebase
+    console.log('[DEBUG] Step 1: Getting auth header')
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized: Missing or invalid token' }, { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 400 })
     }
     
+    console.log('[DEBUG] Step 2: Splitting token')
     const idToken = authHeader.split('Bearer ')[1]
     
     let decodedToken;
     try {
+      console.log('[DEBUG] Step 3: Verifying Firebase Token')
       decodedToken = await getAdminAuth().verifyIdToken(idToken)
+      console.log('[DEBUG] Step 4: Token verified successfully')
     } catch (e: any) {
       console.error('Firebase Admin Auth Verification Failed:', e.message)
-      return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 })
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 400 })
     }
     
     const userId = decodedToken.uid
     const userEmail = decodedToken.email || ''
 
-    // 2. Parsear el body para obtener el planType y los datos del token
+    // 2. Parsear el body
+    console.log('[DEBUG] Step 5: Parsing body')
     const body = await req.json()
+    console.log('[DEBUG] Step 6: Body parsed:', JSON.stringify(body))
     const { planType, cardTokenId, payerEmail } = body
     
     if ((planType !== 'monthly' && planType !== 'annual') || !cardTokenId || !payerEmail) {
-      return NextResponse.json({ error: 'Bad Request: Missing or invalid parameters' }, { status: 400 })
+      return new Response(JSON.stringify({ error: 'Bad Request' }), { status: 400 })
     }
 
-    // 3. Obtener el ID del Plan de PreApproval de las variables de entorno
+    // 3. Obtener el ID del Plan
+    console.log('[DEBUG] Step 7: Getting Plan ID')
     const preapprovalPlanId = planType === 'monthly' 
       ? process.env.MP_MONTHLY_PLAN_ID 
       : process.env.MP_ANNUAL_PLAN_ID
 
+    console.log('[DEBUG] Step 8: Plan ID is:', preapprovalPlanId)
     if (!preapprovalPlanId) {
-      console.error(`Missing Plan ID in env vars for planType: ${planType}`)
-      return NextResponse.json({ error: 'Internal Server Error: Plan ID not configured' }, { status: 400 })
+      return new Response(JSON.stringify({ error: 'Plan ID not configured' }), { status: 400 })
     }
 
-    // 4. Crear la Intención de Suscripción (PreApproval) inyectando el UID en external_reference
+    // 4. Crear la Intención de Suscripción (PreApproval)
+    console.log('[DEBUG] Step 9: Initializing PreApproval Client')
     const preApproval = new PreApproval(getMpClient())
+    
+    console.log('[DEBUG] Step 10: Calling preApproval.create()')
     
     const subscription = await preApproval.create({
       body: {
@@ -55,8 +65,10 @@ export async function POST(req: Request) {
         reason: planType === 'monthly' ? 'Suscripción Mensual VIP - Lanvip' : 'Suscripción Anual VIP - Lanvip'
       }
     })
+    
+    console.log('[DEBUG] Step 11: preApproval.create() success:', subscription.id)
 
-    // 5. Retornamos success (ya no hay init_point porque el pago se autorizó directo)
+    // 5. Retornamos success
     return NextResponse.json({ success: true, subscription_id: subscription.id })
 
   } catch (error: any) {
