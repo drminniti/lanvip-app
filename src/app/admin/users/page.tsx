@@ -138,15 +138,22 @@ export default function AdminUsersPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 transition-colors"
         />
-        <select
-          value={planFilter}
-          onChange={(e) => setPlanFilter(e.target.value as any)}
-          className="w-full md:w-48 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 transition-colors appearance-none"
-        >
-          <option value="all">Todos los planes</option>
-          <option value="vip">Solo VIP / Trial</option>
-          <option value="free">Solo Free</option>
-        </select>
+        <div className="relative w-full md:w-48">
+          <select
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value as any)}
+            className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 pr-10 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 transition-colors appearance-none cursor-pointer"
+          >
+            <option value="all">Todos los planes</option>
+            <option value="vip">Solo VIP / Trial</option>
+            <option value="free">Solo Free</option>
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-neutral-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
       </div>
 
       {/* Table */}

@@ -1,14 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { AdminContext } from '@/context/AdminContext'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
+import Link from 'next/link'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading, error } = useUserProfile(user?.uid)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -94,18 +96,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           <nav className="flex-1 space-y-2">
-            <a href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 text-white font-medium hover:bg-white/10 transition-colors">
-              <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <Link href="/admin" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+              pathname === '/admin' ? 'bg-white/5 text-white' : 'text-neutral-400 hover:bg-white/5 hover:text-white'
+            }`}>
+              <svg className={`w-5 h-5 ${pathname === '/admin' ? 'text-[#D4AF37]' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
               Métricas
-            </a>
-            <a href="/admin/users" className="flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-400 font-medium hover:bg-white/5 hover:text-white transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            </Link>
+            <Link href="/admin/users" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+              pathname === '/admin/users' ? 'bg-white/5 text-white' : 'text-neutral-400 hover:bg-white/5 hover:text-white'
+            }`}>
+              <svg className={`w-5 h-5 ${pathname === '/admin/users' ? 'text-[#D4AF37]' : ''}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
               Usuarios (CRM)
-            </a>
+            </Link>
           </nav>
           
           <button 
