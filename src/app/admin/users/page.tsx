@@ -121,8 +121,8 @@ export default function AdminUsersPage() {
   })
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8">
+      <div className="flex flex-col gap-2">
         <div>
           <h1 className="text-2xl font-bold text-white">Gestión de Usuarios (CRM)</h1>
           <p className="text-sm text-neutral-400 mt-1">Administra cuentas, roles y suscripciones.</p>
@@ -255,7 +255,7 @@ export default function AdminUsersPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="bg-[#141414] border border-[#333333] rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]"
+              className="bg-[#141414] border border-[#333333] rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]"
             >
               {/* Success Alert */}
               <AnimatePresence>
@@ -317,7 +317,7 @@ export default function AdminUsersPage() {
                     <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     Otorgar Trial VIP
                   </h3>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1 relative">
                       <input 
                         type="number" 
@@ -340,7 +340,7 @@ export default function AdminUsersPage() {
                 {/* 2. Manual Upgrade/Downgrade */}
                 <div className="bg-black/40 rounded-xl p-5 border border-white/5">
                   <h3 className="text-sm font-semibold text-white mb-4">Modificar Plan Manualmente</h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button 
                       onClick={() => handleUpdateUser(selectedUser.uid, { plan: 'vip', subscriptionEndsAt: null, planNotification: 'upgraded' })}
                       disabled={isUpdating || selectedUser.plan === 'vip' && !selectedUser.subscriptionEndsAt}
@@ -371,7 +371,7 @@ export default function AdminUsersPage() {
                     Liberar Username (@{selectedUser.username})
                   </button>
                   ) : (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <button 
                       onClick={async () => {
                         setIsUpdating(true)
@@ -414,12 +414,12 @@ export default function AdminUsersPage() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                       Asignar Rol (Superadmin)
                     </h3>
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white/5 rounded-xl border border-white/5">
                       <div>
                         <p className="text-sm font-medium text-white">Privilegios de Administrador</p>
                         <p className="text-xs text-neutral-500 mt-1">Permite acceso a este panel</p>
                       </div>
-                      <div className="flex bg-black/50 p-1 rounded-lg border border-white/5">
+                      <div className="flex bg-black/50 p-1 rounded-lg border border-white/5 w-full sm:w-auto">
                         <button 
                           onClick={() => handleRoleChange('user')}
                           className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${selectedUser.role !== 'admin' && selectedUser.role !== 'superadmin' ? 'bg-white/10 text-white' : 'text-neutral-500 hover:text-white'}`}
