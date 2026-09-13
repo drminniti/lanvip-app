@@ -167,40 +167,85 @@ export default function BillingPage() {
       {/* ── Features Card ── */}
       <div className="bg-[#111] border border-white/10 rounded-3xl p-8 mb-8">
         <h2 className="text-xl font-semibold mb-6">Beneficios de tu Plan</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ul className="space-y-4">
-            <li className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              <span className={!isVip ? 'text-white' : 'text-[#A3A3A3]'}>Múltiples enlaces</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              <span className={!isVip ? 'text-white' : 'text-[#A3A3A3]'}>Temas básicos</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              <span className={!isVip ? 'text-white' : 'text-[#A3A3A3]'}>Bloques integrados</span>
-            </li>
-          </ul>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4">
           
-          <ul className="space-y-4">
-            <li className="flex items-center gap-3">
-              {isVip ? <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
-              <span className={isVip ? 'text-[#D4AF37] font-medium' : 'text-neutral-500 line-through'}>Sin marca de agua de Lanvip</span>
-            </li>
-            <li className="flex items-center gap-3">
-              {isVip ? <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
-              <span className={isVip ? 'text-[#D4AF37] font-medium' : 'text-neutral-500 line-through'}>Temas Premium y Personalizados</span>
-            </li>
-            <li className="flex items-center gap-3">
-              {isVip ? <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
-              <span className={isVip ? 'text-[#D4AF37] font-medium' : 'text-neutral-500 line-through'}>Dominio personalizado (Pronto)</span>
-            </li>
-            <li className="flex items-center gap-3">
-              {isVip ? <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> : <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>}
-              <span className={isVip ? 'text-[#D4AF37] font-medium' : 'text-neutral-500 line-through'}>Analíticas Avanzadas</span>
-            </li>
-          </ul>
+          {/* Free Column */}
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+            <h3 className="text-lg font-medium text-white mb-4 flex items-center justify-between">
+              Plan Gratuito
+              {!isVip && <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">Tu plan actual</span>}
+            </h3>
+            <ul className="space-y-4">
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-[#A3A3A3]">Múltiples enlaces</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-[#A3A3A3]">Temas básicos</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-[#A3A3A3]">Bloques integrados</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                <span className="text-neutral-500 line-through">Sin marca de agua</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                <span className="text-neutral-500 line-through">Temas Premium</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                <span className="text-neutral-500 line-through">Dominio personalizado</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                <span className="text-neutral-500 line-through">Analíticas Avanzadas</span>
+              </li>
+            </ul>
+          </div>
+          
+          {/* VIP Column */}
+          <div className="bg-[#D4AF37]/5 rounded-2xl p-6 border border-[#D4AF37]/20 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 blur-3xl -mr-16 -mt-16 rounded-full"></div>
+            <h3 className="text-lg font-medium text-[#D4AF37] mb-4 flex items-center justify-between relative z-10">
+              Lanvip Pro VIP
+              {isVip && !isCancelled && <span className="text-xs bg-[#D4AF37] text-black font-bold px-2 py-1 rounded">Tu plan actual</span>}
+              {isVip && isCancelled && <span className="text-xs bg-red-400 text-black font-bold px-2 py-1 rounded">Cancelando</span>}
+            </h3>
+            <ul className="space-y-4 relative z-10">
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-white">Múltiples enlaces</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-white">Temas básicos</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-white">Bloques integrados</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-[#D4AF37] font-medium">Sin marca de agua</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-[#D4AF37] font-medium">Temas Premium</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-[#D4AF37] font-medium">Dominio personalizado (Pronto)</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <svg className="w-5 h-5 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                <span className="text-[#D4AF37] font-medium">Analíticas Avanzadas</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
