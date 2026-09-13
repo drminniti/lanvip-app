@@ -80,6 +80,33 @@ export async function POST(req: Request) {
       } else {
         console.log(`⚠️ No external_reference (uid) found for transaction ${dataId}.`)
       }
+    } else if (type === 'payment') {
+      const paymentClient = new Payment(mpClient)
+      const paymentData = await paymentClient.get({ id: dataId })
+      
+      status = paymentData.status || ''
+      planType = paymentData.description || 'Unknown'
+      uid = paymentData.external_reference || ''
+
+      console.log('\n=============================================')
+      console.log('🔄 WEBHOOK DE RENOVACIÓN (MERCADO PAGO)')
+      console.log(`- TIPO:   ${type}`)
+      console.log(`- UID:    ${uid}`)
+      console.log(`- ESTADO: ${status}`)
+      console.log('=============================================\n')
+
+      if (uid && status === 'approved') {
+        const userRef = adminDb.collection('users').doc(uid)
+        const isAnnual = planType.toLowerCase().includes('anual')
+        const daysToAdd = isAnnual ? 365 : 30
+        const endsAt = new Date()
+        endsAt.setDate(endsAt.getDate() + daysToAdd)
+
+        await userRef.update({
+          subscriptionEndsAt: endsAt
+        })
+        console.log(`✅ User ${uid} subscription renewed. Added ${daysToAdd} days.`)
+      }
     }
 
     // 3. Devolver 200 OK rápido
