@@ -60,7 +60,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, subscription_id: subscription.id })
 
   } catch (error: any) {
-    console.error('Error in /api/checkout:', error?.message || String(error))
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    const errorMsg = error?.message || String(error)
+    console.error('Error in /api/checkout:', errorMsg)
+    // Force a JSON string return using standard Response to completely avoid NextResponse weirdness
+    return new Response(JSON.stringify({ error: 'Internal Server Error', details: errorMsg }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    })
   }
 }
