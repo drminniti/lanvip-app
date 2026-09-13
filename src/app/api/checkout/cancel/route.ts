@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { PreApproval } from 'mercadopago'
 import { mpClient } from '@/lib/mercadopago'
-import { adminAuth, adminDb } from '@/lib/firebase-admin'
+import { getAdminAuth, getAdminDb } from '@/lib/firebase-admin'
 
 export async function POST(req: Request) {
   try {
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const idToken = authHeader.split('Bearer ')[1]
     let decodedToken;
     try {
-      decodedToken = await adminAuth.verifyIdToken(idToken)
+      decodedToken = await getAdminAuth().verifyIdToken(idToken)
     } catch (e: any) {
       return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 })
     }
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const userId = decodedToken.uid
 
     // 2. Fetch user profile from DB
-    const userRef = adminDb.collection('users').doc(userId)
+    const userRef = getAdminDb().collection('users').doc(userId)
     const userDoc = await userRef.get()
     
     if (!userDoc.exists) {

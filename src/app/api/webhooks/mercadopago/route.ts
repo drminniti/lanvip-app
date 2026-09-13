@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { Payment, PreApproval } from 'mercadopago'
 import { mpClient } from '@/lib/mercadopago'
-import { adminDb } from '@/lib/firebase-admin'
+import { getAdminDb } from '@/lib/firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
 
 export async function POST(req: Request) {
@@ -49,10 +49,10 @@ export async function POST(req: Request) {
 
       // 2. Lógica de Actualización en Base de Datos por UID (Segura)
       if (uid) {
-        const userRef = adminDb.collection('users').doc(uid)
+        const userRef = getAdminDb().collection('users').doc(uid)
         
         if (status === 'approved' || status === 'authorized') {
-          await adminDb.runTransaction(async (transaction) => {
+          await getAdminDb().runTransaction(async (transaction) => {
             const userDoc = await transaction.get(userRef)
             if (!userDoc.exists) return
 
@@ -116,9 +116,9 @@ export async function POST(req: Request) {
       console.log('=============================================\n')
 
       if (uid && status === 'approved') {
-        const userRef = adminDb.collection('users').doc(uid)
+        const userRef = getAdminDb().collection('users').doc(uid)
         
-        await adminDb.runTransaction(async (transaction) => {
+        await getAdminDb().runTransaction(async (transaction) => {
           const userDoc = await transaction.get(userRef)
           if (!userDoc.exists) return
 

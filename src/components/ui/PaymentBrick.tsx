@@ -44,7 +44,14 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
         })
       })
 
-      const data = await res.json()
+      let data;
+      try {
+        data = await res.json()
+      } catch (e) {
+        const text = await res.text()
+        throw new Error(`Server returned invalid JSON. Status: ${res.status}. Body: ${text.substring(0, 100)}`)
+      }
+
       if (data.error) throw new Error(data.error)
       
       // La suscripción fue creada exitosamente

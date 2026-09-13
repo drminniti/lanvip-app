@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { PreApproval } from 'mercadopago'
 import { mpClient } from '@/lib/mercadopago'
-import { adminAuth } from '@/lib/firebase-admin'
+import { getAdminAuth } from '@/lib/firebase-admin'
 export async function POST(req: Request) {
   try {
     // 1. Validar la sesión del usuario a través del token de Firebase
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     
     let decodedToken;
     try {
-      decodedToken = await adminAuth.verifyIdToken(idToken)
+      decodedToken = await getAdminAuth().verifyIdToken(idToken)
     } catch (e: any) {
       console.error('Firebase Admin Auth Verification Failed:', e.message)
       return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 })
