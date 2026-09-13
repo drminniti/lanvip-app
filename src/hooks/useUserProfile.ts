@@ -31,6 +31,8 @@ export function useUserProfile(uid: string | undefined): UseUserProfileResult {
       return
     }
 
+    setLoading(true)
+
     const db      = getFirebaseDb()
     const userRef = doc(db, 'users', uid)
 
@@ -52,7 +54,11 @@ export function useUserProfile(uid: string | undefined): UseUserProfileResult {
       },
     )
 
-    return () => unsubscribe()
+    return () => {
+      // Delay the unsubscribe slightly to prevent the Firebase SDK from tearing down
+      // the connection if another component or Strict Mode immediately remounts.
+      setTimeout(() => unsubscribe(), 100)
+    }
   }, [uid])
 
   return { profile, loading, error }
