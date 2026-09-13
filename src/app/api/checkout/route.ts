@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { PreApproval } from 'mercadopago'
-import { mpClient } from '@/lib/mercadopago'
+import { getMpClient } from '@/lib/mercadopago'
 import { getAdminAuth } from '@/lib/firebase-admin'
 export async function POST(req: Request) {
   try {
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     }
 
     // 4. Crear la Intención de Suscripción (PreApproval) inyectando el UID en external_reference
-    const preApproval = new PreApproval(mpClient)
+    const preApproval = new PreApproval(getMpClient())
     
     const subscription = await preApproval.create({
       body: {
@@ -59,8 +59,8 @@ export async function POST(req: Request) {
     // 5. Retornamos success (ya no hay init_point porque el pago se autorizó directo)
     return NextResponse.json({ success: true, subscription_id: subscription.id })
 
-  } catch (error) {
-    console.error('Error in /api/checkout:', error)
+  } catch (error: any) {
+    console.error('Error in /api/checkout:', error?.message || String(error))
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

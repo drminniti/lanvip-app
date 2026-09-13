@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { PreApproval } from 'mercadopago'
-import { mpClient } from '@/lib/mercadopago'
+import { getMpClient } from '@/lib/mercadopago'
 import { getAdminAuth, getAdminDb } from '@/lib/firebase-admin'
 
 export async function POST(req: Request) {
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     // 3. Cancel subscription in Mercado Pago
-    const preApproval = new PreApproval(mpClient)
+    const preApproval = new PreApproval(getMpClient())
     try {
       await preApproval.update({
         id: subscriptionId,
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true })
 
   } catch (error: any) {
-    console.error('Error cancelling subscription:', error)
+    console.error('Error cancelling subscription:', error?.message || String(error))
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
   }
 }

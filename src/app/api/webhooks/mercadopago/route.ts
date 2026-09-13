@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { Payment, PreApproval } from 'mercadopago'
-import { mpClient } from '@/lib/mercadopago'
+import { getMpClient } from '@/lib/mercadopago'
 import { getAdminDb } from '@/lib/firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
 
@@ -101,7 +101,7 @@ export async function POST(req: Request) {
         console.log(`⚠️ No external_reference (uid) found for transaction ${dataId}.`)
       }
     } else if (type === 'payment') {
-      const paymentClient = new Payment(mpClient)
+      const paymentClient = new Payment(getMpClient())
       const paymentData = await paymentClient.get({ id: dataId })
       
       status = paymentData.status || ''
@@ -156,8 +156,8 @@ export async function POST(req: Request) {
 
     // 3. Devolver 200 OK rápido
     return NextResponse.json({ status: 'success' }, { status: 200 })
-  } catch (error) {
-    console.error('Error processing webhook:', error)
+  } catch (error: any) {
+    console.error('Error processing webhook:', error?.message || String(error))
     return NextResponse.json({ status: 'error' }, { status: 200 })
   }
 }
