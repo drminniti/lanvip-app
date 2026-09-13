@@ -92,10 +92,13 @@ export default function BillingPage() {
   }
 
   const isVip = profile.plan === 'vip'
-  const isCancelled = profile.isSubscriptionCancelled
+  const isLifetimeVip = isVip && !profile.subscriptionId
+  const isCancelled = profile.isSubscriptionCancelled && !isLifetimeVip
 
   let formattedDate = 'N/A'
-  if (profile.subscriptionEndsAt) {
+  if (isLifetimeVip) {
+    formattedDate = 'Ilimitado (Acceso de por vida)'
+  } else if (profile.subscriptionEndsAt) {
     // Manejo seguro del Timestamp de Firebase
     const dateObj = profile.subscriptionEndsAt.toDate ? profile.subscriptionEndsAt.toDate() : new Date(profile.subscriptionEndsAt)
     formattedDate = dateObj.toLocaleDateString('es-AR', {
@@ -118,6 +121,11 @@ export default function BillingPage() {
                 <span className="px-4 py-1.5 bg-[#D4AF37]/20 text-[#D4AF37] font-bold rounded-full border border-[#D4AF37]/30 uppercase tracking-wide text-sm">
                   Lanvip Pro VIP
                 </span>
+                {isLifetimeVip && (
+                  <span className="text-sm text-[#D4AF37] bg-[#D4AF37]/10 px-3 py-1 rounded-full border border-[#D4AF37]/20">
+                    Lifetime
+                  </span>
+                )}
                 {isCancelled && (
                   <span className="text-sm text-red-400 bg-red-400/10 px-3 py-1 rounded-full border border-red-400/20">
                     Cancelada
@@ -143,7 +151,11 @@ export default function BillingPage() {
             {isVip ? (
               <>
                 <p className="text-sm text-[#A3A3A3] mb-1">
-                  {isCancelled ? 'Pierdes el acceso VIP el:' : 'Próxima renovación automática:'}
+                  {isLifetimeVip 
+                    ? 'Estado de la suscripción:' 
+                    : isCancelled 
+                      ? 'Pierdes el acceso VIP el:' 
+                      : 'Próxima renovación automática:'}
                 </p>
                 <p className="text-lg font-medium mb-3">{formattedDate}</p>
                 
@@ -249,7 +261,7 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {isVip && !isCancelled && (
+      {isVip && !isCancelled && !isLifetimeVip && (
         <div className="bg-red-500/5 border border-red-500/10 rounded-3xl p-8">
           <h3 className="text-lg font-semibold text-red-400 mb-2">Zona de Peligro</h3>
           <p className="text-sm text-[#A3A3A3] mb-6">
