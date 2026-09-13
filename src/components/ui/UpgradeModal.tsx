@@ -104,7 +104,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   <span className="text-xs opacity-80 font-medium">Facturado cada mes</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xl block">$5.000</span>
+                  <span className="text-xl block">$15</span>
                   <span className="text-xs opacity-80 uppercase tracking-wide">ARS / mes</span>
                 </div>
               </button>
@@ -121,7 +121,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   <span className="text-xs opacity-80 font-medium">Facturado anualmente</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xl block">$50.000</span>
+                  <span className="text-xl block">$20</span>
                   <span className="text-xs opacity-80 uppercase tracking-wide">ARS / año</span>
                 </div>
               </button>
@@ -150,7 +150,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
               </div>
               <div className="text-right">
                 <span className="text-lg font-bold text-[#D4AF37] block">
-                  ${loadingPlan === 'monthly' ? '5.000' : '50.000'}
+                  ${loadingPlan === 'monthly' ? '15' : '20'}
                 </span>
                 <span className="text-xs text-[#A3A3A3]">ARS</span>
               </div>

@@ -68,7 +68,7 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
   return (
     <div className="w-full text-left mt-4 relative">
       <CardPayment
-        initialization={{ amount: planType === 'monthly' ? 5000 : 50000 }} // Monto ilustrativo para el Brick
+        initialization={{ amount: planType === 'monthly' ? 15 : 20 }} // Monto ilustrativo para el Brick
         onSubmit={onSubmit}
         onReady={onReady}
         onError={onErrorBrick}
