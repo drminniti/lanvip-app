@@ -33,17 +33,26 @@ export async function POST(req: Request) {
     const subscriptionId = userData?.subscriptionId
 
     if (!subscriptionId) {
-      return NextResponse.json({ error: 'No active subscription found' }, { status: 400 })
+      // Si fue otorgado manualmente (Admin) sin MP, simplemente lo cancelamos localmente
+      await userRef.update({
+        isSubscriptionCancelled: true
+      })
+      return NextResponse.json({ success: true, message: 'Local subscription cancelled' })
     }
 
     // 3. Cancel subscription in Mercado Pago
     const preApproval = new PreApproval(mpClient)
-    await preApproval.update({
-      id: subscriptionId,
-      body: {
-        status: 'cancelled'
-      }
-    })
+    try {
+      await preApproval.update({
+        id: subscriptionId,
+        body: {
+          status: 'cancelled'
+        }
+      })
+    } catch (mpError: any) {
+      console.warn('MP Error cancelling subscription (might already be cancelled):', mpError.message)
+      // Continuamos con la cancelación local incluso si MP falla, para asegurar que la UI se actualice
+    }
 
     // 4. Update user profile to reflect cancellation
     await userRef.update({
