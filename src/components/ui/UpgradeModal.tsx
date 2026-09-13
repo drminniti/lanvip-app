@@ -70,28 +70,61 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Desbloquea el poder de Lanvip VIP</h2>
-        <p className="text-[#A3A3A3] mb-8 leading-relaxed">
-          Actualiza a Lanvip VIP para desbloquear Temas Premium, Marca de Agua Oculta, Dominio Personalizado y Métricas Avanzadas.
-        </p>
-        <div className="flex flex-col gap-3">
-          {checkoutStep === 'selection' && (
-            <>
+        {checkoutStep === 'selection' && (
+          <div className="text-left">
+            <h2 className="text-2xl font-bold text-white mb-2 text-center">Desbloquea Lanvip VIP</h2>
+            <p className="text-[#A3A3A3] mb-6 text-sm text-center">
+              Lleva tu perfil al siguiente nivel con todas las funcionalidades premium.
+            </p>
+
+            <div className="bg-white/5 rounded-2xl p-5 mb-6 border border-white/10">
+              <h3 className="text-white font-medium mb-3">Tu plan VIP incluye:</h3>
+              <ul className="space-y-2 text-sm text-[#A3A3A3]">
+                <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Eliminar marca de agua</li>
+                <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Acceso a Temas Premium</li>
+                <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Analíticas Avanzadas</li>
+                <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Dominio Personalizado (Próximamente)</li>
+              </ul>
+            </div>
+
+            <div className="space-y-3">
               <button 
                 onClick={() => handleSelectPlan('monthly')}
-                className="w-full bg-[#D4AF37] hover:bg-[#F5D989] text-black font-semibold py-4 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2"
+                className="w-full bg-[#D4AF37] hover:bg-[#F5D989] text-black font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-between group"
               >
-                Suscripción Mensual
+                <div className="flex flex-col text-left">
+                  <span className="text-lg">Mensual</span>
+                  <span className="text-xs opacity-80 font-medium">Facturado cada mes</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xl block">$5.000</span>
+                  <span className="text-xs opacity-80 uppercase tracking-wide">ARS / mes</span>
+                </div>
               </button>
 
               <button 
                 onClick={() => handleSelectPlan('annual')}
-                className="w-full bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 font-semibold py-4 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2"
+                className="w-full bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-between relative overflow-hidden"
               >
-                Suscripción Anual
+                <div className="absolute top-0 right-0 bg-[#D4AF37] text-black text-[10px] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">
+                  Ahorra 16%
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-lg">Anual</span>
+                  <span className="text-xs opacity-80 font-medium">Facturado anualmente</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xl block">$50.000</span>
+                  <span className="text-xs opacity-80 uppercase tracking-wide">ARS / año</span>
+                </div>
               </button>
-            </>
-          )}
+            </div>
+            
+            <p className="text-center text-xs text-neutral-500 mt-5">
+              💳 Tarjetas de crédito, débito y dinero en Mercado Pago. Pagos 100% seguros.
+            </p>
+          </div>
+        )}
 
           {checkoutStep === 'payment' && loadingPlan && (
             <PaymentBrick 
