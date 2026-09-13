@@ -70,10 +70,20 @@ export async function POST(req: Request) {
           })
           
           console.log(`✅ User ${uid} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'})`)
-        } else if (status === 'rejected' || status === 'cancelled' || status === 'refunded') {
+        } else if (status === 'cancelled') {
+          // MP fires cancelled when user manually cancels or all retries fail.
+          // We DO NOT downgrade them immediately so they can enjoy their remaining days.
+          await userRef.update({
+            isSubscriptionCancelled: true,
+            planNotification: 'downgraded'
+          })
+          console.log(`⚠️ User ${uid} subscription cancelled but retains VIP until end date.`)
+        } else if (status === 'rejected' || status === 'refunded') {
+          // If a payment is refunded, or preapproval explicitly rejected before payment
           await userRef.update({
             plan: 'free',
-            planNotification: 'downgraded'
+            planNotification: 'downgraded',
+            isSubscriptionCancelled: true
           })
           console.log(`❌ User ${uid} downgraded to Free (Status: ${status})`)
         }
@@ -97,15 +107,40 @@ export async function POST(req: Request) {
 
       if (uid && status === 'approved') {
         const userRef = adminDb.collection('users').doc(uid)
-        const isAnnual = planType.toLowerCase().includes('anual')
-        const daysToAdd = isAnnual ? 365 : 30
-        const endsAt = new Date()
-        endsAt.setDate(endsAt.getDate() + daysToAdd)
+        
+        await adminDb.runTransaction(async (transaction) => {
+          const userDoc = await transaction.get(userRef)
+          if (!userDoc.exists) return
 
-        await userRef.update({
-          subscriptionEndsAt: endsAt
+          const userData = userDoc.data()
+          const processedPayments = userData?.processedPayments || []
+
+          // Idempotency check: if payment already processed, do nothing
+          if (processedPayments.includes(dataId)) {
+            console.log(`⚠️ Payment ${dataId} already processed for user ${uid}. Skipping.`)
+            return
+          }
+
+          const isAnnual = planType.toLowerCase().includes('anual')
+          const daysToAdd = isAnnual ? 365 : 30
+          
+          let endsAt = new Date()
+          if (userData?.subscriptionEndsAt) {
+             const currentEndsAt = userData.subscriptionEndsAt.toDate ? userData.subscriptionEndsAt.toDate() : new Date(userData.subscriptionEndsAt)
+             // Only extend from current date if it hasn't expired yet
+             if (currentEndsAt > new Date()) {
+                endsAt = currentEndsAt
+             }
+          }
+          endsAt.setDate(endsAt.getDate() + daysToAdd)
+
+          transaction.update(userRef, {
+            subscriptionEndsAt: endsAt,
+            processedPayments: FieldValue.arrayUnion(dataId),
+            isSubscriptionCancelled: false
+          })
+          console.log(`✅ User ${uid} subscription renewed. Added ${daysToAdd} days.`)
         })
-        console.log(`✅ User ${uid} subscription renewed. Added ${daysToAdd} days.`)
       }
     }
 
