@@ -2,25 +2,28 @@
 **Proyecto:** Lanvip 
 
 ### 1. Visión de Negocio
-Lanvip evolucionará de una herramienta gratuita (MVP de validación) a un modelo de ingresos de tres niveles:
-1. **Suscripción SaaS (Pro):** B2C para profesionales independientes.
-2. **High-Ticket Phygital (Setup VIP):** Venta de hardware (Tarjetas NFC) + Software.
-3. **Enterprise B2B (Lanvip Teams):** Flotas de perfiles controladas centralizadamente por corporaciones.
+Lanvip evolucionó de una herramienta de validación (Free) a un ecosistema SaaS premium (Freemium):
+1. **Suscripción SaaS (VIP):** Usuarios particulares pueden mejorar sus perfiles desbloqueando características de conversión avanzadas (Temas premium, sin marca de agua, analíticas exhaustivas).
+2. **Onboarding Consultivo (Sales):** A través del CRM interno, los administradores pueden otorgar pruebas VIP ("Trials" manuales temporales) a cuentas estratégicas para enamorarlas del servicio antes del cobro.
+3. **Phygital y B2B (Futuro):** Venta cruzada de hardware (Tarjetas NFC) y flotas de usuarios manejados por empresas.
 
-### 2. Impacto en el Modelo de Datos (Future-Proofing)
-El agente debe estructurar la base de datos en Firestore para soportar esta lógica de escalabilidad, añadiendo los siguientes campos desde el MVP:
+### 2. Estructura de Planes SaaS (Actual)
+El sistema actual reconoce dos grandes estados a través de la propiedad `plan` en el documento del usuario:
+- `plan: 'free'`: El usuario tiene acceso a su perfil base con marca de agua y temas estándar.
+- `plan: 'vip'`: El usuario ha desbloqueado las funciones avanzadas. Su plan expira al finalizar `subscriptionEndsAt` o se auto-renueva si la suscripción de Mercado Pago es exitosa.
 
-**Actualización Colección `users`:**
-- `planId`: Enum `['free', 'pro', 'team_member', 'team_admin']`. (Por defecto: `free`).
-- `organizationId`: Referencia nula por defecto, utilizada en el futuro para agrupar usuarios B2B.
-- `isNfcEnabled`: Booleano para trackear si el usuario adquirió el Setup VIP físico.
+**Opciones de Venta (UI Checkouts):**
+Los usuarios compran una de dos frecuencias dentro del plan VIP:
+- **Mensual:** Facturación mes a mes. Agrega 30 días con cada renovación automática.
+- **Anual:** Facturación completa anual, generalmente con descuento. Agrega 365 días con cada renovación.
 
-**Nueva Colección `organizations` (Preparación B2B):**
-- `{ id, name, adminUid, brandingSettings: { forceLogo, forceColors }, activeLicenses, maxLicenses }`
+### 3. Impacto en el Modelo de Datos (Firestore)
+- `plan`: Campo central `'free' | 'vip'`.
+- `planNotification`: Enum usado para mostrar alertas en el dashboard (ej. `'upgraded'`, `'downgraded'`, `'trial'`).
+- `subscriptionEndsAt`: Timestamp nativo que determina cuándo el usuario pierde acceso VIP si MercadoPago no cobra la renovación a tiempo.
+- `isSubscriptionCancelled`: Si el usuario interrumpió el cobro recurrente (pero retiene beneficios hasta `subscriptionEndsAt`).
 
-### 3. Reglas de Negocio en la Interfaz (UI)
-- **Feature Flags (Muros de Pago visuales):** El panel de administración debe estar preparado para renderizar un candado 🔒 o una etiqueta "PRO" en funcionalidades premium (ej. Analíticas Avanzadas, Dominio Personalizado). Al hacer tap, se debe mostrar un modal de "Próximamente / Upgrade" para validar la intención de pago de los early adopters.
-- **Onboarding:** El flujo de registro debe ser extremadamente simple para facilitar el "Onboarding Consultivo" manual que se hará con los primeros usuarios.
-
-### 4. Seguridad de Rutas y Roles
-- Implementar un middleware robusto en Next.js que valide el `planId` del usuario antes de permitir el acceso a rutas protegidas o configuraciones avanzadas del dashboard.
+### 4. Paneles de Seguridad (Feature Flags)
+El front-end implementa "Feature Flags" reactivos (`isVipActive`):
+- Los apartados "Temas", "Watermark", "Analíticas" comprueban el estatus `vip` e interponen un muro de pago ("Bloqueado") solicitando al usuario que mejore su plan con el componente `<UpgradeModal />`.
+- El acceso administrativo (CRM) está gobernado por el middleware y Firebase context a través de `role: 'admin' | 'superadmin'`.
