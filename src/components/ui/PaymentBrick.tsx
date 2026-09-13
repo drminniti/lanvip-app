@@ -44,11 +44,11 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
         })
       })
 
+      const text = await res.text()
       let data;
       try {
-        data = await res.json()
+        data = JSON.parse(text)
       } catch (e) {
-        const text = await res.text()
         throw new Error(`Server returned invalid JSON. Status: ${res.status}. Body: ${text.substring(0, 100)}`)
       }
 
