@@ -16,7 +16,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
   useEffect(() => {
     if (isOpen) {
-      // Reset state when opened
+      document.body.style.overflow = 'hidden'
       setCheckoutStep('selection')
       setLoadingPlan(null)
       
@@ -29,6 +29,12 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
         }
       }
       fetchToken()
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset'
     }
   }, [isOpen])
 
@@ -122,19 +128,42 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             </div>
             
             <p className="text-center text-xs text-neutral-500 mt-5">
-              💳 Tarjetas de crédito, débito y dinero en Mercado Pago. Pagos 100% seguros.
+              💳 Tarjetas de crédito y débito. Pagos 100% seguros con Mercado Pago.
             </p>
           </div>
         )}
 
-          {checkoutStep === 'payment' && loadingPlan && (
+        {checkoutStep === 'payment' && loadingPlan && (
+          <div className="text-left animate-in fade-in slide-in-from-right-4 duration-300">
+            <button 
+              onClick={() => setCheckoutStep('selection')}
+              className="text-[#A3A3A3] hover:text-white text-sm flex items-center gap-1 mb-4 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              Volver a los planes
+            </button>
+
+            <div className="bg-white/5 border border-white/10 rounded-xl p-4 flex justify-between items-center mb-2">
+              <div>
+                <h3 className="text-white font-medium">Lanvip VIP {loadingPlan === 'monthly' ? 'Mensual' : 'Anual'}</h3>
+                <p className="text-sm text-[#A3A3A3]">{loadingPlan === 'monthly' ? 'Facturado cada mes' : 'Facturado anualmente'}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-bold text-[#D4AF37] block">
+                  ${loadingPlan === 'monthly' ? '5.000' : '50.000'}
+                </span>
+                <span className="text-xs text-[#A3A3A3]">ARS</span>
+              </div>
+            </div>
+
             <PaymentBrick 
               planType={loadingPlan} 
               firebaseToken={firebaseToken}
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
             />
-          )}
+          </div>
+        )}
 
           {checkoutStep === 'success' && (
             <div className="p-6 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 font-medium">
@@ -145,7 +174,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
         <button 
           onClick={onClose}
-          disabled={loadingPlan !== null}
+          disabled={checkoutStep === 'success'}
           className="mt-6 text-[#A3A3A3] hover:text-white transition-colors text-sm disabled:opacity-50"
         >
           Quizás más tarde
