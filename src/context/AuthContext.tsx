@@ -32,7 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return () => {
-      if (unsubscribe) unsubscribe()
+      // Delay the unsubscribe slightly to prevent Firebase Auth from tearing down
+      // the listener if another component or Strict Mode immediately remounts.
+      if (unsubscribe) {
+        setTimeout(() => unsubscribe(), 100)
+      }
     }
   }, [])
 
