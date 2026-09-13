@@ -35,12 +35,26 @@ service cloud.firestore {
       allow read:  if true;
       
       allow create: if request.auth != null && (
-        (request.auth.uid == userId && !('role' in request.resource.data)) ||
+        (request.auth.uid == userId 
+          && (!('role' in request.resource.data) || request.resource.data.role == 'user')
+          && (!('plan' in request.resource.data) || request.resource.data.plan == 'free')
+          && !('subscriptionEndsAt' in request.resource.data)
+          && !('subscriptionId' in request.resource.data)
+          && !('isSubscriptionCancelled' in request.resource.data)
+          && !('processedPayments' in request.resource.data)
+        ) ||
         (isAdmin() && (!('role' in request.resource.data) || isSuperAdmin()))
       );
       
       allow update: if request.auth != null && (
-        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
+        (request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'role', 
+          'plan', 
+          'subscriptionEndsAt', 
+          'subscriptionId', 
+          'isSubscriptionCancelled', 
+          'processedPayments'
+        ])) ||
         (isAdmin() && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || isSuperAdmin()))
       );
       
