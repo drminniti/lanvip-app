@@ -85,8 +85,7 @@ export async function POST(req: Request) {
           // MP fires cancelled when user manually cancels or all retries fail.
           // We DO NOT downgrade them immediately so they can enjoy their remaining days.
           await userRef.update({
-            isSubscriptionCancelled: true,
-            planNotification: 'downgraded'
+            isSubscriptionCancelled: true
           })
           console.log(`⚠️ User ${uid} subscription cancelled but retains VIP until end date.`)
         } else if (status === 'rejected' || status === 'refunded') {
