@@ -100,8 +100,7 @@ export default function BillingPage() {
   if (isLifetimeVip) {
     formattedDate = 'Ilimitado (Acceso de por vida)'
   } else if (profile.subscriptionEndsAt) {
-    // Manejo seguro del Timestamp de Firebase
-    const dateObj = profile.subscriptionEndsAt.toDate ? profile.subscriptionEndsAt.toDate() : new Date(profile.subscriptionEndsAt)
+    const dateObj = profile.subscriptionEndsAt.toDate ? profile.subscriptionEndsAt.toDate() : new Date(profile.subscriptionEndsAt as any)
     formattedDate = dateObj.toLocaleDateString('es-AR', {
       year: 'numeric', month: 'long', day: 'numeric'
     })

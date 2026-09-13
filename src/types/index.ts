@@ -59,7 +59,6 @@ export interface UserProfile {
   role?: UserRole                 // Por defecto asume 'user' si no existe
   
   // ── Suscripción & Trials ──
-  plan: 'free' | 'vip'
   subscriptionEndsAt?: Timestamp | null  // Timestamp de fin de VIP o Trial
   subscriptionId?: string
   isSubscriptionCancelled?: boolean
