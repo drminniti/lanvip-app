@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
     if (!preapprovalPlanId) {
       console.error(`Missing Plan ID in env vars for planType: ${planType}`)
-      return NextResponse.json({ error: 'Internal Server Error: Plan ID not configured' }, { status: 500 })
+      return NextResponse.json({ error: 'Internal Server Error: Plan ID not configured' }, { status: 400 })
     }
 
     // 4. Crear la Intención de Suscripción (PreApproval) inyectando el UID en external_reference
@@ -63,8 +63,9 @@ export async function POST(req: Request) {
     const errorMsg = error?.message || String(error)
     console.error('Error in /api/checkout:', errorMsg)
     // Force a JSON string return using standard Response to completely avoid NextResponse weirdness
-    return new Response(JSON.stringify({ error: 'Internal Server Error', details: errorMsg }), {
-      status: 500,
+    // Return 400 instead of 500 to prevent Vercel from intercepting the error and stripping the body
+    return new Response(JSON.stringify({ error: 'Checkout Error', details: errorMsg }), {
+      status: 400,
       headers: { 'Content-Type': 'application/json' }
     })
   }
