@@ -5,8 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getFirebaseDb } from '@/lib/firebase'
 import { doc, updateDoc } from 'firebase/firestore'
 import type { UserProfile } from '@/types'
+import { usePaywall } from '@/context/PaywallContext'
 
 export default function PlanNotificationModal({ profile }: { profile: UserProfile }) {
+  const { openUpgradeModal } = usePaywall()
   const [isOpen, setIsOpen] = useState(!!profile.planNotification)
   const [isDismissing, setIsDismissing] = useState(false)
 
@@ -80,10 +82,9 @@ export default function PlanNotificationModal({ profile }: { profile: UserProfil
             <div className="w-full space-y-3">
               {profile.planNotification === 'downgraded' && (
                 <button
-                  onClick={() => {
-                    handleDismiss()
-                    // Si tuviéramos un checkout, redirigimos aquí. 
-                    // Por ahora solo cerramos el modal, pero podrías agregar router.push('/upgrade')
+                  onClick={async () => {
+                    await handleDismiss()
+                    openUpgradeModal()
                   }}
                   className="w-full bg-[#D4AF37] text-black font-bold py-3.5 rounded-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
                 >
