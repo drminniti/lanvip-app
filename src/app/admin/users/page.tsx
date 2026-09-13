@@ -17,6 +17,8 @@ export default function AdminUsersPage() {
   const [trialDays, setTrialDays] = useState('14')
   const [isUpdating, setIsUpdating] = useState(false)
   const [successMsg, setSuccessMsg] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [confirmRelease, setConfirmRelease] = useState(false)
 
   async function fetchUsers() {
     setLoading(true)
@@ -72,7 +74,8 @@ export default function AdminUsersPage() {
       setTimeout(() => setSuccessMsg(''), 3000)
     } catch (err) {
       console.error('Error updating user:', err)
-      alert('Error al actualizar usuario')
+      setErrorMsg('Error al actualizar usuario')
+      setTimeout(() => setErrorMsg(''), 3000)
     } finally {
       setIsUpdating(false)
     }
@@ -81,7 +84,11 @@ export default function AdminUsersPage() {
   async function handleGrantTrial() {
     if (!selectedUser) return
     const days = parseInt(trialDays)
-    if (isNaN(days) || days <= 0) return alert('Días inválidos')
+    if (isNaN(days) || days <= 0) {
+      setErrorMsg('Días inválidos')
+      setTimeout(() => setErrorMsg(''), 3000)
+      return
+    }
     
     const end = new Date()
     end.setDate(end.getDate() + days)
@@ -267,6 +274,23 @@ export default function AdminUsersPage() {
                 )}
               </AnimatePresence>
 
+              {/* Error Alert */}
+              <AnimatePresence>
+                {errorMsg && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="bg-red-500/20 border-b border-red-500/30 px-6 py-3"
+                  >
+                    <p className="text-sm text-red-400 font-medium flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                      {errorMsg}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Header */}
               <div className="p-6 border-b border-[#333333] flex justify-between items-center bg-white/5">
                 <div className="flex items-center gap-3">
@@ -338,35 +362,49 @@ export default function AdminUsersPage() {
                 <div className="bg-black/40 rounded-xl p-5 border border-white/5">
                   <h3 className="text-sm font-semibold text-white mb-2 text-red-400">Moderación</h3>
                   <p className="text-xs text-neutral-400 mb-4">Liberar el @username permite que otro usuario lo registre.</p>
+                  {!confirmRelease ? (
                   <button 
-                    onClick={async () => {
-                      if(confirm('¿Seguro que deseas liberar la URL de este usuario?')) {
-                        setIsUpdating(true)
-                        try {
-                          const db = getFirebaseDb()
-                          // 1. Borrar de la colección de usernames
-                          if (selectedUser.username) {
-                            const { deleteDoc } = await import('firebase/firestore')
-                            await deleteDoc(doc(db, 'usernames', selectedUser.username))
-                          }
-                          // 2. Limpiar del perfil
-                          await updateDoc(doc(db, 'users', selectedUser.uid), { username: '', hasCompletedOnboarding: false })
-                          // Actualizar estado local
-                          setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, username: '', hasCompletedOnboarding: false } : u))
-                          setSelectedUser(prev => prev ? { ...prev, username: '', hasCompletedOnboarding: false } : null)
-                        } catch (err) {
-                          console.error('Error al liberar URL:', err)
-                          alert('Error al liberar la URL')
-                        } finally {
-                          setIsUpdating(false)
-                        }
-                      }
-                    }}
+                    onClick={() => setConfirmRelease(true)}
                     disabled={isUpdating || !selectedUser.username}
                     className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 px-4 py-3 rounded-xl text-sm font-medium transition-colors w-full"
                   >
                     Liberar Username (@{selectedUser.username})
                   </button>
+                  ) : (
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={async () => {
+                        setIsUpdating(true)
+                        try {
+                          const db = getFirebaseDb()
+                          if (selectedUser.username) {
+                            const { deleteDoc } = await import('firebase/firestore')
+                            await deleteDoc(doc(db, 'usernames', selectedUser.username))
+                          }
+                          await updateDoc(doc(db, 'users', selectedUser.uid), { username: '', hasCompletedOnboarding: false })
+                          setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, username: '', hasCompletedOnboarding: false } : u))
+                          setSelectedUser(prev => prev ? { ...prev, username: '', hasCompletedOnboarding: false } : null)
+                          setConfirmRelease(false)
+                        } catch (err) {
+                          console.error('Error al liberar URL:', err)
+                          setErrorMsg('Error al liberar la URL')
+                          setTimeout(() => setErrorMsg(''), 3000)
+                        } finally {
+                          setIsUpdating(false)
+                        }
+                      }}
+                      className="flex-1 bg-red-500 text-white hover:bg-red-600 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                    >
+                      Sí, liberar
+                    </button>
+                    <button 
+                      onClick={() => setConfirmRelease(false)}
+                      className="flex-1 bg-white/5 text-white hover:bg-white/10 border border-white/10 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                  )}
                 </div>
 
                 {/* 4. Roles (Superadmin only) */}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { getAuth } from 'firebase/auth'
 import { PaymentBrick } from './PaymentBrick'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -13,12 +14,14 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const [loadingPlan, setLoadingPlan] = useState<'monthly' | 'annual' | null>(null)
   const [firebaseToken, setFirebaseToken] = useState<string>('')
   const [checkoutStep, setCheckoutStep] = useState<'selection' | 'payment' | 'success'>('selection')
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
       setCheckoutStep('selection')
       setLoadingPlan(null)
+      setPaymentError(null)
       
       const fetchToken = async () => {
         const auth = getAuth()
@@ -43,10 +46,11 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const handleSelectPlan = (planType: 'monthly' | 'annual') => {
     setLoadingPlan(planType)
     if (!firebaseToken) {
-      alert('Debes estar autenticado para realizar esta acción.')
+      setPaymentError('Debes estar autenticado para realizar esta acción.')
       setLoadingPlan(null)
       return
     }
+    setPaymentError(null)
     setCheckoutStep('payment')
   }
 
@@ -59,7 +63,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   }
 
   const handlePaymentError = (errorMsg: string) => {
-    alert(errorMsg)
+    setPaymentError(errorMsg)
     setCheckoutStep('selection')
     setLoadingPlan(null)
   }
@@ -93,6 +97,20 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Dominio Personalizado (Próximamente)</li>
               </ul>
             </div>
+
+            <AnimatePresence>
+              {paymentError && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 text-red-400 text-sm flex items-start gap-2 text-left"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <span>{paymentError}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="space-y-3">
               <button 
