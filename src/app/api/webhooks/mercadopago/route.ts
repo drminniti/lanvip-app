@@ -52,24 +52,35 @@ export async function POST(req: Request) {
         const userRef = adminDb.collection('users').doc(uid)
         
         if (status === 'approved' || status === 'authorized') {
-          const isAnnual = planType.toLowerCase().includes('anual') || subscriptionData.preapproval_plan_id === process.env.MP_ANNUAL_PLAN_ID
-          const daysToAdd = isAnnual ? 365 : 30
-          const endsAt = new Date()
-          endsAt.setDate(endsAt.getDate() + daysToAdd)
+          await adminDb.runTransaction(async (transaction) => {
+            const userDoc = await transaction.get(userRef)
+            if (!userDoc.exists) return
 
-          // Usamos la nomenclatura correcta (plan: 'vip')
-          await userRef.update({
-            plan: 'vip',
-            subscriptionEndsAt: FieldValue.serverTimestamp(),
-            planNotification: 'upgraded',
-            subscriptionId: dataId
+            const userData = userDoc.data()
+            const isAnnual = planType.toLowerCase().includes('anual') || subscriptionData.preapproval_plan_id === process.env.MP_ANNUAL_PLAN_ID
+            const daysToAdd = isAnnual ? 365 : 30
+            
+            let endsAt = new Date()
+            if (userData?.subscriptionEndsAt) {
+               const currentEndsAt = userData.subscriptionEndsAt.toDate ? userData.subscriptionEndsAt.toDate() : new Date(userData.subscriptionEndsAt)
+               // Solo extendemos si la fecha actual es mayor a hoy, para no arrastrar fechas vencidas
+               if (currentEndsAt > new Date()) {
+                  endsAt = currentEndsAt
+               }
+            }
+            endsAt.setDate(endsAt.getDate() + daysToAdd)
+
+            // Usamos la nomenclatura correcta (plan: 'vip')
+            transaction.update(userRef, {
+              plan: 'vip',
+              planNotification: 'upgraded',
+              subscriptionId: dataId,
+              isSubscriptionCancelled: false,
+              subscriptionEndsAt: endsAt
+            })
+            
+            console.log(`✅ User ${uid} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'}) - Date stacked.`)
           })
-          
-          await userRef.update({
-            subscriptionEndsAt: endsAt
-          })
-          
-          console.log(`✅ User ${uid} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'})`)
         } else if (status === 'cancelled') {
           // MP fires cancelled when user manually cancels or all retries fail.
           // We DO NOT downgrade them immediately so they can enjoy their remaining days.
