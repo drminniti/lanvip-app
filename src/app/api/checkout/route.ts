@@ -59,8 +59,24 @@ export async function POST(req: Request) {
     // 5. Retornamos success
     return NextResponse.json({ success: true, subscription_id: subscription.id })
 
-  } catch (error: unknown) {
-    const errorMsg = error instanceof Error ? error.message : String(error)
+  } catch (error: any) {
+    let errorMsg = 'Unknown error'
+    if (error && error.message) {
+      errorMsg = typeof error.message === 'string' ? error.message : JSON.stringify(error.message)
+    } else if (error && typeof error === 'object') {
+      errorMsg = JSON.stringify(error)
+    } else {
+      errorMsg = String(error)
+    }
+    
+    // Si es un error de la API de MercadoPago, suele venir en error.cause o error.response
+    if (error?.cause) {
+       errorMsg += ` | Cause: ${JSON.stringify(error.cause)}`
+    }
+    if (error?.response) {
+       errorMsg += ` | Response: ${JSON.stringify(error.response)}`
+    }
+    
     console.error('Error in /api/checkout:', errorMsg)
     // Force a JSON string return using standard Response to completely avoid NextResponse weirdness
     // Return 400 instead of 500 to prevent Vercel from intercepting the error and stripping the body
