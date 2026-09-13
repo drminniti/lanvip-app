@@ -65,10 +65,13 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
     console.log('Brick is ready')
   }
 
+  const monthlyPrice = parseInt(process.env.NEXT_PUBLIC_PRICE_MONTHLY?.replace(/\D/g, '') || '5000')
+  const annualPrice = parseInt(process.env.NEXT_PUBLIC_PRICE_ANNUAL?.replace(/\D/g, '') || '50000')
+
   return (
     <div className="w-full text-left mt-4 relative">
       <CardPayment
-        initialization={{ amount: planType === 'monthly' ? 15 : 20 }} // Monto ilustrativo para el Brick
+        initialization={{ amount: planType === 'monthly' ? monthlyPrice : annualPrice }} // Monto ilustrativo para el Brick
         onSubmit={onSubmit}
         onReady={onReady}
         onError={onErrorBrick}
