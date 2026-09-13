@@ -66,7 +66,7 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
   }
 
   return (
-    <div className="w-full text-left bg-white p-4 rounded-xl mt-4">
+    <div className="w-full text-left mt-4 relative">
       <CardPayment
         initialization={{ amount: planType === 'monthly' ? 5000 : 50000 }} // Monto ilustrativo para el Brick
         onSubmit={onSubmit}
@@ -75,7 +75,7 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
         customization={{
           visual: {
             style: {
-              theme: 'default'
+              theme: 'dark'
             }
           }
         }}
