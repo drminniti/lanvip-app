@@ -395,41 +395,82 @@ export default function ProfilePage() {
               disabled={saving}
             />
             
-            <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-white">Ocultar Marca de Agua</h3>
-                  {!isVip && (
-                    <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold tracking-wider">VIP</span>
-                  )}
+            <div className="mt-8 pt-6 border-t border-white/5">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-white">Marca de Agua</h3>
+                      {!isVip && (
+                        <span className="px-2 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] text-[10px] font-bold tracking-wider">VIP</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-neutral-400 mt-1">Oculta o personaliza el texto al final de tu página.</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium text-neutral-400">
+                      {profile.themeSettings.hideWatermark ? 'Oculta' : 'Visible'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!isVip) {
+                          openUpgradeModal()
+                          return
+                        }
+                        const currentThemeSettings = profile.themeSettings
+                        updateUserProfile(user!.uid, { 
+                          themeSettings: {
+                            ...currentThemeSettings,
+                            hideWatermark: !currentThemeSettings.hideWatermark
+                          }
+                        })
+                      }}
+                      className={`relative w-12 h-6 rounded-full transition-colors flex items-center px-1 ${
+                        (profile.themeSettings.hideWatermark && isVip) ? 'bg-[#D4AF37]' : 'bg-[#333]'
+                      }`}
+                    >
+                      <motion.div
+                        className="w-4 h-4 bg-white rounded-full shadow-md"
+                        animate={{ x: (profile.themeSettings.hideWatermark && isVip) ? 24 : 0 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      />
+                    </button>
+                  </div>
                 </div>
-                <p className="text-xs text-neutral-400 mt-1">Elimina el logo de Lanvip de tu landing pública.</p>
+
+                {/* Custom Watermark Input */}
+                {isVip && !profile.themeSettings.hideWatermark && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    className="pt-1"
+                  >
+                    <label className="text-xs text-neutral-400 mb-1.5 block">Texto Personalizado (Opcional)</label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Creado por [Tu Nombre]"
+                      defaultValue={profile.themeSettings.customWatermark || ''}
+                      onBlur={(e) => {
+                        const val = e.target.value.trim()
+                        if (val !== profile.themeSettings.customWatermark) {
+                          updateUserProfile(user!.uid, {
+                            themeSettings: {
+                              ...profile.themeSettings,
+                              customWatermark: val
+                            }
+                          })
+                        }
+                      }}
+                      className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 transition-colors"
+                      maxLength={40}
+                    />
+                    <p className="text-[10px] text-neutral-500 mt-1.5 text-right">
+                      Si lo dejas en blanco, se mostrará el logo de Lanvip. Guarda al salir del campo.
+                    </p>
+                  </motion.div>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  if (!isVip) {
-                    openUpgradeModal()
-                    return
-                  }
-                  const currentThemeSettings = profile.themeSettings
-                  updateUserProfile(user!.uid, { 
-                    themeSettings: {
-                      ...currentThemeSettings,
-                      hideWatermark: !currentThemeSettings.hideWatermark
-                    }
-                  })
-                }}
-                className={`relative w-12 h-6 rounded-full transition-colors flex items-center px-1 ${
-                  (profile.themeSettings.hideWatermark && isVip) ? 'bg-[#D4AF37]' : 'bg-[#333]'
-                }`}
-              >
-                <motion.div
-                  className="w-4 h-4 bg-white rounded-full shadow-md"
-                  animate={{ x: (profile.themeSettings.hideWatermark && isVip) ? 24 : 0 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-              </button>
             </div>
           </div>
 

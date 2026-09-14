@@ -869,25 +869,34 @@ function Content({ profile, blocks, isCustomTheme, accent, theme, isVipActive }:
           </div>
         )}
 
-        {/* Lanvip badge */}
+        {/* Lanvip badge / Custom Watermark */}
         {!(isVipActive && profile.themeSettings.hideWatermark) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-8 flex items-center gap-1.5"
+            className="mt-8 flex items-center justify-center gap-1.5"
           >
-            <a
-              href="https://lanvip.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 transition-opacity hover:opacity-100"
-              style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.75, textDecoration: 'none' }}
-            >
-              <LanvipLogo size={14} />
-              <span>Creado con</span>
-              <span style={{ color: `${accent}66`, fontWeight: 600 }}>Lanvip</span>
-            </a>
+            {isVipActive && profile.themeSettings.customWatermark ? (
+              <span 
+                className="text-sm tracking-wide"
+                style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.6, fontWeight: 500 }}
+              >
+                {profile.themeSettings.customWatermark}
+              </span>
+            ) : (
+              <a
+                href="https://lanvip.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 transition-opacity hover:opacity-100"
+                style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.75, textDecoration: 'none' }}
+              >
+                <LanvipLogo size={14} />
+                <span>Creado con</span>
+                <span style={{ color: `${accent}66`, fontWeight: 600 }}>Lanvip</span>
+              </a>
+            )}
           </motion.div>
         )}
     </>
