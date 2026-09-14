@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- **Unique CTR Metric**: Corrected the Global CTR calculation on the Analytics dashboard to accurately measure (Unique Users who clicked / Unique Views) instead of gross clicks. Included deduplication logic and a retrocompatible fallback for historical data. Added an informational modal to explain the metric to users.
 - **Custom VIP Watermark**: VIP users can now fully customize the text of the Lanvip watermark at the bottom of their profile, replacing the default branding with their own custom text.
 - **Security Audit & SSR Sandbox**: Created `src/lib/server/queries.ts` using Firebase Admin SDK to handle SSR queries, allowing us to lock down public collections.
 - **Data Sanitization**: Implemented a sanitizer on public pages to strip sensitive PII (emails, subscription details) from React Hydration state.
