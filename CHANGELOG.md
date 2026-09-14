@@ -1,8 +1,8 @@
 # Changelog
 
 ## [Unreleased]
-
 ### Added
+- **Custom VIP Watermark**: VIP users can now fully customize the text of the Lanvip watermark at the bottom of their profile, replacing the default branding with their own custom text.
 - **Security Audit & SSR Sandbox**: Created `src/lib/server/queries.ts` using Firebase Admin SDK to handle SSR queries, allowing us to lock down public collections.
 - **Data Sanitization**: Implemented a sanitizer on public pages to strip sensitive PII (emails, subscription details) from React Hydration state.
 - **Admin Mobile Responsiveness**: Added a mobile-friendly hamburger menu and sliding sidebar to the Admin Dashboard. Optimized paddings, flex-wrapping, and modal inputs for small screens on the Metrics and CRM pages.
