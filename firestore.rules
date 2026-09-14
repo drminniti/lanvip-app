@@ -18,9 +18,11 @@ service cloud.firestore {
       // Lectura pública para validación rápida de disponibilidad (debounce)
       allow read: if true;
       
-      // Creación permitida si el usuario asigna su propio UID (o si es Admin liberando una url, pero el admin borraría la URL del perfil, y este documento se borra. Sin embargo, para crear, siempre es su propio UID)
+      // Creación permitida si el usuario asigna su propio UID, la data contiene solo UID y createdAt, y el formato de username es válido (3-20 caracteres alfanuméricos)
       allow create: if request.auth != null 
-                    && request.resource.data.uid == request.auth.uid;
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['uid', 'createdAt'])
+                    && username.matches('^[a-z0-9_]{3,20}$');
                     
       // Actualización denegada para evitar secuestro de identidad
       allow update: if false;
@@ -32,7 +34,9 @@ service cloud.firestore {
 
     // ─── PERFILES DE USUARIO ───────────────────────────────────────────
     match /users/{userId} {
-      allow read:  if true;
+      // Los perfiles ya no son de lectura pública universal para proteger datos sensibles (emails, subs).
+      // El SSR usa Admin SDK para renderizar landings públicas.
+      allow read:  if request.auth != null && (request.auth.uid == userId || isAdmin());
       
       allow create: if request.auth != null && (
         (request.auth.uid == userId 
