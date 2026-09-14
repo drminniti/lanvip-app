@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 ### Added
+- **Security Audit & SSR Sandbox**: Created `src/lib/server/queries.ts` using Firebase Admin SDK to handle SSR queries, allowing us to lock down public collections.
+- **Data Sanitization**: Implemented a sanitizer on public pages to strip sensitive PII (emails, subscription details) from React Hydration state.
 - **Admin Mobile Responsiveness**: Added a mobile-friendly hamburger menu and sliding sidebar to the Admin Dashboard. Optimized paddings, flex-wrapping, and modal inputs for small screens on the Metrics and CRM pages.
 - **Global Custom 404 Page**: Added `not-found.tsx` to handle non-existent routes with a custom Lanvip aesthetic, reducing user frustration and providing clear navigation back to the app (`/` and `/dashboard`).
 - **Theme Engine 2.0**:
