@@ -1,7 +1,6 @@
 import { notFound }                   from 'next/navigation'
 import type { Metadata }              from 'next'
-import { getPublicProfileByUsername } from '@/lib/auth'
-import { getActiveBlocksByUserId }    from '@/lib/blocks'
+import { getPublicProfileByUsername, getActiveBlocksByUserId } from '@/lib/server/queries'
 import { PublicLanding }             from '@/components/public/PublicLanding'
 import type { UserProfile, Block }   from '@/types'
 
@@ -14,12 +13,22 @@ type Params = { username: string }
 type Serialized<T> = Omit<T, 'createdAt'> & { createdAt?: string | null }
 
 function serializeProfile(p: UserProfile): Serialized<UserProfile> {
-  const { createdAt, ...rest } = p
+  const { 
+    createdAt,
+    email,
+    role,
+    subscriptionEndsAt,
+    subscriptionId,
+    isSubscriptionCancelled,
+    planNotification,
+    ...rest 
+  } = p as any; // Cast to any to safely extract even if fields are technically missing from types sometimes
+
   return {
     ...rest,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createdAt: (createdAt as any)?.toDate?.()?.toISOString() ?? null,
-  }
+  } as Serialized<UserProfile>
 }
 
 function serializeBlocks(blocks: Block[]): Serialized<Block>[] {

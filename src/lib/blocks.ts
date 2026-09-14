@@ -137,22 +137,4 @@ export async function reorderBlocks(blocks: Block[]): Promise<void> {
   await batch.commit()
 }
 
-// ─── Read (one-shot, for SSR) ─────────────────────────────────────────────────
 
-/**
- * One-shot fetch of all active blocks for a user, ordered by `order` asc.
- * Used by the public SSR route /[username] — no subscription needed.
- *
- * Requires Firestore composite index: userId (Asc) + isActive (Asc) + order (Asc).
- * If missing, Firestore will throw with a link to create it.
- */
-export async function getActiveBlocksByUserId(userId: string): Promise<Block[]> {
-  const q = query(
-    collection(getFirebaseDb(), COL),
-    where('userId',   '==', userId),
-    where('isActive', '==', true),
-    orderBy('order', 'asc'),
-  )
-  const snap = await getDocs(q)
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as Block))
-}
