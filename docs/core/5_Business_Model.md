@@ -24,3 +24,9 @@ El agente debe estructurar la base de datos en Firestore para soportar esta lóg
 
 ### 4. Seguridad de Rutas y Roles
 - Implementar un middleware robusto en Next.js que valide el `planId` del usuario antes de permitir el acceso a rutas protegidas o configuraciones avanzadas del dashboard.
+
+### 5. Lógica de Expiración (Suscripciones)
+Para gestionar la transición entre VIP y Free de manera retrocompatible y robusta:
+- **Lifetime VIPs (Fase temprana):** Usuarios con `plan === 'vip'` pero sin `subscriptionEndsAt`. Mantienen el acceso VIP de manera indefinida.
+- **VIP Activo:** Usuarios con `plan === 'vip'` y un `subscriptionEndsAt` en el futuro.
+- **VIP Expirado:** Si un usuario cancela o el pago falla, la fecha `subscriptionEndsAt` pasará, pero su campo `plan` podría seguir siendo `'vip'` hasta que un proceso (ej. un cron job de downgrade) lo pase a `'free'`. El sistema (`useSubscription`) calcula dinámicamente si el plan expiró basándose en la fecha actual y revoca el acceso VIP en la UI inmediatamente, mostrando además banners de renovación.

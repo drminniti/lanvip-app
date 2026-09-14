@@ -101,6 +101,11 @@ service cloud.firestore {
 }
 ```
 
+#### 4.1 Endpoints de Administración (Admin SDK)
+Las consultas masivas (ej. listar todos los usuarios en el panel Admin) no se pueden realizar desde el cliente JS si las reglas de seguridad restringen el acceso por documento. Para solucionar esto, el panel Admin utiliza Server Actions o API Routes (`/api/admin/users`) que consumen el **Firebase Admin SDK**.
+- El Admin SDK hace un bypass total de las reglas de seguridad de Firestore.
+- La seguridad se garantiza verificando el token de Firebase (`Authorization: Bearer <token>`) en el endpoint y validando que el UID solicitante tenga rol de `admin` o `superadmin` en su propio documento.
+
 ### 5. Esquema de Datos Firestore
 
 **Colección `users`**
