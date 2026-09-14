@@ -1,8 +1,55 @@
 import { NextResponse } from 'next/server'
-import { Payment, PreApproval } from 'mercadopago'
+import { Payment, PreApproval, WebhookSignatureValidator, InvalidWebhookSignatureError } from 'mercadopago'
 import { getMpClient } from '@/lib/mercadopago'
 import { getAdminDb } from '@/lib/firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
+
+// ─── Webhook Signature Validation ─────────────────────────────────────────────
+/**
+ * Validates the HMAC-SHA256 signature that MercadoPago attaches to every
+ * webhook request.
+ *
+ * MP sends:
+ *   - Header  `x-signature`   : "ts=<timestamp>,v1=<hash>"
+ *   - Header  `x-request-id`  : UUID
+ *   - Query   `data.id`       : resource ID
+ *
+ * The validator builds `id:<data.id>;request-id:<x-req-id>;ts:<ts>;` and
+ * compares the HMAC-SHA256 against `v1` using MP_WEBHOOK_SECRET.
+ *
+ * If MP_WEBHOOK_SECRET is not set (local dev without the variable), we log a
+ * critical warning but allow the request through so development isn't blocked.
+ * In production Vercel has the secret, so it always validates.
+ *
+ * See: docs/core/7_Security.md §Webhooks
+ */
+function validateMpSignature(req: Request, dataId: string): boolean {
+  const secret = process.env.MP_WEBHOOK_SECRET
+  if (!secret) {
+    console.warn('[Webhook] ⚠️ CRITICAL: MP_WEBHOOK_SECRET not set — skipping signature validation. Set it in Vercel env vars!')
+    return true // allow in dev; production always has the secret
+  }
+
+  const xSignature = req.headers.get('x-signature') ?? ''
+  const xRequestId = req.headers.get('x-request-id') ?? ''
+
+  try {
+    WebhookSignatureValidator.validate({
+      xSignature,
+      xRequestId,
+      dataId,
+      secret,
+    })
+    return true
+  } catch (err) {
+    if (err instanceof InvalidWebhookSignatureError) {
+      console.error('[Webhook] ❌ Invalid signature — request rejected.')
+    } else {
+      console.error('[Webhook] ❌ Signature validation error:', err)
+    }
+    return false
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -23,6 +70,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: 'success' }, { status: 200 })
     }
 
+    // ── Signature validation (P0-A) ───────────────────────────────────────────
+    if (!validateMpSignature(req, String(dataId))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     let uid = ''
     let status = ''
     let planType = ''
@@ -37,7 +89,6 @@ export async function POST(req: Request) {
       status = subscriptionData.status || ''
       planType = subscriptionData.reason || 'Unknown'
       uid = subscriptionData.external_reference || ''
-      const payerEmail = subscriptionData.payer_email
 
       console.log('\n=============================================')
       console.log('✅ WEBHOOK RECIBIDO Y VALIDADO (MERCADO PAGO)')
