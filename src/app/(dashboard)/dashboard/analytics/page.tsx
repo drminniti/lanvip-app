@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { useUserBlocks } from '@/hooks/useUserBlocks'
@@ -14,12 +15,14 @@ function StatCard({
   icon,
   accent,
   delay,
+  onInfoClick,
 }: {
   label:  string
   value:  number | string
   icon:   string
   accent: string
   delay:  number
+  onInfoClick?: () => void
 }) {
   return (
     <motion.div
@@ -43,8 +46,56 @@ function StatCard({
       >
         {typeof value === 'number' ? value.toLocaleString('es-AR') : value}
       </p>
-      <p className="text-sm" style={{ color: '#A3A3A3' }}>{label}</p>
+      <div className="flex items-center gap-2">
+        <p className="text-sm" style={{ color: '#A3A3A3' }}>{label}</p>
+        {onInfoClick && (
+          <button 
+            onClick={onInfoClick}
+            className="w-4 h-4 rounded-full flex items-center justify-center border border-[#555] text-[#A3A3A3] hover:text-white hover:border-white transition-colors"
+            title="Información"
+          >
+            <span className="text-[10px] font-bold">i</span>
+          </button>
+        )}
+      </div>
     </motion.div>
+  )
+}
+
+function InfoModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="glass-card p-6 max-w-md w-full relative"
+          >
+            <button 
+              onClick={onClose}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-white"
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+              <span className="text-[#D4AF37]">ℹ</span> ¿Qué es el CTR Único?
+            </h3>
+            <p className="text-sm text-neutral-300 mb-4 leading-relaxed">
+              El <strong>Click-Through Rate (CTR)</strong> mide el porcentaje de visitantes que hicieron clic en alguno de tus enlaces.
+            </p>
+            <div className="bg-black/50 p-4 rounded-xl border border-white/10 mb-4">
+              <p className="text-xs text-neutral-400 mb-1">Fórmula:</p>
+              <p className="text-sm font-mono text-[#D4AF37]">Usuarios Únicos con clic / Visitas Únicas</p>
+            </div>
+            <p className="text-sm text-neutral-300 leading-relaxed">
+              <strong>Ejemplo:</strong> Si 10 personas distintas visitan tu perfil (10 visitas únicas) y 3 de ellas hacen clic en algún enlace, tu CTR será del <strong>30%</strong>, sin importar si esas 3 personas hicieron clic 20 veces en total.
+            </p>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   )
 }
 
@@ -108,6 +159,7 @@ export default function AnalyticsPage() {
   const { user }              = useAuth()
   const { profile, loading: pLoading } = useUserProfile(user?.uid)
   const { blocks,  loading: bLoading } = useUserBlocks(user?.uid)
+  const [showCtrInfo, setShowCtrInfo] = useState(false)
 
   const accent     = '#D4AF37'
   const isLoading  = pLoading || bLoading
@@ -116,8 +168,11 @@ export default function AnalyticsPage() {
   const totalViews  = profile?.views ?? 0
   const totalClicks = blocks.reduce((sum, b) => sum + (b.clickCount ?? 0), 0)
   const activeCount = blocks.filter(b => b.isActive).length
-  const ctr         = totalViews > 0
-    ? `${((totalClicks / totalViews) * 100).toFixed(1)} %`
+  
+  // Retrocompatible unique CTR:
+  const uniqueClicks = profile?.uniqueClicks ?? Math.min(totalClicks, totalViews)
+  const ctr = totalViews > 0
+    ? `${((uniqueClicks / totalViews) * 100).toFixed(1)} %`
     : '—'
 
   // Blocks sorted by clickCount desc (only active ones)
@@ -178,13 +233,16 @@ export default function AnalyticsPage() {
           delay={0.19}
         />
         <StatCard
-          label="CTR (clics / visitas)"
+          label="CTR Único"
           value={ctr}
           icon="📈"
           accent={accent}
           delay={0.26}
+          onInfoClick={() => setShowCtrInfo(true)}
         />
       </div>
+
+      <InfoModal isOpen={showCtrInfo} onClose={() => setShowCtrInfo(false)} />
 
       {/* Top blocks */}
       {topBlocks.length > 0 && (

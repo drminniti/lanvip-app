@@ -58,13 +58,41 @@ export async function trackPageView(uid: string): Promise<void> {
 
 // ─── Click counter ────────────────────────────────────────────────────────────
 
+const CLICK_SESSION_KEY_PREFIX = 'lanvip_clicked_profile_'
+
 /**
- * Increments the `clickCount` counter on a block document.
+ * Tracks a unique click on the profile level.
+ * Called automatically by incrementClickCount.
+ */
+async function trackUniqueProfileClick(uid: string): Promise<void> {
+  if (typeof window === 'undefined') return
+  const key = `${CLICK_SESSION_KEY_PREFIX}${uid}`
+  if (sessionStorage.getItem(key)) return
+
+  sessionStorage.setItem(key, '1')
+  const db  = getFirebaseDb()
+  const ref = doc(db, 'users', uid)
+  // Ensure uniqueClicks field exists and increments.
+  await updateDoc(ref, { uniqueClicks: increment(1) }).catch(err => {
+    console.error('Failed to update uniqueClicks:', err)
+  })
+}
+
+/**
+ * Increments the `clickCount` counter on a block document,
+ * and also records a unique click at the profile level for CTR.
  * Called client-side from PublicLanding when a visitor clicks a tile.
  * Fire-and-forget: caller should not await this to avoid blocking navigation.
  */
-export async function incrementClickCount(blockId: string): Promise<void> {
+export async function incrementClickCount(blockId: string, uid: string): Promise<void> {
   const db  = getFirebaseDb()
   const ref = doc(db, 'blocks', blockId)
-  await updateDoc(ref, { clickCount: increment(1) })
+  
+  // Fire both updates in parallel without blocking each other
+  Promise.all([
+    updateDoc(ref, { clickCount: increment(1) }),
+    trackUniqueProfileClick(uid)
+  ]).catch(err => {
+    console.error('Error incrementing clicks:', err)
+  })
 }

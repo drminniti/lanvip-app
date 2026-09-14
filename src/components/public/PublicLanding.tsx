@@ -93,7 +93,7 @@ function BentoTile({
         whileTap={{ scale: 0.96 }}
         onClick={() => {
           downloadVCard(block.content, profileDisplayName)
-          void incrementClickCount(block.id)
+          void incrementClickCount(block.id, block.userId)
         }}
         className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4 w-full text-left`}
         style={{ borderColor: `${tileColor}35`, cursor: 'pointer' }}
@@ -164,7 +164,7 @@ function BentoTile({
               setTimeout(() => setCopiedEmail(false), 2000)
             }
           }
-          void incrementClickCount(block.id)
+          void incrementClickCount(block.id, block.userId)
         }}
         className={`${colClass} bento-tile flex items-center justify-between gap-3 px-4 py-4`}
         style={{ textDecoration: 'none', borderColor: `${tileColor}35`, cursor: 'pointer' }}
@@ -213,7 +213,7 @@ function BentoTile({
             navigator.clipboard.writeText(emailAddress)
             setCopiedEmail(true)
             setTimeout(() => setCopiedEmail(false), 2000)
-            void incrementClickCount(block.id)
+            void incrementClickCount(block.id, block.userId)
           }}
           className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/10 active:bg-white/20"
           style={{ background: copiedEmail ? '#22c55e22' : 'rgba(255,255,255,0.06)', position: 'relative', zIndex: 2 }}
@@ -246,7 +246,7 @@ function BentoTile({
         transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.96 }}
-        onClick={() => void incrementClickCount(block.id)}
+        onClick={() => void incrementClickCount(block.id, block.userId)}
         className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4`}
         style={{ textDecoration: 'none', borderColor: `${tileColor}35`, cursor: 'pointer' }}
         aria-label={block.content.title}
@@ -333,7 +333,7 @@ function BentoTile({
                 flushSync(() => {
                   setIsPlaying(true)
                 })
-                void incrementClickCount(block.id)
+                void incrementClickCount(block.id, block.userId)
               }}
             >
               <img
@@ -364,7 +364,7 @@ function BentoTile({
           whileTap={{ scale: 0.96 }}
           onClick={() => {
             setShowLightbox(true)
-            void incrementClickCount(block.id)
+            void incrementClickCount(block.id, block.userId)
           }}
           className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4 w-full text-left`}
           style={{ borderColor: isFeatured ? `${accent}73` : `rgba(239,68,68,0.28)`, cursor: 'pointer' }}
@@ -458,7 +458,7 @@ function BentoTile({
         boxShadow: isFeatured ? `0 0 24px ${accent}66` : 'none'
       }}
       whileTap={{ scale: 0.96 }}
-      onClick={() => { if (block.content.url) void incrementClickCount(block.id) }}
+      onClick={() => { if (block.content.url) void incrementClickCount(block.id, block.userId) }}
       className={`${colClass} bento-tile flex items-center gap-3 px-4 py-4`}
       style={{
         textDecoration: 'none',

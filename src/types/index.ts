@@ -42,6 +42,7 @@ export interface UserProfile {
   avatarUrl: string
   themeSettings: ThemeSettings
   views: number
+  uniqueClicks?: number
   createdAt: Timestamp
   /**
    * Tracks whether the user has completed the onboarding flow (chosen their
