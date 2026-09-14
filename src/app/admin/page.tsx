@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { collection, query, getDocs, orderBy, Timestamp } from 'firebase/firestore'
-import { getFirebaseDb } from '@/lib/firebase'
+import { getFirebaseAuth } from '@/lib/firebase'
 import type { UserProfile } from '@/types'
 import { motion } from 'framer-motion'
 
@@ -19,11 +18,22 @@ export default function AdminDashboardPage() {
     async function fetchUsers() {
       setLoading(true)
       try {
-        const db = getFirebaseDb()
-        const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'))
-        const snapshot = await getDocs(q)
-        const loaded = snapshot.docs.map(doc => doc.data() as UserProfile)
-        setUsers(loaded)
+        const auth = getFirebaseAuth()
+        const user = auth.currentUser
+        if (!user) {
+          console.error('[Admin] No authenticated user')
+          return
+        }
+        const token = await user.getIdToken()
+        const res = await fetch('/api/admin/users', {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.status === 401 || res.status === 403) {
+          console.error('[Admin] Forbidden: this account does not have admin role.')
+          return
+        }
+        const data = await res.json()
+        setUsers(data.users ?? [])
       } catch (err) {
         console.error('Error fetching users:', err)
       } finally {
@@ -32,6 +42,16 @@ export default function AdminDashboardPage() {
     }
     fetchUsers()
   }, [])
+
+  // Parses a date value that can be a Firestore Timestamp, ISO string, or null.
+  // The API returns ISO strings; Timestamps arrive only in local dev.
+  function parseDate(val: any): Date | null {
+    if (!val) return null
+    if (typeof val === 'string') return new Date(val)
+    if (typeof val.toDate === 'function') return val.toDate()
+    if (typeof val.seconds === 'number') return new Date(val.seconds * 1000)
+    return null
+  }
 
   // Filter users based on date
   const filteredUsers = useMemo(() => {
@@ -51,7 +71,8 @@ export default function AdminDashboardPage() {
 
     return users.filter(u => {
       if (!u.createdAt) return false
-      const created = (u.createdAt as any).toDate() // Timestamp to Date
+      const created = parseDate(u.createdAt)
+      if (!created) return false
       return created >= start && created <= end
     })
   }, [users, dateRange, customStartDate, customEndDate])
@@ -68,8 +89,8 @@ export default function AdminDashboardPage() {
   // count how many have a subscriptionEndsAt in the future.
   const activeTrials = vips.filter(u => {
     if (!u.subscriptionEndsAt) return false
-    const ends = (u.subscriptionEndsAt as any).toDate()
-    return ends > now
+    const ends = parseDate(u.subscriptionEndsAt)
+    return !!ends && ends > now
   }).length
 
   return (
