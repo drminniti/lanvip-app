@@ -7,6 +7,7 @@ import { getFirebaseAuth, getFirebaseDb } from '@/lib/firebase'
 import { UserProfile } from '@/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePaywall } from '@/context/PaywallContext'
+import { useSubscription } from '@/hooks/useSubscription'
 
 export default function BillingPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -16,6 +17,7 @@ export default function BillingPage() {
 
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [modalMessage, setModalMessage] = useState<{ title: string; desc: string; isError?: boolean } | null>(null)
+  const { isVip, isVipExpired, daysUntilExpiry } = useSubscription()
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -91,8 +93,6 @@ export default function BillingPage() {
     return <div className="p-8 text-white">No se pudo cargar el perfil.</div>
   }
 
-  const isVip = profile.plan === 'vip'
-  // Es lifetime si no tiene ID de suscripción de MP, o si no tiene fecha de fin (asignado manualmente)
   const isLifetimeVip = isVip && (!profile.subscriptionId || !profile.subscriptionEndsAt)
   const isCancelled = profile.isSubscriptionCancelled && !isLifetimeVip
 

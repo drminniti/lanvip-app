@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useDashboard } from '@/context/DashboardContext'
+import { useSubscription } from '@/hooks/useSubscription'
+import { usePaywall } from '@/context/PaywallContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -12,6 +14,34 @@ function SkeletonCard({ className = '' }: { className?: string }) {
       <div className="h-4 w-3/4 rounded-full" style={{ background: '#2A2A2A' }} />
       <div className="h-3 w-1/2 rounded-full mt-3" style={{ background: '#222222' }} />
     </div>
+  )
+}
+
+// ─── VIP Expired Banner ─────────────────────────────────────────────────────
+function VipExpiredBanner({ onRenew }: { onRenew: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-2xl px-5 py-4 flex items-center gap-4"
+      style={{
+        background: 'rgba(239,68,68,0.07)',
+        border: '1px solid rgba(239,68,68,0.25)',
+      }}
+    >
+      <span className="text-xl flex-shrink-0">⚠️</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold" style={{ color: '#FCA5A5' }}>Tu plan VIP ha expirado</p>
+        <p className="text-xs mt-0.5" style={{ color: '#A3A3A3' }}>Renovalo para recuperar tus temas premium y funciones exclusivas.</p>
+      </div>
+      <button
+        onClick={onRenew}
+        className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-colors"
+        style={{ background: '#D4AF37', color: '#000' }}
+      >
+        Renovar
+      </button>
+    </motion.div>
   )
 }
 
@@ -243,6 +273,8 @@ export default function DashboardPage() {
   // No new onSnapshot is created — this resolves instantly from cached state.
   const { user }                         = useAuth()
   const { profile, loading }             = useDashboard()
+  const { isVip, isVipExpired }          = useSubscription()
+  const { openUpgradeModal }             = usePaywall()
 
   if (loading) {
     return (
@@ -307,6 +339,9 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
+      {/* ── VIP Expired Banner ────────────────────────────────────────────── */}
+      {isVipExpired && <VipExpiredBanner onRenew={openUpgradeModal} />}
+
       {/* ── Plan Actual ───────────────────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -325,18 +360,7 @@ export default function DashboardPage() {
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium" style={{ color: '#A3A3A3' }}>Plan actual</p>
           <p className="text-base font-bold" style={{ color: '#F5F5F5' }}>
-            {(() => {
-              let isVipActive = profile?.plan === 'vip'
-              if (isVipActive && profile?.subscriptionEndsAt) {
-                const ends = typeof (profile.subscriptionEndsAt as any).toDate === 'function' 
-                  ? (profile.subscriptionEndsAt as any).toDate() 
-                  : new Date((profile.subscriptionEndsAt as any).seconds * 1000)
-                if (ends < new Date()) {
-                  isVipActive = false
-                }
-              }
-              return isVipActive ? 'VIP' : 'Free'
-            })()}
+            {isVip ? 'VIP' : 'Free'}
           </p>
         </div>
         <span
