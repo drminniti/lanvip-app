@@ -879,8 +879,7 @@ function Content({ profile, blocks, isCustomTheme, accent, theme, isVipActive }:
           >
             {isVipActive && profile.themeSettings.customWatermark ? (
               <span 
-                className="text-sm tracking-wide"
-                style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.6, fontWeight: 500 }}
+                style={{ color: 'var(--theme-text, #FFFFFF)', opacity: 0.75 }}
               >
                 {profile.themeSettings.customWatermark}
               </span>
