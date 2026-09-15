@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/downgrade-expired-vips",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
