@@ -23,3 +23,11 @@ Para operaciones masivas y sin restricción de reglas (como listar usuarios en e
 Las reglas de seguridad de Firestore (ver `2_Architecture.md`) prohíben operaciones de lectura globales desde el cliente.
 - `users`: Un usuario sólo puede escribir su propio documento. La lectura está abierta (`true`) para renderizar páginas públicas (`/username`).
 - `blocks`: Lectura pública (`true`), escritura restringida al creador (`request.auth.uid == resource.data.userId`).
+
+### 4. Cron Jobs
+El cron job de downgrade (`/api/cron/downgrade-expired-vips`) se ejecuta diariamente a las 03:00 UTC desde la infraestructura de Vercel.
+- Vercel envía automáticamente el header `Authorization: Bearer <CRON_SECRET>` en cada invocación.
+- El endpoint valida ese header contra la variable de entorno `CRON_SECRET`. Sin ese header, retorna 401.
+- El endpoint NO requiere un token de Firebase Auth porque está pensado para ser invocado exclusivamente por Vercel, no por usuarios.
+- En desarrollo local (sin `CRON_SECRET`), el endpoint omite el chequeo y loggea una advertencia. En producción, `CRON_SECRET` siempre está seteada en Vercel.
+- El cron escribe directamente a Firestore a través del Admin SDK, sin pasar por las reglas de seguridad públicas.
