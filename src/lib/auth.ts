@@ -130,14 +130,6 @@ export async function registerWithEmail(
     console.error('[Lanvip] registerWithEmail — failed to send custom verification email:', verifyErr)
   }
 
-  // Trigger welcome email (fire-and-forget)
-  user.getIdToken().then(token => {
-    fetch('/api/emails/welcome', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).catch(err => console.error('[Lanvip] Failed to trigger welcome email:', err))
-  }).catch(err => console.error('[Lanvip] Failed to get ID token for welcome email:', err))
-
   console.info('[Lanvip] registerWithEmail — success, uid:', user.uid)
   return user
 }

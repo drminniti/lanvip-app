@@ -33,6 +33,14 @@ export default function VerifyEmailPage() {
         try {
           await user.reload()
           if (user.emailVerified) {
+            // Trigger welcome email (safe, API deduplicates)
+            user.getIdToken().then(token => {
+              fetch('/api/emails/welcome', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+              }).catch(console.error)
+            }).catch(console.error)
+
             document.cookie = '__session=1; path=/; SameSite=Lax'
             router.push('/dashboard')
           }
@@ -74,6 +82,14 @@ export default function VerifyEmailPage() {
     try {
       await user.reload()
       if (user.emailVerified) {
+        // Trigger welcome email (safe, API deduplicates)
+        user.getIdToken().then(token => {
+          fetch('/api/emails/welcome', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          }).catch(console.error)
+        }).catch(console.error)
+
         document.cookie = '__session=1; path=/; SameSite=Lax'
         router.push('/dashboard')
       } else {

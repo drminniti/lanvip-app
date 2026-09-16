@@ -36,6 +36,16 @@ export default function LoginPage() {
   // the AuthContext re-render propagates.
   useEffect(() => {
     if (!authLoading && user) {
+      if (user.emailVerified) {
+        // Trigger welcome email (safe, API deduplicates)
+        user.getIdToken().then(token => {
+          fetch('/api/emails/welcome', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+          }).catch(console.error)
+        }).catch(console.error)
+      }
+      
       document.cookie = '__session=1; path=/; SameSite=Lax'
       router.push('/dashboard')
     }

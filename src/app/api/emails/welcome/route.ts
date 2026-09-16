@@ -29,6 +29,11 @@ export async function POST(req: Request) {
     const username = userData?.username
     const displayName = userData?.displayName || 'Creador'
 
+    // Evitar envíos duplicados
+    if (userData?.welcomeEmailSent) {
+      return NextResponse.json({ ok: true, message: 'Welcome email already sent' })
+    }
+
     // Get email from Firebase Auth (not stored in Firestore by default)
     const userRecord = await getAdminAuth().getUser(uid)
     const email = userRecord.email
@@ -39,6 +44,9 @@ export async function POST(req: Request) {
 
     // Fire and forget email sending
     await sendWelcomeEmail(email, displayName, username)
+
+    // Mark as sent
+    await getAdminDb().collection('users').doc(uid).update({ welcomeEmailSent: true })
 
     return NextResponse.json({ ok: true })
   } catch (error) {
