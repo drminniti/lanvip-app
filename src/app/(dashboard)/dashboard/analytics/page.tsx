@@ -193,9 +193,9 @@ function DailyBarChart({ daily, accent }: { daily: { date: string; views: number
 
 // ─── VIP: Breakdown row ───────────────────────────────────────────────────────
 function BreakdownRow({ label, pct, count, accent }: { label: string; pct: number; count: number; accent: string }) {
-  // Country flag emoji from 2-letter ISO code
+  // Country flag emoji from 2-letter ISO code (Regional Indicator Symbols start at 0x1F1E6 for 'A')
   const flag = /^[A-Z]{2}$/.test(label)
-    ? String.fromCodePoint(...[...label].map(c => 0x1F1E0 - 65 + c.charCodeAt(0)))
+    ? String.fromCodePoint(...[...label].map(c => c.charCodeAt(0) + 127397))
     : null
 
   return (
