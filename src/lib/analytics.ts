@@ -53,8 +53,21 @@ export async function trackPageView(uid: string): Promise<void> {
 
   const db  = getFirebaseDb()
   const ref = doc(db, 'users', uid)
-  await updateDoc(ref, { views: increment(1) })
+
+  // Fire both writes in parallel:
+  //   1. Existing cumulative counter (Free + VIP — always visible)
+  //   2. Server-side enriched event (country, device, referrer) → daily subcollection
+  //      Written for ALL users so Free→VIP upgrades immediately see historical data.
+  await Promise.all([
+    updateDoc(ref, { views: increment(1) }),
+    fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid }),
+    }).catch(() => { /* fire-and-forget — tracking failure must never break the page */ }),
+  ])
 }
+
 
 // ─── Click counter ────────────────────────────────────────────────────────────
 
