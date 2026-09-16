@@ -76,6 +76,7 @@ export type BlockType =
   | 'email'
   | 'video'
   | 'image'
+  | 'spotify'
   | 'text'
   | 'music'
   // ── Structural blocks (no click action, always full-width) ───────────────
@@ -100,6 +101,7 @@ export interface BlockContent {
   description?: string  // optional subtitle shown below the title
   thumbnailUrl?: string
   embedId?: string    // for YouTube / Spotify
+  embedType?: string  // for Spotify (track, album, playlist, episode, show)
   autoplay?: boolean  // for YouTube
   displayMode?: 'player' | 'button' // for YouTube
 
