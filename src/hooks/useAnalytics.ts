@@ -31,13 +31,13 @@ export interface AnalyticsSummary {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Returns the last N days as 'YYYY-MM-DD' strings, ascending. */
+/** Returns the last N days as 'YYYY-MM-DD' strings in Argentina time, ascending. */
 function lastNDays(n: number): string[] {
   const days: string[] = []
   for (let i = n - 1; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
-    days.push(d.toISOString().slice(0, 10))
+    days.push(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(d))
   }
   return days
 }

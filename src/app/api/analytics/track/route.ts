@@ -22,7 +22,7 @@ import { FieldValue } from 'firebase-admin/firestore'
  */
 
 function getTodayKey(): string {
-  return new Date().toISOString().slice(0, 10)
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date())
 }
 
 function parseDevice(ua: string): 'mobile' | 'desktop' | 'tablet' {
