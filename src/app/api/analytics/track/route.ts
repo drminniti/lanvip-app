@@ -16,7 +16,7 @@ import { FieldValue } from 'firebase-admin/firestore'
  *   - Referrer → `Referer` header from browser.
  *
  * Storage: `users/{uid}/analytics/{YYYY-MM-DD}` (one doc per day per user).
- * Uses `merge: true` + `FieldValue.increment()` — atomic, no race conditions.
+ * Uses a transaction to handle both new (initialize) and existing (increment) docs.
  *
  * Privacy:
  *   - No IP addresses are stored.
@@ -47,7 +47,6 @@ function parseReferrer(referer: string | null): string {
   try {
     const url = new URL(referer)
     const hostname = url.hostname.replace(/^www\./, '')
-    // Normalize common referrers to readable labels
     if (hostname.includes('instagram')) return 'instagram'
     if (hostname.includes('facebook') || hostname.includes('fb.')) return 'facebook'
     if (hostname.includes('twitter') || hostname.includes('x.com')) return 'x'
@@ -55,8 +54,8 @@ function parseReferrer(referer: string | null): string {
     if (hostname.includes('tiktok')) return 'tiktok'
     if (hostname.includes('whatsapp')) return 'whatsapp'
     if (hostname.includes('google')) return 'google'
-    if (hostname.includes('lanvip')) return 'direct' // self-referral
-    return hostname // e.g. "reddit.com", "t.me"
+    if (hostname.includes('lanvip')) return 'direct'
+    return hostname
   } catch {
     return 'direct'
   }
@@ -80,25 +79,40 @@ export async function POST(req: Request) {
     const dateKey  = getTodayKey()
 
     // ── Write to daily analytics subcollection ──────────────────────────────
-    const db      = getAdminDb()
-    const docRef  = db.collection('users').doc(uid).collection('analytics').doc(dateKey)
+    // Use a transaction to handle both "new doc" (initialize with 1) and
+    // "existing doc" (increment). This is more reliable than set+merge+increment
+    // which can behave differently across Firestore Admin SDK versions.
+    const db     = getAdminDb()
+    const docRef = db.collection('users').doc(uid).collection('analytics').doc(dateKey)
 
-    await docRef.set(
-      {
-        date:    dateKey,
-        views:   FieldValue.increment(1),
-        [`countries.${country}`]: FieldValue.increment(1),
-        [`devices.${device}`]:    FieldValue.increment(1),
-        [`referrers.${referrer}`]: FieldValue.increment(1),
-      },
-      { merge: true }
-    )
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(docRef)
+
+      if (!snap.exists) {
+        // First event of the day — create the document
+        tx.set(docRef, {
+          date:                       dateKey,
+          views:                      1,
+          [`countries.${country}`]:   1,
+          [`devices.${device}`]:      1,
+          [`referrers.${referrer}`]:  1,
+        })
+      } else {
+        // Document already exists — increment all counters
+        tx.update(docRef, {
+          views:                      FieldValue.increment(1),
+          [`countries.${country}`]:   FieldValue.increment(1),
+          [`devices.${device}`]:      FieldValue.increment(1),
+          [`referrers.${referrer}`]:  FieldValue.increment(1),
+        })
+      }
+    })
 
     return NextResponse.json({ ok: true })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[Analytics Track] Error:', msg)
-    // Return 200 anyway — we never want a tracking failure to interrupt the user experience
+    // Return 200 anyway — tracking failure must never break the user experience
     return NextResponse.json({ ok: false, error: msg }, { status: 200 })
   }
 }
