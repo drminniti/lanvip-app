@@ -12,13 +12,18 @@ export async function POST(req: NextRequest) {
     const auth = getAdminAuth()
     
     // Generate the email verification link using Admin SDK
-    const link = await auth.generateEmailVerificationLink(email)
+    const originalLink = await auth.generateEmailVerificationLink(email)
+    
+    // Replace the default firebaseapp.com domain with our own domain
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const urlObj = new URL(originalLink)
+    const customLink = `${origin}/action${urlObj.search}`
     
     // Use the displayName if provided, else use email part
     const displayName = name || email.split('@')[0]
     
     // Send it through our own Resend setup with the custom template
-    await sendVerificationEmailTemplate(email, displayName, link)
+    await sendVerificationEmailTemplate(email, displayName, customLink)
     
     return NextResponse.json({ success: true })
   } catch (error: any) {

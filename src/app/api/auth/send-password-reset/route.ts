@@ -24,10 +24,15 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate the password reset link using Admin SDK
-    const link = await auth.generatePasswordResetLink(email)
+    const originalLink = await auth.generatePasswordResetLink(email)
+    
+    // Replace the default firebaseapp.com domain with our own domain
+    const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const urlObj = new URL(originalLink)
+    const customLink = `${origin}/action${urlObj.search}`
     
     // Send it through our own Resend setup with the custom template
-    await sendPasswordResetEmailTemplate(email, link)
+    await sendPasswordResetEmailTemplate(email, customLink)
     
     return NextResponse.json({ success: true })
   } catch (error: any) {
