@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { applyActionCode, confirmPasswordReset } from 'firebase/auth'
@@ -19,6 +19,8 @@ function ActionPageContent() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [newPassword, setNewPassword] = useState('')
+  
+  const hasAttemptedRef = useRef(false)
 
   useEffect(() => {
     if (!mode || !oobCode) {
@@ -26,6 +28,9 @@ function ActionPageContent() {
       setLoading(false)
       return
     }
+
+    if (hasAttemptedRef.current) return
+    hasAttemptedRef.current = true
 
     // Auto-apply verifyEmail immediately
     if (mode === 'verifyEmail') {
