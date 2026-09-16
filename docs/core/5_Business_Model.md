@@ -47,3 +47,9 @@ El agente debe estructurar la base de datos en Firestore para soportar esta lóg
 - **VIPs activos:** `subscriptionEndsAt > now` → SKIP.
 - **VIPs expirados:** El cron los baja a `free` con `planNotification: 'downgraded'`.
 - El campo `subscriptionId` y `subscriptionEndsAt` se mantienen para auditoría post-downgrade.
+
+### 6. Experiencia de Pago y Manejo de Errores (UX)
+Para mantener la confianza del usuario durante el checkout, los errores devueltos por la API de MercadoPago (generalmente en inglés y muy técnicos, ej. "Card token was used") se interceptan en el backend (`/api/checkout/route.ts`).
+- Se utiliza la utilidad `translateMPError` (`src/lib/mercadopago-errors.ts`) para mapear estos códigos a mensajes amigables en español.
+- El frontend renderiza el `localizedMessage` en la interfaz de usuario.
+- Los errores técnicos originales se preservan en los logs del servidor para facilitar el debugging.
