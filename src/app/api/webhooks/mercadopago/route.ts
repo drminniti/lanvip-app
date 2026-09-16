@@ -113,6 +113,11 @@ export async function POST(req: Request) {
             if (!userDoc.exists) return
 
             const userData = userDoc.data()
+            if (userData?.subscriptionId === dataId && userData?.plan === 'vip') {
+              console.log(`⚠️ Preapproval ${dataId} already processed for user ${uid}. Skipping.`)
+              return
+            }
+
             if (userData?.displayName) displayName = userData.displayName
             isAnnual = planType.toLowerCase().includes('anual') || subscriptionData.preapproval_plan_id === process.env.MP_ANNUAL_PLAN_ID
             const daysToAdd = isAnnual ? 365 : 30
@@ -231,18 +236,8 @@ export async function POST(req: Request) {
             isSubscriptionCancelled: false
           })
           
-          shouldSendEmail = true
           console.log(`✅ User ${uid} subscription renewed. Added ${daysToAdd} days.`)
         })
-
-        if (shouldSendEmail) {
-          try {
-            const authUser = await getAdminAuth().getUser(uid)
-            if (authUser.email) await sendVipUpgradeEmail(authUser.email, displayName, isAnnual)
-          } catch (e) {
-            console.error(`[Webhook] Failed to send VIP renewal email for ${uid}:`, e)
-          }
-        }
       }
     }
 
