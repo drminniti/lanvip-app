@@ -737,6 +737,8 @@ export function PublicLanding({ profile, blocks = [], isPreview = false }: Publi
   )
 }
 
+import { shareProfile } from '@/lib/share'
+
 function Content({ profile, blocks, isCustomTheme, accent, theme, isVipActive }: {
   profile: UserProfile
   blocks: Block[]
@@ -745,16 +747,52 @@ function Content({ profile, blocks, isCustomTheme, accent, theme, isVipActive }:
   theme: any
   isVipActive: boolean
 }) {
+  const [shared, setShared] = useState(false)
+
+  async function handleShare() {
+    const title = `${profile.displayName} | Lanvip`
+    const text = profile.bio ?? `Mirá la Micro-Landing VIP de ${profile.displayName} en Lanvip.`
+    const url = `https://lanvip.app/${profile.username}`
+    const result = await shareProfile(url, title, text)
+    if (result) {
+      setShared(true)
+      setTimeout(() => setShared(false), 2000)
+    }
+  }
+
   return (
     <>
-
-          {/* Avatar */}
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-          className="relative"
+      {/* Top action bar */}
+      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-50">
+        <button
+          onClick={handleShare}
+          className="flex items-center justify-center w-10 h-10 rounded-full transition-all backdrop-blur-md"
+          style={{
+            background: shared ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.08)',
+            border: shared ? '1px solid rgba(34,197,94,0.3)' : '1px solid rgba(255,255,255,0.1)',
+            color: shared ? '#22c55e' : 'var(--theme-text, #F5F5F5)',
+          }}
+          aria-label="Compartir perfil"
         >
+          {shared ? (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Avatar */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+        className="relative mt-6"
+      >
           <div
             className="w-24 h-24 rounded-full overflow-hidden"
             style={{
