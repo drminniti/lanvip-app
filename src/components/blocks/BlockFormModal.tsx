@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { BlockType, BlockWidth, Block } from '@/types'
-import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook, FaPhone, FaLink } from 'react-icons/fa6'
+import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook, FaPhone, FaLink, FaSpotify } from 'react-icons/fa6'
 import { useSubscription } from '@/hooks/useSubscription'
 import { usePaywall } from '@/context/PaywallContext'
 
@@ -49,7 +49,7 @@ const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon
 
 /** The block types the user can choose in step 1 */
 const BLOCK_TYPES: {
-  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email'
+  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify'
   emoji:    string
   label:    string
   subtitle: string
@@ -111,6 +111,14 @@ const BLOCK_TYPES: {
     subtitle: 'Video interactivo',
     bg:       'rgba(239,68,68,0.08)',
     border:   'rgba(239,68,68,0.20)',
+  },
+  {
+    id:       'spotify',
+    emoji:    '🎧',
+    label:    'Spotify',
+    subtitle: 'Música y podcasts',
+    bg:       'rgba(29,185,84,0.08)',
+    border:   'rgba(29,185,84,0.20)',
   },
   {
     id:       'email',
@@ -181,6 +189,16 @@ function socialUrl(platform: SocialPlatform, handle: string): string {
 function parseYouTubeId(urlStr: string): string | null {
   const match = urlStr.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i)
   return match ? match[1] : null
+}
+
+function parseSpotifyUrl(urlStr: string): { type: string, id: string } | null {
+  // Ejemplos: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
+  // o https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M
+  const match = urlStr.match(/spotify\.com\/(track|album|playlist|episode|show)\/([a-zA-Z0-9]+)/i)
+  if (match) {
+    return { type: match[1], id: match[2] }
+  }
+  return null
 }
 
 function platformFromIcon(icon: string): SocialPlatform {
@@ -616,6 +634,15 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       resolvedUrl = `https://youtu.be/${parsedId}`
       resolvedIcon = '▶️'
       if (!resolvedTitle) resolvedTitle = 'Video de YouTube'
+    } else if (blockType === 'spotify') {
+      const parsedSpotify = parseSpotifyUrl(url.trim())
+      if (!parsedSpotify) {
+        setError('URL de Spotify inválida. Revisa el enlace.')
+        return
+      }
+      resolvedUrl = `https://open.spotify.com/${parsedSpotify.type}/${parsedSpotify.id}`
+      resolvedIcon = '🎧'
+      if (!resolvedTitle) resolvedTitle = 'Spotify Embed'
     } else if (blockType === 'email') {
       resolvedUrl = ''
       resolvedIcon = icon || '📧'
@@ -640,6 +667,19 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       formattedUrl = `https://${formattedUrl}`
     }
 
+    let finalEmbedId: string | undefined = undefined
+    let finalEmbedType: string | undefined = undefined
+    
+    if (blockType === 'youtube') {
+      finalEmbedId = parseYouTubeId(formattedUrl) || undefined
+    } else if (blockType === 'spotify') {
+      const parsedSpotify = parseSpotifyUrl(formattedUrl)
+      if (parsedSpotify) {
+        finalEmbedId = parsedSpotify.id
+        finalEmbedType = parsedSpotify.type
+      }
+    }
+
     onSubmit({
       type:        blockType,
       title:       resolvedTitle,
@@ -653,7 +693,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       email:       (blockType === 'vcard' || blockType === 'email') ? email.trim() : undefined,
       company:     blockType === 'vcard' ? company.trim()  : undefined,
       jobTitle:    blockType === 'vcard' ? jobTitle.trim() : undefined,
-      embedId:     blockType === 'youtube' ? parseYouTubeId(formattedUrl) || undefined : undefined,
+      embedId:     finalEmbedId,
+      embedType:   finalEmbedType,
       autoplay:    blockType === 'youtube' ? autoplay : undefined,
       displayMode: blockType === 'youtube' ? displayMode : undefined,
     }).catch(err => {
@@ -673,6 +714,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       if (blockType === 'email')         return 'Editar correo'
       if (blockType === 'divider')       return 'Editar divisor'
       if (blockType === 'section_title') return 'Editar sección'
+      if (blockType === 'youtube')       return 'Editar video'
+      if (blockType === 'spotify')       return 'Editar Spotify'
       return 'Editar enlace'
     }
     if (step === 'type') return 'Nuevo bloque'
@@ -682,6 +725,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     if (blockType === 'email')         return 'Correo'
     if (blockType === 'divider')       return 'Divisor'
     if (blockType === 'section_title') return 'Sección'
+    if (blockType === 'youtube')       return 'YouTube'
+    if (blockType === 'spotify')       return 'Spotify'
     return 'Enlace'
   }
 
@@ -754,7 +799,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                     className="grid grid-cols-2 gap-3"
                   >
                     {BLOCK_TYPES.map(bt => {
-                      const isPremium = bt.id === 'youtube'
+                      const isPremium = bt.id === 'youtube' || bt.id === 'spotify'
                       const isLocked = isPremium && !isVip
 
                       return (
@@ -1116,6 +1161,20 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                           </button>
                         </div>
                       </>
+                    )}
+
+                    {/* ── SPOTIFY ────────────────────────────────────────── */}
+                    {blockType === 'spotify' && (
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <label className="label-dark">Enlace de Spotify *</label>
+                          <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)} onBlur={handleUrlBlur}
+                            placeholder="https://open.spotify.com/track/..." className="input-dark" required />
+                          <p className="text-xs mt-1" style={{ color: '#888' }}>
+                            Pega el enlace de una canción, playlist, álbum, episodio o show.
+                          </p>
+                        </div>
+                      </div>
                     )}
 
                     {/* ── DIVIDER ────────────────────────────────────────── */}
