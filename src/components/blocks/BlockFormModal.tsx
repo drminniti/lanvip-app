@@ -697,7 +697,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       embedId:     finalEmbedId,
       embedType:   finalEmbedType,
       autoplay:    blockType === 'youtube' ? autoplay : undefined,
-      displayMode: blockType === 'youtube' ? displayMode : undefined,
+      displayMode: (blockType === 'youtube' || blockType === 'spotify') ? displayMode : undefined,
     }).catch(err => {
       console.error('Error guardando bloque:', err)
       // En una app más grande mostraríamos un Toast de error acá
@@ -1166,7 +1166,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
 
                     {/* ── SPOTIFY ────────────────────────────────────────── */}
                     {blockType === 'spotify' && (
-                      <div className="space-y-4">
+                      <>
                         <div className="space-y-1">
                           <label className="label-dark">Enlace de Spotify *</label>
                           <input id="block-url" type="url" value={url} onChange={e => setUrl(e.target.value)} onBlur={handleUrlBlur}
@@ -1175,7 +1175,22 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             Pega el enlace de una canción, playlist, álbum, episodio o show.
                           </p>
                         </div>
-                      </div>
+                        {displayMode === 'button' && (
+                          <>
+                            <div className="space-y-1">
+                              <label className="label-dark">Título (opcional)</label>
+                              <input id="block-title" type="text" value={title} onChange={e => setTitle(e.target.value)}
+                                placeholder="Dejar vacío para 'Spotify Embed'" className="input-dark" maxLength={60} />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="label-dark">Descripción (opcional)</label>
+                              <textarea value={description} onChange={e => setDescription(e.target.value)}
+                                placeholder="Breve descripción del audio" className="input-dark"
+                                style={{ resize: 'none', minHeight: '3rem' }} maxLength={120} rows={2} />
+                            </div>
+                          </>
+                        )}
+                      </>
                     )}
 
                     {/* ── DIVIDER ────────────────────────────────────────── */}
@@ -1242,7 +1257,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                     {/* ── Width + Featured (link/social/vcard/calendly/youtube only) ─ */}
                     {blockType !== 'divider' && blockType !== 'section_title' && (
                       <>
-                        {blockType === 'youtube' ? (
+                        {(blockType === 'youtube' || blockType === 'spotify') ? (
                           <YouTubeDisplaySelector 
                             displayMode={displayMode}
                             setDisplayMode={setDisplayMode}

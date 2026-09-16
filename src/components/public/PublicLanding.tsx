@@ -10,7 +10,7 @@ import { downloadVCard } from '@/lib/vcard'
 import { sanitizeUrl } from '@/lib/url'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
 import type { UserProfile, Block, SpanSize } from '@/types'
-import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook } from 'react-icons/fa6'
+import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook, FaSpotify } from 'react-icons/fa6'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
 const SOCIAL_COLORS: Record<string, string> = {
@@ -71,9 +71,11 @@ function BentoTile({
       ? '#0069FF'
       : isYouTube
         ? '#ef4444'
-        : isSocial
-          ? (SOCIAL_COLORS[platformKey] ?? accent)
-          : accent
+        : isSpotify
+          ? '#1DB954'
+          : isSocial
+            ? (SOCIAL_COLORS[platformKey] ?? accent)
+            : accent
 
   // Sprint 2: col-span driven by block.width; fallback for legacy Firestore docs that
   // don't have this field yet (block.isFeatured ? 'full' : 'half').
@@ -442,7 +444,7 @@ function BentoTile({
   }
 
   // ── Spotify tile ────────────────────────────────────────────────────────
-  if (isSpotify) {
+  if (isSpotify && block.content.displayMode !== 'button') {
     const embedId = block.content.embedId
     const embedType = block.content.embedType
     // track/episode: 152px, album/playlist/show: 352px
@@ -510,9 +512,11 @@ function BentoTile({
     >
 
       {/* Icon */}
-      {block.content.icon && (
+      {(block.content.icon || isSpotify) && (
         <span className="text-xl flex-shrink-0 leading-none flex items-center justify-center" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
-          {block.type === 'social' ? (
+          {isSpotify ? (
+            <FaSpotify className="w-5 h-5" style={{ color: '#1DB954' }} />
+          ) : block.type === 'social' ? (
             (() => {
               const s = block.content.icon
               if (s === 'instagram') return <FaInstagram className="w-5 h-5" />
