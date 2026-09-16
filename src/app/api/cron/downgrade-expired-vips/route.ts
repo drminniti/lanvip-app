@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { getAdminDb } from '@/lib/firebase-admin'
+import { getAdminDb, getAdminAuth } from '@/lib/firebase-admin'
 import { Timestamp } from 'firebase-admin/firestore'
+import { sendVipDowngradeEmail } from '@/lib/emails'
 
 /**
  * GET /api/cron/downgrade-expired-vips
@@ -65,6 +66,7 @@ export async function GET(req: Request) {
   let skipped = 0
   let errors = 0
   const downgradedUids: string[] = []
+  const downgradedUsers: { uid: string; displayName: string }[] = []
 
   // Firestore batch supports max 500 operations per commit
   const BATCH_SIZE = 450
@@ -107,6 +109,7 @@ export async function GET(req: Request) {
       opsInBatch++
       downgraded++
       downgradedUids.push(uid)
+      downgradedUsers.push({ uid, displayName: data.displayName || 'Creador' })
 
       // Flush batch before hitting the 500-op limit
       if (opsInBatch >= BATCH_SIZE) {
@@ -126,6 +129,23 @@ export async function GET(req: Request) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[Cron] Error flushing final batch:', msg)
     errors++
+  }
+
+  // ── 4. Send Downgrade Emails ───────────────────────────────────────────────
+  if (downgradedUsers.length > 0) {
+    const auth = getAdminAuth()
+    await Promise.allSettled(
+      downgradedUsers.map(async ({ uid, displayName }) => {
+        try {
+          const userRecord = await auth.getUser(uid)
+          if (userRecord.email) {
+            await sendVipDowngradeEmail(userRecord.email, displayName)
+          }
+        } catch (e) {
+          console.error(`[Cron] Error sending downgrade email to ${uid}:`, e)
+        }
+      })
+    )
   }
 
   const total = vipSnapshot.size

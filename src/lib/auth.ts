@@ -215,6 +215,14 @@ export async function completeOnboarding(
   const auth = getFirebaseAuth()
   if (auth.currentUser) {
     await updateProfile(auth.currentUser, { displayName })
+
+    // Trigger welcome email (fire-and-forget)
+    auth.currentUser.getIdToken().then(token => {
+      fetch('/api/emails/welcome', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).catch(err => console.error('[Lanvip] Failed to trigger welcome email:', err))
+    }).catch(err => console.error('[Lanvip] Failed to get ID token for welcome email:', err))
   }
 
   console.info('[Lanvip] completeOnboarding — uid:', uid, 'username:', username)

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { Payment, PreApproval, WebhookSignatureValidator, InvalidWebhookSignatureError } from 'mercadopago'
 import { getMpClient } from '@/lib/mercadopago'
-import { getAdminDb } from '@/lib/firebase-admin'
+import { getAdminDb, getAdminAuth } from '@/lib/firebase-admin'
 import { FieldValue } from 'firebase-admin/firestore'
+import { sendVipUpgradeEmail } from '@/lib/emails'
 
 // ─── Webhook Signature Validation ─────────────────────────────────────────────
 /**
@@ -103,12 +104,17 @@ export async function POST(req: Request) {
         const userRef = getAdminDb().collection('users').doc(uid)
         
         if (status === 'approved' || status === 'authorized') {
+          let shouldSendEmail = false
+          let displayName = 'Creador'
+          let isAnnual = false
+
           await getAdminDb().runTransaction(async (transaction) => {
             const userDoc = await transaction.get(userRef)
             if (!userDoc.exists) return
 
             const userData = userDoc.data()
-            const isAnnual = planType.toLowerCase().includes('anual') || subscriptionData.preapproval_plan_id === process.env.MP_ANNUAL_PLAN_ID
+            if (userData?.displayName) displayName = userData.displayName
+            isAnnual = planType.toLowerCase().includes('anual') || subscriptionData.preapproval_plan_id === process.env.MP_ANNUAL_PLAN_ID
             const daysToAdd = isAnnual ? 365 : 30
             
             let endsAt = new Date()
@@ -130,8 +136,18 @@ export async function POST(req: Request) {
               subscriptionEndsAt: endsAt
             })
             
+            shouldSendEmail = true
             console.log(`✅ User ${uid} upgraded to VIP (${isAnnual ? 'Annual' : 'Monthly'}) - Date stacked.`)
           })
+
+          if (shouldSendEmail) {
+            try {
+              const authUser = await getAdminAuth().getUser(uid)
+              if (authUser.email) await sendVipUpgradeEmail(authUser.email, displayName, isAnnual)
+            } catch (e) {
+              console.error(`[Webhook] Failed to send VIP upgrade email for ${uid}:`, e)
+            }
+          }
         } else if (status === 'cancelled') {
           // MP fires cancelled when user manually cancels or all retries fail.
           // We DO NOT downgrade them immediately so they can enjoy their remaining days.
@@ -169,11 +185,16 @@ export async function POST(req: Request) {
       if (uid && status === 'approved') {
         const userRef = getAdminDb().collection('users').doc(uid)
         
+        let shouldSendEmail = false
+        let displayName = 'Creador'
+        let isAnnual = false
+
         await getAdminDb().runTransaction(async (transaction) => {
           const userDoc = await transaction.get(userRef)
           if (!userDoc.exists) return
 
           const userData = userDoc.data()
+          if (userData?.displayName) displayName = userData.displayName
           const processedPayments = userData?.processedPayments || []
 
           // Idempotency check: if payment already processed, do nothing
@@ -182,7 +203,7 @@ export async function POST(req: Request) {
             return
           }
 
-          const isAnnual = planType.toLowerCase().includes('anual')
+          isAnnual = planType.toLowerCase().includes('anual')
           const daysToAdd = isAnnual ? 365 : 30
           
           let endsAt = new Date()
@@ -211,8 +232,19 @@ export async function POST(req: Request) {
             processedPayments: FieldValue.arrayUnion(dataId),
             isSubscriptionCancelled: false
           })
+          
+          shouldSendEmail = true
           console.log(`✅ User ${uid} subscription renewed. Added ${daysToAdd} days.`)
         })
+
+        if (shouldSendEmail) {
+          try {
+            const authUser = await getAdminAuth().getUser(uid)
+            if (authUser.email) await sendVipUpgradeEmail(authUser.email, displayName, isAnnual)
+          } catch (e) {
+            console.error(`[Webhook] Failed to send VIP renewal email for ${uid}:`, e)
+          }
+        }
       }
     }
 
