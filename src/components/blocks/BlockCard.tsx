@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Block } from '@/types'
-import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook } from 'react-icons/fa6'
+import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook, FaSpotify } from 'react-icons/fa6'
 
 const SOCIAL_COLORS: Record<string, string> = {
   instagram: '#E1306C',
@@ -45,7 +45,9 @@ export function BlockCard({ block, accent, onToggle, onDelete, onEdit }: BlockCa
     try { onDelete(block.id) } finally { setBusy(false) }
   }
 
-  const iconAccent = block.type === 'social'
+  const iconAccent = block.type === 'spotify'
+    ? '#1DB954' // Spotify Green
+    : block.type === 'social'
     ? (SOCIAL_COLORS[block.content.icon ?? ''] ?? accent)
     : accent
 
@@ -86,7 +88,9 @@ export function BlockCard({ block, accent, onToggle, onDelete, onEdit }: BlockCa
         className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
         style={{ background: `${iconAccent}18`, color: iconAccent }}
       >
-        {block.type === 'social' ? (
+        {block.type === 'spotify' ? (
+          <FaSpotify className="w-5 h-5" />
+        ) : block.type === 'social' ? (
           (() => {
             const s = block.content.icon
             if (s === 'instagram') return <FaInstagram className="w-5 h-5" />
