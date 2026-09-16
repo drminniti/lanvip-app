@@ -175,7 +175,7 @@ function LiveHeroCard({ username }: { username: string }) {
             id="btn-share-link"
             onClick={handleShare}
             whileTap={{ scale: 0.94 }}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hidden sm:flex"
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
             style={{
               background: shared ? 'rgba(34,197,94,0.18)' : 'rgba(255,255,255,0.08)',
               border:     shared ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(255,255,255,0.15)',
@@ -195,7 +195,7 @@ function LiveHeroCard({ username }: { username: string }) {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  Compartido
+                  <span className="hidden sm:inline">Compartido</span>
                 </motion.span>
               ) : (
                 <motion.span
@@ -208,7 +208,7 @@ function LiveHeroCard({ username }: { username: string }) {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
-                  Compartir
+                  <span className="hidden sm:inline">Compartir</span>
                 </motion.span>
               )}
             </AnimatePresence>
