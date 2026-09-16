@@ -123,3 +123,65 @@ export async function sendVipDowngradeEmail(to: string, name: string) {
     console.error(`[Emails] ❌ Error enviando correo de Downgrade a ${to}:`, error)
   }
 }
+
+/**
+ * Envia el correo de verificación de cuenta personalizado.
+ */
+export async function sendVerificationEmailTemplate(to: string, name: string, link: string) {
+  if (!resend) return console.warn('[Emails] ⚠️ Resend API Key no configurada. Saltando envío de correo de Verificación.')
+
+  const content = `
+    <h1 style="${styles.h1}">Verificá tu email</h1>
+    <p style="${styles.p}">Hola <strong style="${styles.strong}">${name}</strong>,</p>
+    <p style="${styles.p}">Gracias por unirte a Lanvip. Ya casi terminamos. Hacé clic en el siguiente botón para verificar tu dirección de correo electrónico y acceder al panel:</p>
+    <div style="margin-top: 30px; margin-bottom: 30px; text-align: left;">
+      <a href="${link}" style="display: inline-block; background-color: #D4AF37; color: #000000; font-weight: 600; text-decoration: none; padding: 12px 24px; border-radius: 8px;">Verificar mi cuenta</a>
+    </div>
+    <p style="${styles.p} font-size: 13px;">Si el botón no funciona, copiá y pegá este enlace en tu navegador:</p>
+    <p style="font-size: 13px; color: #D4AF37; word-break: break-all; margin-bottom: 20px;"><a href="${link}" style="color: #D4AF37; text-decoration: underline;">${link}</a></p>
+    <p style="${styles.p} font-size: 13px; margin-bottom: 0;">Si no pediste crear una cuenta, podés ignorar este correo de forma segura.</p>
+  `
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: 'Verificá tu cuenta en Lanvip',
+      html: baseTemplate(content),
+    })
+    console.log(`[Emails] ✅ Correo de Verificación enviado a ${to}`)
+  } catch (error) {
+    console.error(`[Emails] ❌ Error enviando correo de Verificación a ${to}:`, error)
+  }
+}
+
+/**
+ * Envia el correo de reseteo de contraseña personalizado.
+ */
+export async function sendPasswordResetEmailTemplate(to: string, link: string) {
+  if (!resend) return console.warn('[Emails] ⚠️ Resend API Key no configurada. Saltando envío de correo de Reseteo de Contraseña.')
+
+  const content = `
+    <h1 style="${styles.h1}">Recuperar contraseña</h1>
+    <p style="${styles.p}">Recibimos una solicitud para restablecer la contraseña de tu cuenta en Lanvip.</p>
+    <p style="${styles.p}">Hacé clic en el siguiente botón para elegir una nueva contraseña:</p>
+    <div style="margin-top: 30px; margin-bottom: 30px; text-align: left;">
+      <a href="${link}" style="display: inline-block; background-color: #D4AF37; color: #000000; font-weight: 600; text-decoration: none; padding: 12px 24px; border-radius: 8px;">Restablecer mi contraseña</a>
+    </div>
+    <p style="${styles.p} font-size: 13px;">Si el botón no funciona, copiá y pegá este enlace en tu navegador:</p>
+    <p style="font-size: 13px; color: #D4AF37; word-break: break-all; margin-bottom: 20px;"><a href="${link}" style="color: #D4AF37; text-decoration: underline;">${link}</a></p>
+    <p style="${styles.p} font-size: 13px; margin-bottom: 0;">Si no fuiste vos quien solicitó esto, podés ignorar este correo y tu contraseña seguirá siendo la misma.</p>
+  `
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: 'Restablecé tu contraseña de Lanvip',
+      html: baseTemplate(content),
+    })
+    console.log(`[Emails] ✅ Correo de Reseteo enviado a ${to}`)
+  } catch (error) {
+    console.error(`[Emails] ❌ Error enviando correo de Reseteo a ${to}:`, error)
+  }
+}

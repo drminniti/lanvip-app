@@ -115,12 +115,19 @@ export async function registerWithEmail(
   // Email registration: user explicitly chose username → hasCompletedOnboarding = true
   await createUserDocument(user, username, true)
   
-  // Send email verification
+  // Send custom email verification via our API route
   try {
-    await sendEmailVerification(user)
-    console.info('[Lanvip] registerWithEmail — sent verification email to', email)
+    const res = await fetch('/api/auth/send-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email, name: displayName })
+    })
+    if (!res.ok) {
+      throw new Error(`API error: ${res.statusText}`)
+    }
+    console.info('[Lanvip] registerWithEmail — sent custom verification email to', email)
   } catch (verifyErr) {
-    console.error('[Lanvip] registerWithEmail — failed to send verification email:', verifyErr)
+    console.error('[Lanvip] registerWithEmail — failed to send custom verification email:', verifyErr)
   }
 
   console.info('[Lanvip] registerWithEmail — success, uid:', user.uid)

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
-import { sendEmailVerification } from 'firebase/auth'
 import { getFirebaseErrorMessage } from '@/lib/errors'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
 
@@ -30,17 +29,17 @@ export default function VerifyEmailPage() {
     setError('')
     setMessage('')
     try {
-      await sendEmailVerification(user)
+      const res = await fetch('/api/auth/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, name: user.displayName })
+      })
+      if (!res.ok) throw new Error('Error al enviar el correo')
+      
       setMessage('Correo de verificación reenviado. Revisa tu bandeja de entrada.')
     } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorCode = (err as any)?.code
-      if (errorCode === 'auth/too-many-requests') {
-        setError('Por favor, espera unos minutos antes de volver a intentar.')
-      } else {
-        console.warn('[Lanvip] handleResendEmail catch:', err)
-        setError(getFirebaseErrorMessage(err))
-      }
+      console.warn('[Lanvip] handleResendEmail catch:', err)
+      setError('No se pudo reenviar el correo. Intenta de nuevo más tarde.')
     } finally {
       setLoading(false)
     }

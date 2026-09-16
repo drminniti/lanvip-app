@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { sendPasswordResetEmail } from 'firebase/auth'
-import { getFirebaseAuth } from '@/lib/firebase'
 import { getFirebaseErrorMessage } from '@/lib/errors'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
 
@@ -31,8 +29,20 @@ export default function ForgotPasswordPage() {
 
     setLoading(true)
     try {
-      const auth = getFirebaseAuth()
-      await sendPasswordResetEmail(auth, email)
+      const res = await fetch('/api/auth/send-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        if (errorData.error === 'auth/user-not-found') {
+          throw { code: 'auth/user-not-found' } // Simulate Firebase error format for getFirebaseErrorMessage
+        }
+        throw new Error('Error al enviar el correo')
+      }
+
       setMessage('Te hemos enviado un correo con las instrucciones para restablecer tu contraseña. Revisa tu bandeja de entrada o spam.')
     } catch (err: unknown) {
       console.error('[Lanvip] forgot-password UI catch:', err)
