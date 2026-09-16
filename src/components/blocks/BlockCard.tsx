@@ -19,8 +19,8 @@ const SOCIAL_COLORS: Record<string, string> = {
 interface BlockCardProps {
   block:    Block
   accent:   string
-  onToggle: (block: Block) => Promise<void>
-  onDelete: (blockId: string) => Promise<void>
+  onToggle: (block: Block) => void
+  onDelete: (blockId: string) => void
   onEdit?:  (block: Block) => void
 }
 
@@ -34,15 +34,15 @@ export function BlockCard({ block, accent, onToggle, onDelete, onEdit }: BlockCa
 
   useEffect(() => { setIsActive(block.isActive) }, [block.isActive])
 
-  async function handleToggle() {
+  function handleToggle() {
     setIsActive(p => !p)
-    try { await onToggle(block) } catch { setIsActive(block.isActive) }
+    try { onToggle(block) } catch { setIsActive(block.isActive) }
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!confirmDelete) { setConfirmDelete(true); return }
     setBusy(true)
-    try { await onDelete(block.id) } finally { setBusy(false) }
+    try { onDelete(block.id) } finally { setBusy(false) }
   }
 
   const iconAccent = block.type === 'social'
