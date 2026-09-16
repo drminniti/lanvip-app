@@ -89,11 +89,13 @@ export default function BlocksPage() {
         email:       data.email    || undefined,
         company:     data.company  || undefined,
         jobTitle:    data.jobTitle || undefined,
-        // YouTube fields
+        // YouTube / Spotify fields
         embedId:     data.embedId  || undefined,
+        embedType:   data.embedType || undefined,
         autoplay:    data.autoplay,
         displayMode: data.displayMode || undefined,
       },
+      width:        data.width ?? 'full',
       spanSize:     '1x1',
       isFeatured:   data.isFeatured,
       currentCount: blocks.length,
@@ -113,6 +115,7 @@ export default function BlocksPage() {
         company:     data.company  || undefined,
         jobTitle:    data.jobTitle || undefined,
         embedId:     data.embedId  || undefined,
+        embedType:   data.embedType || undefined,
         autoplay:    data.autoplay,
         displayMode: data.displayMode || undefined,
       },
