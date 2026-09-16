@@ -697,16 +697,6 @@ export function PublicLanding({ profile, blocks = [], isPreview = false }: Publi
         backgroundColor: bg,
       } as React.CSSProperties}
     >
-      {/* ── Fix para el overscroll (bounce) en mobile ── */}
-      {!isPreview && (
-        <style dangerouslySetInnerHTML={{ __html: `
-          body, html {
-            background: ${bg} !important;
-            background-attachment: fixed !important;
-          }
-        `}} />
-      )}
-
       {/* Capa de Fondo (Capa 0) */}
       <div className={isPreview ? "absolute inset-0 z-0 pointer-events-none" : "fixed inset-0 z-0 pointer-events-none"}>
         <div className="absolute inset-0" style={{ background: bg }} />

@@ -164,7 +164,7 @@ function LiveHeroCard({ username }: { username: string }) {
             target="_blank"
             rel="noopener noreferrer"
             id="link-public-url"
-            className="flex-1 text-sm font-mono truncate transition-colors"
+            className="flex-1 min-w-0 text-sm font-mono truncate transition-colors"
             style={{ color: '#D4AF37', textDecoration: 'none' }}
           >
             {publicUrl}

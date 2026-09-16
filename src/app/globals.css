@@ -27,12 +27,14 @@
 
   html {
     scroll-behavior: smooth;
+    overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--color-bg);
   }
 
   body {
+    overscroll-behavior: none;
     background-color: var(--color-bg);
     color: var(--color-text-primary);
     font-family:
