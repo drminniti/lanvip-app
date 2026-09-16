@@ -104,8 +104,8 @@ Los bloques especiales transforman la Micro-Landing de un directorio de enlaces 
 
 | Tipo | Descripción | Estado |
 |------|-------------|--------|
-| `video` | Embed de YouTube (usa `embedId`) | 📋 Planificado |
-| `music` | Embed de Spotify | 📋 Planificado |
+| `youtube` | Embed de YouTube (usa `embedId` y opciones de autoplay) | ✅ Implementado |
+| `spotify` | Embed de Spotify universal VIP (usa `embedId` y `embedType`) | ✅ Implementado |
 | `image` | Imagen full-width con caption | 📋 Planificado |
 | `text`  | Bloque de texto libre / quote | 📋 Planificado |
 
