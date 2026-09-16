@@ -33,7 +33,29 @@ function parseDevice(ua: string): 'mobile' | 'desktop' | 'tablet' {
   return 'desktop'
 }
 
-function parseReferrer(referer: string | null): string {
+function isBot(ua: string): boolean {
+  const lower = ua.toLowerCase()
+  const bots = [
+    'bot', 'spider', 'crawler', 'preview', 'facebookexternalhit',
+    'whatsapp/', 'skypeuripreview', 'slackbot', 'twitterbot', 'headlesschrome'
+  ]
+  return bots.some(b => lower.includes(b))
+}
+
+function parseReferrer(referer: string | null, ua: string): string {
+  const uaLower = ua.toLowerCase()
+  
+  // 1. Try User-Agent first for in-app browsers (they often drop the Referer header)
+  if (uaLower.includes('instagram')) return 'instagram'
+  if (uaLower.includes('fbav') || uaLower.includes('fban')) return 'facebook'
+  if (uaLower.includes('tiktok')) return 'tiktok'
+  
+  // Note: WhatsApp usually opens links in the system browser, dropping the referer.
+  // We can't reliably detect it if the UA is just regular Safari/Chrome.
+  // But if it *does* include whatsapp (and isn't the scraper), we catch it here.
+  if (uaLower.includes('whatsapp') && !uaLower.includes('whatsapp/')) return 'whatsapp'
+
+  // 2. Fallback to the Referer header
   if (!referer) return 'direct'
   try {
     const url = new URL(referer)
@@ -61,11 +83,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing uid' }, { status: 400 })
     }
 
+    const ua = req.headers.get('user-agent') ?? ''
+    
+    // Abort tracking if it's a known bot/crawler to prevent skewing analytics
+    // (e.g., link preview scrapers from Meta/WhatsApp that evaluate JS)
+    if (isBot(ua)) {
+      return NextResponse.json({ ok: true, note: 'ignored-bot' })
+    }
+
     const country  = req.headers.get('x-vercel-ip-country') ?? 'Unknown'
-    const ua       = req.headers.get('user-agent') ?? ''
     const referer  = req.headers.get('referer')
     const device   = parseDevice(ua)
-    const referrer = parseReferrer(referer)
+    const referrer = parseReferrer(referer, ua)
     const dateKey  = getTodayKey()
 
     const db       = getAdminDb()
