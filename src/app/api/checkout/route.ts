@@ -3,6 +3,7 @@ import { PreApproval } from 'mercadopago'
 import { getMpClient } from '@/lib/mercadopago'
 import { getAdminAuth } from '@/lib/firebase-admin'
 import { createClient } from 'redis'
+import { translateMPError } from '@/lib/mercadopago-errors'
 
 // Inicializamos el cliente estándar de Redis si existe la URL
 let redisClient: ReturnType<typeof createClient> | null = null
@@ -102,9 +103,17 @@ export async function POST(req: Request) {
     }
     
     console.error('Error in /api/checkout:', errorMsg)
+    
+    // Traducimos el error original para el cliente
+    const localizedMessage = translateMPError(error)
+
     // Force a JSON string return using standard Response to completely avoid NextResponse weirdness
     // Return 400 instead of 500 to prevent Vercel from intercepting the error and stripping the body
-    return new Response(JSON.stringify({ error: 'Checkout Error', details: errorMsg }), {
+    return new Response(JSON.stringify({ 
+      error: 'Checkout Error', 
+      details: errorMsg,
+      localizedMessage // Enviamos el mensaje traducido al cliente
+    }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' }
     })
