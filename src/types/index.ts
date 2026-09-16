@@ -64,7 +64,6 @@ export interface UserProfile {
   subscriptionEndsAt?: Timestamp | null  // Timestamp de fin de VIP o Trial
   subscriptionId?: string
   isSubscriptionCancelled?: boolean
-  planNotification?: 'downgraded' | 'upgraded' | 'trial' | null
 }
 
 // ─── Block (Bento Card) ──────────────────────────────────────────────────────

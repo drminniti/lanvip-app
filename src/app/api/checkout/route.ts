@@ -2,8 +2,32 @@ import { NextResponse } from 'next/server'
 import { PreApproval } from 'mercadopago'
 import { getMpClient } from '@/lib/mercadopago'
 import { getAdminAuth } from '@/lib/firebase-admin'
+import { createClient } from 'redis'
+
+// Inicializamos el cliente estándar de Redis si existe la URL
+let redisClient: ReturnType<typeof createClient> | null = null
+if (process.env.REDIS_URL) {
+  redisClient = createClient({ url: process.env.REDIS_URL })
+  redisClient.connect().catch(console.error)
+}
+
 export async function POST(req: Request) {
   try {
+    // 0. Rate Limiting (por IP) usando Redis estándar (Fixed Window)
+    if (redisClient && redisClient.isReady) {
+      const ip = req.headers.get('x-forwarded-for') ?? '127.0.0.1'
+      const windowKey = `ratelimit:checkout:${ip}`
+      
+      const requests = await redisClient.incr(windowKey)
+      if (requests === 1) {
+        // Si es el primero, expiramos la key en 60 segundos
+        await redisClient.expire(windowKey, 60)
+      }
+      
+      if (requests > 5) {
+        return new Response(JSON.stringify({ error: 'Demasiados intentos. Por favor espera un minuto.' }), { status: 429 })
+      }
+    }
     // 1. Validar la sesión del usuario a través del token de Firebase
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {

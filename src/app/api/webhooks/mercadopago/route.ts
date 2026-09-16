@@ -130,7 +130,6 @@ export async function POST(req: Request) {
             // Usamos la nomenclatura correcta (plan: 'vip')
             transaction.update(userRef, {
               plan: 'vip',
-              planNotification: 'upgraded',
               subscriptionId: dataId,
               isSubscriptionCancelled: false,
               subscriptionEndsAt: endsAt
@@ -159,7 +158,6 @@ export async function POST(req: Request) {
           // If a payment is refunded, or preapproval explicitly rejected before payment
           await userRef.update({
             plan: 'free',
-            planNotification: 'downgraded',
             isSubscriptionCancelled: true
           })
           console.log(`❌ User ${uid} downgraded to Free (Status: ${status})`)

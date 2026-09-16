@@ -102,7 +102,6 @@ export async function GET(req: Request) {
       const userRef = db.collection('users').doc(uid)
       batch.update(userRef, {
         plan: 'free',
-        planNotification: 'downgraded',
         // Keep subscriptionId and subscriptionEndsAt for audit trail.
         // isSubscriptionCancelled stays as-is.
       })

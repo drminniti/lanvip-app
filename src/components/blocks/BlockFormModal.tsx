@@ -640,31 +640,29 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       formattedUrl = `https://${formattedUrl}`
     }
 
-    setSaving(true)
-    try {
-      await onSubmit({
-        type:        blockType,
-        title:       resolvedTitle,
-        url:         formattedUrl,
-        icon:        resolvedIcon,
-        description: description.trim(),
-        width:       blockWidth,
-        isFeatured,
-        platform:    blockType === 'social' ? platform : undefined,
-        phone:       blockType === 'vcard' ? phone.trim()    : undefined,
-        email:       (blockType === 'vcard' || blockType === 'email') ? email.trim() : undefined,
-        company:     blockType === 'vcard' ? company.trim()  : undefined,
-        jobTitle:    blockType === 'vcard' ? jobTitle.trim() : undefined,
-        embedId:     blockType === 'youtube' ? parseYouTubeId(formattedUrl) || undefined : undefined,
-        autoplay:    blockType === 'youtube' ? autoplay : undefined,
-        displayMode: blockType === 'youtube' ? displayMode : undefined,
-      })
-      handleClose()
-    } catch {
-      setError('Error al guardar. Inténtalo de nuevo.')
-    } finally {
-      setSaving(false)
-    }
+    onSubmit({
+      type:        blockType,
+      title:       resolvedTitle,
+      url:         formattedUrl,
+      icon:        resolvedIcon,
+      description: description.trim(),
+      width:       blockWidth,
+      isFeatured,
+      platform:    blockType === 'social' ? platform : undefined,
+      phone:       blockType === 'vcard' ? phone.trim()    : undefined,
+      email:       (blockType === 'vcard' || blockType === 'email') ? email.trim() : undefined,
+      company:     blockType === 'vcard' ? company.trim()  : undefined,
+      jobTitle:    blockType === 'vcard' ? jobTitle.trim() : undefined,
+      embedId:     blockType === 'youtube' ? parseYouTubeId(formattedUrl) || undefined : undefined,
+      autoplay:    blockType === 'youtube' ? autoplay : undefined,
+      displayMode: blockType === 'youtube' ? displayMode : undefined,
+    }).catch(err => {
+      console.error('Error guardando bloque:', err)
+      // En una app más grande mostraríamos un Toast de error acá
+    })
+
+    // Cerramos instantáneamente (Optimistic UX)
+    handleClose()
   }
 
   function headerTitle() {

@@ -64,12 +64,12 @@ export function BlocksGrid({ blocks: liveBlocks, accent, onEdit }: BlocksGridPro
     })
   }
 
-  async function handleToggle(block: Block) {
-    await updateBlock(block.id, { isActive: !block.isActive })
+  function handleToggle(block: Block) {
+    updateBlock(block.id, { isActive: !block.isActive }).catch(console.error)
   }
 
-  async function handleDelete(blockId: string) {
-    await deleteBlock(blockId)
+  function handleDelete(blockId: string) {
+    deleteBlock(blockId).catch(console.error)
   }
 
   if (liveBlocks.length === 0) {
