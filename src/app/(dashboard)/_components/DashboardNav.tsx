@@ -130,9 +130,11 @@ export default function DashboardNav() {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false)
 
   async function handleLogoutConfirm() {
+    setIsLogoutModalOpen(false)
+    document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
     await logout()
-    document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    router.push('/login')
+    // La redirección a /login la maneja automáticamente el AuthContext + DashboardLayout 
+    // cuando detecta que el usuario es null. Así evitamos el race condition con login/page.tsx
   }
 
   function handleLogoutClick() {
