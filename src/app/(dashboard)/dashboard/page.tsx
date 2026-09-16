@@ -45,11 +45,14 @@ function VipExpiredBanner({ onRenew }: { onRenew: () => void }) {
   )
 }
 
+import { shareProfile } from '@/lib/share'
+
 // ─── Live URL Hero Card ───────────────────────────────────────────────────────
 function LiveHeroCard({ username }: { username: string }) {
   const publicUrl   = `lanvip.app/${username}`
   const fullUrl     = `https://${publicUrl}`
   const [copied, setCopied] = useState(false)
+  const [shared, setShared] = useState(false)
 
   async function handleCopy() {
     try {
@@ -57,7 +60,7 @@ function LiveHeroCard({ username }: { username: string }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback for browsers that block clipboard without interaction
+      // Fallback
       const el = document.createElement('input')
       el.value = fullUrl
       document.body.appendChild(el)
@@ -66,6 +69,19 @@ function LiveHeroCard({ username }: { username: string }) {
       document.body.removeChild(el)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  async function handleShare() {
+    const title = `Mi perfil de Lanvip`
+    const text = `¡Conocé mi Micro-Landing VIP!`
+    const result = await shareProfile(fullUrl, title, text)
+    if (result === 'copied') {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } else if (result === true) {
+      setShared(true)
+      setTimeout(() => setShared(false), 2000)
     }
   }
 
@@ -153,6 +169,50 @@ function LiveHeroCard({ username }: { username: string }) {
           >
             {publicUrl}
           </a>
+
+          {/* Share button */}
+          <motion.button
+            id="btn-share-link"
+            onClick={handleShare}
+            whileTap={{ scale: 0.94 }}
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hidden sm:flex"
+            style={{
+              background: shared ? 'rgba(34,197,94,0.18)' : 'rgba(255,255,255,0.08)',
+              border:     shared ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(255,255,255,0.15)',
+              color:      shared ? '#22c55e' : '#fff',
+            }}
+            aria-label="Compartir enlace"
+          >
+            <AnimatePresence mode="wait">
+              {shared ? (
+                <motion.span
+                  key="check"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex items-center gap-1"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Compartido
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="share"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="flex items-center gap-1"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                  Compartir
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
 
           {/* Copy button */}
           <motion.button
