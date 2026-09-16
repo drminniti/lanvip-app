@@ -135,7 +135,6 @@ export async function loginWithEmail(email: string, password: string): Promise<U
 export async function loginWithGoogle(): Promise<User> {
   const auth           = getFirebaseAuth()
   const googleProvider = new GoogleAuthProvider()
-  googleProvider.setCustomParameters({ prompt: 'select_account' })
 
   console.info('[Lanvip] loginWithGoogle — opening popup')
   const { user } = await signInWithPopup(auth, googleProvider, browserPopupRedirectResolver)
