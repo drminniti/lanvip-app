@@ -63,6 +63,15 @@ service cloud.firestore {
       );
       
       allow delete: if request.auth != null && (request.auth.uid == userId || isSuperAdmin());
+
+      // ── Subcollección de analíticas VIP ──────────────────────────────
+      // El dueño puede leer sus propios datos de analíticas (para el dashboard VIP).
+      // La escritura está bloqueada desde el cliente — solo el Admin SDK (server-side)
+      // puede escribir vía /api/analytics/track.
+      match /analytics/{date} {
+        allow read:  if request.auth != null && (request.auth.uid == userId || isAdmin());
+        allow write: if false;
+      }
     }
 
     // ─── BLOQUES BENTO ─────────────────────────────────────────────────
