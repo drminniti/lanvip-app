@@ -30,6 +30,7 @@ export interface BlockFormData {
   // youtube-only
   autoplay?: boolean
   embedId?:  string
+  embedType?: string
   displayMode?: 'player' | 'button'
 }
 
@@ -193,8 +194,8 @@ function parseYouTubeId(urlStr: string): string | null {
 
 function parseSpotifyUrl(urlStr: string): { type: string, id: string } | null {
   // Ejemplos: https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT
-  // o https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M
-  const match = urlStr.match(/spotify\.com\/(track|album|playlist|episode|show)\/([a-zA-Z0-9]+)/i)
+  // o https://open.spotify.com/intl-es/track/1p8yWGsjWcfOtfmlaS44lf
+  const match = urlStr.match(/spotify\.com\/(?:[a-zA-Z0-9-]+\/)?(track|album|playlist|episode|show)\/([a-zA-Z0-9]+)/i)
   if (match) {
     return { type: match[1], id: match[2] }
   }
@@ -454,9 +455,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const { openUpgradeModal } = usePaywall()
 
   // Derive initial block type — clamp to the supported UI types
-  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email'
+  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify'
   function toUIType(t?: BlockType): UIBlockType {
-    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube' || t === 'email') return t
+    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube' || t === 'email' || t === 'spotify') return t
     return 'link'
   }
 
@@ -507,7 +508,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       const resolvedHandle = uit === 'social' ? handleFromUrl(pt, initialData.content.url ?? '') : ''
       setHandle(resolvedHandle)
       setLinkedinType(pt === 'linkedin' && resolvedHandle.startsWith('company/') ? 'company' : 'personal')
-      setUrl((uit === 'link' || uit === 'calendly' || uit === 'youtube') ? (initialData.content.url ?? '') : '')
+      setUrl((uit === 'link' || uit === 'calendly' || uit === 'youtube' || uit === 'spotify') ? (initialData.content.url ?? '') : '')
       setIcon(initialData.content.icon ?? '🔗')
       setDescription(initialData.content.description ?? '')
       setIsFeatured(initialData.isFeatured ?? false)
