@@ -55,6 +55,7 @@ function BentoTile({
   const isVCard     = block.type === 'vcard'
   const isCalendly  = block.type === 'calendly'
   const isYouTube   = block.type === 'youtube'
+  const isSpotify   = block.type === 'spotify'
   const isEmail     = block.type === 'email'
   const platformKey = isSocial ? (block.content.icon ?? '') : ''
   const [isPlaying, setIsPlaying] = useState(false)
@@ -440,6 +441,46 @@ function BentoTile({
     )
   }
 
+  // ── Spotify tile ────────────────────────────────────────────────────────
+  if (isSpotify) {
+    const embedId = block.content.embedId
+    const embedType = block.content.embedType
+    // track/episode: 152px, album/playlist/show: 352px
+    const iframeHeight = (embedType === 'track' || embedType === 'episode') ? 152 : 352
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0, boxShadow: isFeatured ? `0 0 12px ${accent}26` : 'none' }}
+        transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
+        className={`${colClass} bento-tile overflow-hidden relative`}
+        style={{ borderColor: isFeatured ? `${accent}73` : `rgba(255,255,255,0.08)`, padding: 0 }}
+      >
+        {isFeatured && (
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+              boxShadow: `inset 0 0 20px ${accent}22`,
+              pointerEvents: 'none', zIndex: 1,
+            }}
+          />
+        )}
+        <iframe
+          style={{ borderRadius: '12px' }}
+          src={`https://open.spotify.com/embed/${embedType}/${embedId}?utm_source=generator&theme=0`}
+          width="100%"
+          height={iframeHeight}
+          frameBorder="0"
+          allowFullScreen
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
+          className="relative z-10 w-full"
+        />
+      </motion.div>
+    )
+  }
+
   // ── Default tile (link / social) ──────────────────────────────────────────
   return (
     <motion.a
@@ -546,7 +587,7 @@ export function PublicLanding({ profile, blocks = [], isPreview = false }: Publi
   }
 
   // Filter premium blocks
-  const visibleBlocks = isVipActive ? blocks : blocks.filter(b => b.type !== 'youtube')
+  const visibleBlocks = isVipActive ? blocks : blocks.filter(b => b.type !== 'youtube' && b.type !== 'spotify')
 
   let themeId = matchThemeId(profile.themeSettings)
   let isCustomTheme = themeId === 'custom'
