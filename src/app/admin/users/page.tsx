@@ -19,6 +19,7 @@ export default function AdminUsersPage() {
   const [successMsg, setSuccessMsg] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
   const [confirmRelease, setConfirmRelease] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   async function fetchUsers() {
     setLoading(true)
@@ -102,6 +103,66 @@ export default function AdminUsersPage() {
   async function handleRoleChange(role: UserRole) {
     if (!selectedUser) return
     await handleUpdateUser(selectedUser.uid, { role })
+  }
+
+  async function handleToggleBan() {
+    if (!selectedUser) return
+    setIsUpdating(true)
+    const newBanStatus = !selectedUser.isBanned
+    try {
+      const { getFirebaseAuth } = await import('@/lib/firebase')
+      const token = await getFirebaseAuth().currentUser?.getIdToken()
+      const authHeader = `Bearer ${token}`
+      const res = await fetch(`/api/admin/users/${selectedUser.uid}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authHeader
+        },
+        body: JSON.stringify({ action: newBanStatus ? 'ban' : 'unban' })
+      })
+
+      if (!res.ok) throw new Error('Error en API')
+      
+      setUsers(prev => prev.map(u => u.uid === selectedUser.uid ? { ...u, isBanned: newBanStatus } : u))
+      setSelectedUser(prev => prev ? { ...prev, isBanned: newBanStatus } : null)
+      setSuccessMsg(newBanStatus ? 'Usuario baneado' : 'Usuario desbaneado')
+      setTimeout(() => setSuccessMsg(''), 3000)
+    } catch (err) {
+      console.error('Error baneo:', err)
+      setErrorMsg('Error al cambiar estado de baneo')
+      setTimeout(() => setErrorMsg(''), 3000)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  async function handleDeleteUser() {
+    if (!selectedUser) return
+    setIsUpdating(true)
+    try {
+      const { getFirebaseAuth } = await import('@/lib/firebase')
+      const token = await getFirebaseAuth().currentUser?.getIdToken()
+      const authHeader = `Bearer ${token}`
+      const res = await fetch(`/api/admin/users/${selectedUser.uid}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': authHeader
+        }
+      })
+
+      if (!res.ok) throw new Error('Error en API')
+
+      setUsers(prev => prev.filter(u => u.uid !== selectedUser.uid))
+      setSelectedUser(null)
+      setConfirmDelete(false)
+    } catch (err) {
+      console.error('Error delete:', err)
+      setErrorMsg('Error al eliminar usuario')
+      setTimeout(() => setErrorMsg(''), 3000)
+    } finally {
+      setIsUpdating(false)
+    }
   }
 
   const filteredUsers = users.filter(u => {
@@ -254,7 +315,11 @@ export default function AdminUsersPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4"
-            onClick={() => setSelectedUser(null)}
+            onClick={() => {
+              setSelectedUser(null)
+              setConfirmRelease(false)
+              setConfirmDelete(false)
+            }}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -310,14 +375,35 @@ export default function AdminUsersPage() {
                     <p className="text-sm text-neutral-400">@{selectedUser.username}</p>
                   </div>
                 </div>
-                <button onClick={() => setSelectedUser(null)} className="text-neutral-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition-colors">
+                <button onClick={() => {
+                  setSelectedUser(null)
+                  setConfirmRelease(false)
+                  setConfirmDelete(false)
+                }} className="text-neutral-500 hover:text-white bg-white/5 hover:bg-white/10 p-2 rounded-full transition-colors">
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
 
               {/* Body */}
               <div className="p-6 space-y-6 overflow-y-auto">
-                {/* 1. Trial Management */}
+                {/* 1. Account Status / Banning */}
+                {selectedUser.isBanned && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-red-400">Cuenta Inhabilitada (Baneada)</p>
+                      <p className="text-xs text-red-400/80 mt-1">El usuario no puede iniciar sesión ni su perfil es visible.</p>
+                    </div>
+                    <button 
+                      onClick={handleToggleBan}
+                      disabled={isUpdating}
+                      className="bg-red-500/20 text-red-400 hover:bg-red-500/30 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Desbanear
+                    </button>
+                  </div>
+                )}
+                
+                {/* 2. Trial Management */}
                 <div className="bg-black/40 rounded-xl p-5 border border-white/5">
                   <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                     <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -442,6 +528,52 @@ export default function AdminUsersPage() {
                     </div>
                   </div>
                 )}
+
+                {/* 5. Destructive Actions (Ban & Delete) */}
+                <div className="bg-red-950/20 rounded-xl p-5 border border-red-500/20">
+                  <h3 className="text-sm font-semibold text-red-400 mb-4 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    Acciones de Moderación
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {!selectedUser.isBanned && (
+                      <button 
+                        onClick={handleToggleBan}
+                        disabled={isUpdating || selectedUser.role === 'superadmin'}
+                        className="bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 px-4 py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Banear Usuario
+                      </button>
+                    )}
+                    
+                    {!confirmDelete ? (
+                      <button 
+                        onClick={() => setConfirmDelete(true)}
+                        disabled={isUpdating || selectedUser.role === 'superadmin'}
+                        className={`${selectedUser.isBanned ? 'col-span-1 sm:col-span-2' : ''} bg-red-600/10 text-red-500 hover:bg-red-600/20 border border-red-600/30 px-4 py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        Eliminar Cuenta Definitivamente
+                      </button>
+                    ) : (
+                      <div className={`flex flex-col sm:flex-row gap-2 ${selectedUser.isBanned ? 'col-span-1 sm:col-span-2' : ''}`}>
+                        <button 
+                          onClick={handleDeleteUser}
+                          disabled={isUpdating}
+                          className="flex-1 bg-red-500 text-white hover:bg-red-600 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                        >
+                          Confirmar Borrado
+                        </button>
+                        <button 
+                          onClick={() => setConfirmDelete(false)}
+                          disabled={isUpdating}
+                          className="flex-1 bg-white/5 text-white hover:bg-white/10 border border-white/10 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </motion.div>
           </motion.div>

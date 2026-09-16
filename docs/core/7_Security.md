@@ -38,3 +38,8 @@ El flujo de autenticación mediante Firebase Auth (email/contraseña) incorpora 
 - **Verificación Bloqueante:** Todo usuario que se registra mediante Email/Contraseña recibe automáticamente un correo de verificación. El `DashboardLayout` bloquea el acceso a `/dashboard` y redirige a `/verify-email` si `user.emailVerified` es `false`. Los usuarios de Google Login quedan verificados automáticamente.
 - **Recuperación de Contraseña:** Flujo soportado nativamente por Firebase a través de `sendPasswordResetEmail` en la ruta `/forgot-password`.
 - **Existencia de Email:** Se mapean los errores nativos de Firebase (`auth/email-already-in-use` y `auth/user-not-found`) en la UI para brindar feedback rápido de existencia de cuenta.
+
+### 6. Moderación y Baneo de Cuentas
+El Panel de Administración permite la moderación de cuentas mediante el endpoint `api/admin/users/[uid]`:
+- **Baneo:** Se utiliza `admin.auth().updateUser(uid, { disabled: true })` para bloquear inicios de sesión y `admin.auth().revokeRefreshTokens(uid)` para desloguear instantáneamente cualquier sesión activa. A su vez, se actualiza el perfil en Firestore (`isBanned: true`) para que la landing pública arroje un aviso de "Perfil Inhabilitado".
+- **Eliminación Definitiva:** Se utiliza `admin.auth().deleteUser(uid)` y se borra el documento del usuario en Firestore. Adicionalmente, se elimina su registro de `reserved_usernames` liberando el nombre de usuario de forma inmediata.

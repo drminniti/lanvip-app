@@ -578,6 +578,21 @@ interface PublicLandingProps {
  *   - Heights: content-driven via py-4 padding — no fixed heights.
  */
 export function PublicLanding({ profile, blocks = [], isPreview = false }: PublicLandingProps) {
+  // ─── Enforce Banned Restriction ────────────
+  if (profile.isBanned && !isPreview) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black p-4">
+        <div className="text-center space-y-4">
+          <LanvipLogo className="w-12 h-12 mx-auto text-neutral-600 grayscale" />
+          <h1 className="text-xl font-bold text-white">Perfil Inhabilitado</h1>
+          <p className="text-neutral-400 text-sm max-w-sm mx-auto">
+            Este perfil ha sido inhabilitado por violar los términos de servicio.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // ─── Enforce VIP Restrictions for Downgraded / Expired users ────────────
   const now = new Date()
   let isVipActive = profile.plan === 'vip'
