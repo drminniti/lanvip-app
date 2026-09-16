@@ -23,6 +23,28 @@ export default function VerifyEmailPage() {
     }
   }, [user, authLoading, router])
 
+  // Polling automático para que avance sin tener que apretar el botón
+  useEffect(() => {
+    if (!user || user.emailVerified) return
+
+    const interval = setInterval(async () => {
+      // Solo hacer reload si la pestaña está activa para no gastar red en background
+      if (document.visibilityState === 'visible') {
+        try {
+          await user.reload()
+          if (user.emailVerified) {
+            document.cookie = '__session=1; path=/; SameSite=Lax'
+            router.push('/dashboard')
+          }
+        } catch (err) {
+          // Ignorar errores de red temporales
+        }
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [user, router])
+
   async function handleResendEmail() {
     if (!user) return
     setLoading(true)
