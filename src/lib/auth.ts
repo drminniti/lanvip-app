@@ -8,6 +8,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendEmailVerification,
   User,
 } from 'firebase/auth'
 import {
@@ -113,6 +114,15 @@ export async function registerWithEmail(
   await updateProfile(user, { displayName })
   // Email registration: user explicitly chose username → hasCompletedOnboarding = true
   await createUserDocument(user, username, true)
+  
+  // Send email verification
+  try {
+    await sendEmailVerification(user)
+    console.info('[Lanvip] registerWithEmail — sent verification email to', email)
+  } catch (verifyErr) {
+    console.error('[Lanvip] registerWithEmail — failed to send verification email:', verifyErr)
+  }
+
   console.info('[Lanvip] registerWithEmail — success, uid:', user.uid)
   return user
 }

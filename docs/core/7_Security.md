@@ -31,3 +31,10 @@ El cron job de downgrade (`/api/cron/downgrade-expired-vips`) se ejecuta diariam
 - El endpoint NO requiere un token de Firebase Auth porque está pensado para ser invocado exclusivamente por Vercel, no por usuarios.
 - En desarrollo local (sin `CRON_SECRET`), el endpoint omite el chequeo y loggea una advertencia. En producción, `CRON_SECRET` siempre está seteada en Vercel.
 - El cron escribe directamente a Firestore a través del Admin SDK, sin pasar por las reglas de seguridad públicas.
+
+### 5. Autenticación y Verificación de Email
+El flujo de autenticación mediante Firebase Auth (email/contraseña) incorpora medidas de validación robustas:
+- **Validación Local (Regex):** Antes de enviar peticiones a Firebase, los formularios de login y registro validan la sintaxis del email para evitar tráfico innecesario.
+- **Verificación Bloqueante:** Todo usuario que se registra mediante Email/Contraseña recibe automáticamente un correo de verificación. El `DashboardLayout` bloquea el acceso a `/dashboard` y redirige a `/verify-email` si `user.emailVerified` es `false`. Los usuarios de Google Login quedan verificados automáticamente.
+- **Recuperación de Contraseña:** Flujo soportado nativamente por Firebase a través de `sendPasswordResetEmail` en la ruta `/forgot-password`.
+- **Existencia de Email:** Se mapean los errores nativos de Firebase (`auth/email-already-in-use` y `auth/user-not-found`) en la UI para brindar feedback rápido de existencia de cuenta.

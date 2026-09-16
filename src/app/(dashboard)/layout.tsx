@@ -38,6 +38,11 @@ export default function DashboardLayout({
       return
     }
 
+    if (!user.emailVerified) {
+      router.replace('/verify-email')
+      return
+    }
+
     if (profile && !profile.hasCompletedOnboarding) {
       router.replace('/onboarding')
     }

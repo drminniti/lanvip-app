@@ -48,6 +48,14 @@ export default function RegisterPage() {
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    
+    // Email regex validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Por favor, ingresa un formato de email válido.')
+      return
+    }
+
     if (password.length < 8) {
       setError('La contraseña debe tener al menos 8 caracteres.')
       return

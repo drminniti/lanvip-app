@@ -44,6 +44,14 @@ export default function LoginPage() {
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    // Email regex validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      setError('Por favor, ingresa un formato de email válido.')
+      return
+    }
+
     setLoading(true)
     try {
       // Do NOT call router.push here. Navigation is handled by the useEffect
@@ -153,6 +161,11 @@ export default function LoginPage() {
               placeholder="••••••••"
               className="input-dark"
             />
+            <div className="flex justify-end pt-1">
+              <Link href="/forgot-password" className="text-xs hover:underline" style={{ color: '#A3A3A3' }}>
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </div>
 
           {error && (
