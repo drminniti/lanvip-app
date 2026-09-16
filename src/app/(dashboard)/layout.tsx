@@ -48,8 +48,8 @@ export default function DashboardLayout({
       <PaywallProvider>
         <div className="flex min-h-screen" style={{ background: '#0A0A0A' }}>
           <DashboardNav />
-          <main className="flex-1 pb-24 md:pb-8">
-            <div className="max-w-5xl mx-auto px-4 md:px-8 py-8">
+          <main className="flex-1">
+            <div className="max-w-5xl mx-auto px-4 md:px-8 pt-6 pb-28 md:py-8">
               {children}
             </div>
           </main>

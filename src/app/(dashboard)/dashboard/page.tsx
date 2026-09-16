@@ -89,10 +89,10 @@ function LiveHeroCard({ username }: { username: string }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.10, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-      className="relative overflow-hidden rounded-3xl p-6 md:p-8"
+      transition={{ delay: 0.10, duration: 0.5 }}
+      className="glass-card relative overflow-hidden px-4 py-5 md:px-8 md:py-8"
       style={{
-        background:  'rgba(0,0,0,0.45)',
+        background: 'rgba(212,175,55,0.03)',
         backdropFilter: 'blur(20px)',
         border:      '1px solid rgba(212,175,55,0.18)',
         boxShadow:   '0 0 60px rgba(212,175,55,0.06)',
@@ -113,7 +113,7 @@ function LiveHeroCard({ username }: { username: string }) {
         }}
       />
 
-      <div className="relative z-10 space-y-5">
+      <div className="relative z-10 space-y-4 md:space-y-5">
         {/* Status pill */}
         <div className="flex items-center gap-2">
           <span
@@ -353,7 +353,7 @@ export default function DashboardPage() {
   const username    = profile?.username ?? ''
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -407,7 +407,7 @@ export default function DashboardPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.20, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-        className="glass-card px-5 py-4 flex items-center gap-4"
+        className="glass-card px-4 py-3 md:px-5 md:py-4 flex items-center gap-3 md:gap-4"
       >
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
@@ -436,7 +436,7 @@ export default function DashboardPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.28, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-        className="grid grid-cols-2 gap-4"
+        className="grid grid-cols-2 gap-3 md:gap-4"
       >
         <QuickAction
           href="/dashboard/profile"
