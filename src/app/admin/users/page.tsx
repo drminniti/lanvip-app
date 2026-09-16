@@ -156,6 +156,8 @@ export default function AdminUsersPage() {
       setUsers(prev => prev.filter(u => u.uid !== selectedUser.uid))
       setSelectedUser(null)
       setConfirmDelete(false)
+      setSuccessMsg('Usuario eliminado correctamente')
+      setTimeout(() => setSuccessMsg(''), 3000)
     } catch (err) {
       console.error('Error delete:', err)
       setErrorMsg('Error al eliminar usuario')
@@ -328,40 +330,6 @@ export default function AdminUsersPage() {
               onClick={e => e.stopPropagation()}
               className="bg-[#141414] border border-[#333333] rounded-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]"
             >
-              {/* Success Alert */}
-              <AnimatePresence>
-                {successMsg && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="bg-green-500/20 border-b border-green-500/30 px-6 py-3"
-                  >
-                    <p className="text-sm text-green-400 font-medium flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                      {successMsg}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Error Alert */}
-              <AnimatePresence>
-                {errorMsg && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="bg-red-500/20 border-b border-red-500/30 px-6 py-3"
-                  >
-                    <p className="text-sm text-red-400 font-medium flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                      {errorMsg}
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               {/* Header */}
               <div className="p-6 border-b border-[#333333] flex justify-between items-center bg-white/5">
                 <div className="flex items-center gap-3">
@@ -579,6 +547,42 @@ export default function AdminUsersPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Global Toasts */}
+      <div className="fixed bottom-8 right-8 z-[100] flex flex-col gap-3 pointer-events-none">
+        <AnimatePresence>
+          {successMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              className="bg-green-500/20 border border-green-500/30 backdrop-blur-md px-6 py-4 rounded-xl shadow-2xl shadow-green-500/10"
+            >
+              <p className="text-sm text-green-400 font-medium flex items-center gap-3">
+                <span className="bg-green-500/20 p-1 rounded-full">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                </span>
+                {successMsg}
+              </p>
+            </motion.div>
+          )}
+          {errorMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.9 }}
+              className="bg-red-500/20 border border-red-500/30 backdrop-blur-md px-6 py-4 rounded-xl shadow-2xl shadow-red-500/10"
+            >
+              <p className="text-sm text-red-400 font-medium flex items-center gap-3">
+                <span className="bg-red-500/20 p-1 rounded-full">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                </span>
+                {errorMsg}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }
