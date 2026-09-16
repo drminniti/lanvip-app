@@ -352,7 +352,7 @@ export default function AdminUsersPage() {
                       disabled={isUpdating || selectedUser.plan === 'vip' && !selectedUser.subscriptionEndsAt}
                       className="bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 px-4 py-3 rounded-xl text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Hacer VIP (Lifetime)
+                      Hacer VIP
                     </button>
                     <button 
                       onClick={() => handleUpdateUser(selectedUser.uid, { plan: 'free', subscriptionEndsAt: null })}
