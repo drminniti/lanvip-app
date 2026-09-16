@@ -42,8 +42,11 @@ export async function sendWelcomeEmail(to: string, name: string, username: strin
     <h1 style="${styles.h1}">Bienvenido a Lanvip ⚡️</h1>
     <p style="${styles.p}">Hola <strong style="${styles.strong}">${name}</strong>,</p>
     <p style="${styles.p}">Tu perfil público ya está activo y listo para ser configurado. Acabás de dar el primer paso para unificar todos tus enlaces y elevar tu presencia digital.</p>
-    <p style="${styles.p}">Podés ver tu perfil en vivo acá:</p>
-    <a href="https://lanvip.app/${username}" style="${styles.button}">Ver mi perfil</a>
+    <p style="${styles.p}">Podés ver tu perfil en vivo o empezar a personalizarlo desde el panel de control:</p>
+    <div style="margin-top: 20px;">
+      <a href="https://lanvip.app/${username}" style="${styles.button}">Ver mi perfil</a>
+      <a href="https://lanvip.app/dashboard" style="${styles.button} background-color: #333333; color: #FFFFFF; margin-left: 10px;">Configurar mi perfil</a>
+    </div>
   `
 
   try {
