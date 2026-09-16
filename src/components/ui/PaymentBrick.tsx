@@ -53,8 +53,9 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
       }
 
       if (data.error) {
-        // Lanzamos el error con el mensaje localizado que mandó el servidor
-        throw new Error(data.localizedMessage || data.details || data.error)
+        // Llamamos directamente a onError para evitar que Next.js levante la pantalla de error
+        onError(data.localizedMessage || data.details || data.error)
+        return
       }
       
       // La suscripción fue creada exitosamente
