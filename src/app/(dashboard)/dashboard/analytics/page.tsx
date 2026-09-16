@@ -151,7 +151,7 @@ function DailyBarChart({ daily, accent }: { daily: { date: string; views: number
   const max = Math.max(...daily.map(d => d.views), 1)
 
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="w-full overflow-x-auto pt-10 pb-2 -mt-10 -mx-4 px-4">
       <div className="flex items-end gap-1.5 h-28 min-w-0" style={{ minWidth: daily.length * 28 }}>
         {daily.map((day, i) => {
           const heightPct = (day.views / max) * 100
