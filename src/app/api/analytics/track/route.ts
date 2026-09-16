@@ -6,32 +6,23 @@ import { FieldValue } from 'firebase-admin/firestore'
 /**
  * POST /api/analytics/track
  *
- * Server-side analytics event tracker. Called client-side (fire-and-forget)
- * from PublicLanding on every unique page view.
+ * Server-side analytics event tracker for PUBLIC visitors (no auth required).
+ * Called fire-and-forget from PublicLanding via trackPageView().
  *
- * What it captures (server-side only — unavailable to client JS reliably):
- *   - Country  → Vercel injects `x-vercel-ip-country` header automatically.
- *               Falls back to 'Unknown' in local dev (header not present).
- *   - Device   → User-Agent parsed with ua-parser-js.
- *   - Referrer → `Referer` header from browser.
+ * Replaces ALL client-side Firestore writes for view tracking, since Firestore
+ * security rules require auth for writes on users/{uid}. Public visitors are
+ * unauthenticated, so we use Admin SDK here to bypass those rules securely.
  *
- * Storage: `users/{uid}/analytics/{YYYY-MM-DD}` (one doc per day per user).
- * Uses a transaction to handle both new (initialize) and existing (increment) docs.
- *
- * Privacy:
- *   - No IP addresses are stored.
- *   - No personal data is stored.
- *   - Country is aggregated (a map field), not tied to individual visitors.
- *
- * Data is ALWAYS written regardless of the user's plan (Free or VIP).
- * The plan only gates the DISPLAY in the dashboard — this ensures Free users
- * who upgrade to VIP immediately see their historical data.
+ * What it does in one request:
+ *   1. Increments users/{uid}.views (cumulative — visible to Free + VIP)
+ *   2. Writes to users/{uid}/analytics/{YYYY-MM-DD} subcollection with:
+ *      - views, country (x-vercel-ip-country), device (UA), referrer
  *
  * See: docs/core/8_Analytics.md
  */
 
 function getTodayKey(): string {
-  return new Date().toISOString().slice(0, 10) // 'YYYY-MM-DD'
+  return new Date().toISOString().slice(0, 10)
 }
 
 function parseDevice(ua: string): 'mobile' | 'desktop' | 'tablet' {
@@ -70,7 +61,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing uid' }, { status: 400 })
     }
 
-    // ── Extract enrichment signals ──────────────────────────────────────────
     const country  = req.headers.get('x-vercel-ip-country') ?? 'Unknown'
     const ua       = req.headers.get('user-agent') ?? ''
     const referer  = req.headers.get('referer')
@@ -78,41 +68,41 @@ export async function POST(req: Request) {
     const referrer = parseReferrer(referer)
     const dateKey  = getTodayKey()
 
-    // ── Write to daily analytics subcollection ──────────────────────────────
-    // Use a transaction to handle both "new doc" (initialize with 1) and
-    // "existing doc" (increment). This is more reliable than set+merge+increment
-    // which can behave differently across Firestore Admin SDK versions.
-    const db     = getAdminDb()
-    const docRef = db.collection('users').doc(uid).collection('analytics').doc(dateKey)
+    const db       = getAdminDb()
+    const userRef  = db.collection('users').doc(uid)
+    const dailyRef = userRef.collection('analytics').doc(dateKey)
 
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(docRef)
+    // Run both writes in parallel: cumulative counter + daily subcollection
+    await Promise.all([
+      // 1. Cumulative views on user profile (Free + VIP visible)
+      userRef.update({ views: FieldValue.increment(1) }),
 
-      if (!snap.exists) {
-        // First event of the day — create the document
-        tx.set(docRef, {
-          date:                       dateKey,
-          views:                      1,
-          [`countries.${country}`]:   1,
-          [`devices.${device}`]:      1,
-          [`referrers.${referrer}`]:  1,
-        })
-      } else {
-        // Document already exists — increment all counters
-        tx.update(docRef, {
-          views:                      FieldValue.increment(1),
-          [`countries.${country}`]:   FieldValue.increment(1),
-          [`devices.${device}`]:      FieldValue.increment(1),
-          [`referrers.${referrer}`]:  FieldValue.increment(1),
-        })
-      }
-    })
+      // 2. Daily enriched record (VIP visible)
+      db.runTransaction(async (tx) => {
+        const snap = await tx.get(dailyRef)
+        if (!snap.exists) {
+          tx.set(dailyRef, {
+            date:                       dateKey,
+            views:                      1,
+            [`countries.${country}`]:   1,
+            [`devices.${device}`]:      1,
+            [`referrers.${referrer}`]:  1,
+          })
+        } else {
+          tx.update(dailyRef, {
+            views:                      FieldValue.increment(1),
+            [`countries.${country}`]:   FieldValue.increment(1),
+            [`devices.${device}`]:      FieldValue.increment(1),
+            [`referrers.${referrer}`]:  FieldValue.increment(1),
+          })
+        }
+      }),
+    ])
 
     return NextResponse.json({ ok: true })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('[Analytics Track] Error:', msg)
-    // Return 200 anyway — tracking failure must never break the user experience
     return NextResponse.json({ ok: false, error: msg }, { status: 200 })
   }
 }

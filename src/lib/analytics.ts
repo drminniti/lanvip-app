@@ -1,111 +1,77 @@
 /**
- * analytics.ts — Firestore atomic counters for views and clicks.
+ * analytics.ts — Client-side tracking helpers.
  *
- * Uses Firestore `increment()` which is atomic by default — no race conditions
- * even with thousands of concurrent visitors.
+ * All Firestore writes are now handled SERVER-SIDE via API routes:
+ *   - /api/analytics/track  → page views (views counter + daily subcollection)
+ *   - /api/analytics/click  → block clicks (clickCount + uniqueClicks)
  *
- * See 2_Architecture.md §5 for the data schema (views on users, clickCount on blocks).
+ * This is necessary because public visitors are unauthenticated, and Firestore
+ * security rules require auth for writes on users/{uid} and blocks/{blockId}.
+ * The Admin SDK in the API routes bypasses those rules securely.
  *
- * ── Architectural note on view tracking ──────────────────────────────────────
- * Views are tracked CLIENT-SIDE (not in SSR) for two reasons:
- *   1. SSR runs on every request, including bots, crawlers and Googlebot — this
- *      inflates counters with non-human traffic.
- *   2. Next.js may re-render the Server Component on hard reloads, double-
- *      counting legitimate users.
+ * Client responsibilities:
+ *   - sessionStorage deduplication (so each browser session counts once)
+ *   - Calling the API fire-and-forget (never block navigation)
  *
- * Mitigation: `trackPageView()` is called from a `useEffect` in PublicLanding
- * and uses `sessionStorage` to count each uid exactly once per browser session.
- * This means:
- *   ✅ Bots that don't execute JS are not counted.
- *   ✅ Hard reloads / SSR re-renders don't inflate the count.
- *   ✅ The user is counted once per session (tab lifetime), which is the
- *      industry-standard definition of a unique session view.
+ * See: docs/core/8_Analytics.md
  */
 
-import { doc, updateDoc, increment } from 'firebase/firestore'
-import { getFirebaseDb } from './firebase'
+const SESSION_VIEW_PREFIX  = 'lanvip_view_'
+const SESSION_CLICK_PREFIX = 'lanvip_clicked_profile_'
 
-// ─── View counter (client-only, sessionStorage-deduplicated) ──────────────────
-
-const SESSION_KEY_PREFIX = 'lanvip_view_'
+// ─── View tracking ────────────────────────────────────────────────────────────
 
 /**
- * Increments the `views` counter on a user's profile document.
+ * Tracks a page view for a public profile.
  *
- * MUST be called from a Client Component (inside `useEffect`) — never from a
- * Server Component or `generateMetadata`. Uses sessionStorage to ensure the
- * counter is incremented at most once per browser session per profile.
+ * MUST be called from a Client Component inside `useEffect` — never from a
+ * Server Component. Uses sessionStorage to fire at most once per session.
+ *
+ * Delegates ALL Firestore writes to /api/analytics/track (Admin SDK):
+ *   • users/{uid}.views              (cumulative — Free + VIP)
+ *   • users/{uid}/analytics/{date}   (daily enriched — VIP)
  *
  * @param uid — Firestore UID of the profile owner.
  */
 export async function trackPageView(uid: string): Promise<void> {
-  // Guard: sessionStorage is only available in the browser
   if (typeof window === 'undefined') return
 
-  const key = `${SESSION_KEY_PREFIX}${uid}`
-
-  // Already counted this profile in this session → bail out
+  const key = `${SESSION_VIEW_PREFIX}${uid}`
   if (sessionStorage.getItem(key)) return
-
-  // Mark as counted before the async write to prevent race conditions on
-  // concurrent calls (e.g. React StrictMode double-invoke in dev)
   sessionStorage.setItem(key, '1')
 
-  const db  = getFirebaseDb()
-  const ref = doc(db, 'users', uid)
-
-  // Fire both writes in parallel:
-  //   1. Existing cumulative counter (Free + VIP — always visible)
-  //   2. Server-side enriched event (country, device, referrer) → daily subcollection
-  //      Written for ALL users so Free→VIP upgrades immediately see historical data.
-  await Promise.all([
-    updateDoc(ref, { views: increment(1) }),
-    fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ uid }),
-    }).catch(() => { /* fire-and-forget — tracking failure must never break the page */ }),
-  ])
+  // Fire-and-forget — tracking failure must never break the page
+  fetch('/api/analytics/track', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ uid }),
+  }).catch(() => {})
 }
 
-
-// ─── Click counter ────────────────────────────────────────────────────────────
-
-const CLICK_SESSION_KEY_PREFIX = 'lanvip_clicked_profile_'
+// ─── Click tracking ───────────────────────────────────────────────────────────
 
 /**
- * Tracks a unique click on the profile level.
- * Called automatically by incrementClickCount.
+ * Tracks a click on a block tile.
+ *
+ * Increments clickCount on the block and (once per session) uniqueClicks on
+ * the profile. Delegates ALL writes to /api/analytics/click (Admin SDK).
+ *
+ * Fire-and-forget: do NOT await this — it must not block navigation.
+ *
+ * @param blockId — Firestore ID of the block.
+ * @param uid     — Firestore UID of the profile owner.
  */
-async function trackUniqueProfileClick(uid: string): Promise<void> {
+export function incrementClickCount(blockId: string, uid: string): void {
   if (typeof window === 'undefined') return
-  const key = `${CLICK_SESSION_KEY_PREFIX}${uid}`
-  if (sessionStorage.getItem(key)) return
 
-  sessionStorage.setItem(key, '1')
-  const db  = getFirebaseDb()
-  const ref = doc(db, 'users', uid)
-  // Ensure uniqueClicks field exists and increments.
-  await updateDoc(ref, { uniqueClicks: increment(1) }).catch(err => {
-    console.error('Failed to update uniqueClicks:', err)
-  })
-}
+  // Track unique profile click once per session
+  const uniqueKey = `${SESSION_CLICK_PREFIX}${uid}`
+  const isUniqueClick = !sessionStorage.getItem(uniqueKey)
+  if (isUniqueClick) sessionStorage.setItem(uniqueKey, '1')
 
-/**
- * Increments the `clickCount` counter on a block document,
- * and also records a unique click at the profile level for CTR.
- * Called client-side from PublicLanding when a visitor clicks a tile.
- * Fire-and-forget: caller should not await this to avoid blocking navigation.
- */
-export async function incrementClickCount(blockId: string, uid: string): Promise<void> {
-  const db  = getFirebaseDb()
-  const ref = doc(db, 'blocks', blockId)
-  
-  // Fire both updates in parallel without blocking each other
-  Promise.all([
-    updateDoc(ref, { clickCount: increment(1) }),
-    trackUniqueProfileClick(uid)
-  ]).catch(err => {
-    console.error('Error incrementing clicks:', err)
-  })
+  fetch('/api/analytics/click', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ blockId, uid, isUniqueClick }),
+  }).catch(() => {})
 }
