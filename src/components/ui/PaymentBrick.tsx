@@ -68,7 +68,8 @@ export function PaymentBrick({ planType, firebaseToken, onSuccess, onError }: Pa
   }
 
   const onErrorBrick = (error: any) => {
-    console.error('Brick Error:', error)
+    if (error && Object.keys(error).length === 0) return
+    console.warn('Brick validation/internal error:', error)
   }
 
   const onReady = () => {
