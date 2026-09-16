@@ -33,11 +33,12 @@ export default function VerifyEmailPage() {
       await sendEmailVerification(user)
       setMessage('Correo de verificación reenviado. Revisa tu bandeja de entrada.')
     } catch (err: unknown) {
-      console.error('[Lanvip] handleResendEmail catch:', err)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((err as any)?.code === 'auth/too-many-requests') {
+      const errorCode = (err as any)?.code
+      if (errorCode === 'auth/too-many-requests') {
         setError('Por favor, espera unos minutos antes de volver a intentar.')
       } else {
+        console.warn('[Lanvip] handleResendEmail catch:', err)
         setError(getFirebaseErrorMessage(err))
       }
     } finally {
