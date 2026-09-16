@@ -359,14 +359,14 @@ function VipAnalyticsPanel({ uid }: { uid: string }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
-  const { user }              = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { profile, loading: pLoading } = useUserProfile(user?.uid)
   const { blocks,  loading: bLoading } = useUserBlocks(user?.uid)
   const { isVip }             = useSubscription()
   const { openUpgradeModal }  = usePaywall()
   const [showCtrInfo, setShowCtrInfo] = useState(false)
 
-  const isLoading = pLoading || bLoading
+  const isLoading = authLoading || pLoading || bLoading
 
   // Derived stats (Free + VIP)
   const totalViews  = profile?.views ?? 0
@@ -456,9 +456,9 @@ export default function AnalyticsPage() {
       )}
 
       {/* Advanced analytics — VIP only */}
-      {isVip
-        ? <VipAnalyticsPanel uid={user!.uid} />
-        : <VipAnalyticsPaywall onUpgrade={openUpgradeModal} />
+      {isVip && profile
+        ? <VipAnalyticsPanel uid={profile.uid} />
+        : !isVip && <VipAnalyticsPaywall onUpgrade={openUpgradeModal} />
       }
 
       {/* Empty state */}
