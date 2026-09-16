@@ -171,9 +171,9 @@ export default function LoginPage() {
               placeholder="••••••••"
               className="input-dark"
             />
-            <div className="flex justify-end pt-1">
-              <Link href="/forgot-password" className="text-xs hover:underline" style={{ color: '#A3A3A3' }}>
-                ¿Olvidaste tu contraseña?
+            <div className="flex justify-end pt-2">
+              <Link href="/forgot-password" className="text-sm font-medium hover:underline transition-colors" style={{ color: '#D4AF37' }}>
+                Olvidé mi contraseña
               </Link>
             </div>
           </div>
