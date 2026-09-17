@@ -990,15 +990,15 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             }
                             handleTypeNext(bt.id)
                           }}
-                          className="flex flex-col items-center gap-2 p-5 rounded-2xl transition-all relative overflow-hidden"
-                          style={{ background: bt.bg, border: `1px solid ${bt.border}` }}
+                          className={`flex flex-col items-center gap-2 p-5 rounded-2xl transition-all relative overflow-hidden ${isLocked ? 'opacity-70 grayscale-[50%]' : 'hover:scale-[1.02]'}`}
+                          style={{ background: bt.bg, border: `1px solid ${bt.border}`, cursor: isLocked ? 'pointer' : 'pointer' }}
                         >
                           {isLocked && (
-                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center z-10 backdrop-blur-[2px]">
-                              <svg className="w-6 h-6 text-white/80 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-black/50 backdrop-blur-md px-2 py-1 rounded-full border border-[#D4AF37]/20">
+                              <svg className="w-3 h-3 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                               </svg>
-                              <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-black/50 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">VIP</span>
+                              <span className="text-[9px] font-bold text-[#D4AF37] tracking-widest uppercase mt-px">VIP</span>
                             </div>
                           )}
                           <span className="text-2xl">{bt.emoji}</span>
