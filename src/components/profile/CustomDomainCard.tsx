@@ -64,6 +64,22 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
     
     // Remove protocol and trailing slashes
     const sanitizedDomain = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '')
+    
+    if (!sanitizedDomain) {
+      setStatusMsg({ type: 'err', text: 'Por favor, ingresa un dominio válido.' })
+      return
+    }
+
+    // Confirmación de seguridad
+    let confirmMsg = `¿Estás seguro de que quieres conectar el dominio "${sanitizedDomain}"?\n\nPor favor, verifica que esté escrito correctamente para evitar problemas de conexión.`
+    if (initialDomain && initialDomain !== sanitizedDomain) {
+      confirmMsg = `Actualmente tienes conectado el dominio "${initialDomain}".\n\n¿Estás seguro de que quieres cambiarlo a "${sanitizedDomain}"?\n\n⚠️ IMPORTANTE: Tu dominio anterior dejará de funcionar en tu perfil de Lanvip y deberás configurarlo nuevamente si deseas volver atrás.`
+    }
+
+    if (!window.confirm(confirmMsg)) {
+      return
+    }
+
     setLoading(true)
     setStatusMsg(null)
     
