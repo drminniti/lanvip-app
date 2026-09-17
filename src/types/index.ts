@@ -83,6 +83,7 @@ export type BlockType =
   // ── Structural blocks (no click action, always full-width) ───────────────
   | 'divider'       // subtle visual separator (line / space)
   | 'section_title' // plain text heading to group links
+  | 'image_gallery' // VIP Image Gallery
 
 /**
  * Controls the column span of a block in the public Bento grid.
@@ -115,6 +116,9 @@ export interface BlockContent {
   company?:  string
   /** Job title or professional role */
   jobTitle?: string
+
+  // ── Image Gallery specific fields ───────────────────────────────────────
+  galleryImages?: { id: string; url: string }[]
 }
 
 export interface Block {
