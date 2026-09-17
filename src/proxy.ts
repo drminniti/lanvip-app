@@ -20,8 +20,8 @@ export function proxy(req: NextRequest) {
   // Get hostname of request (e.g. damian.com, localhost:3000)
   let hostname = req.headers.get('host') || ''
   
-  // Remove port if exists (for local testing mostly, though in production Vercel doesn't append ports)
-  hostname = hostname.split(':')[0]
+  // Remove port if exists and strip 'www.' for consistent matching
+  hostname = hostname.split(':')[0].replace(/^www\./, '')
 
   const allowedDomains = [
     'localhost',
