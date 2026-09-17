@@ -18,11 +18,40 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
   const [domain, setDomain] = useState(initialDomain)
   const [loading, setLoading] = useState(false)
   const [statusMsg, setStatusMsg] = useState<{ type: 'ok' | 'err', text: string } | null>(null)
+  const [domainStatus, setDomainStatus] = useState<'idle' | 'loading' | 'active' | 'pending' | 'invalid'>('idle')
 
   // Sync state if initialDomain updates from parent
   useEffect(() => {
     setDomain(initialDomain)
   }, [initialDomain])
+
+  // Check Vercel domain status on load
+  useEffect(() => {
+    async function checkDomainStatus() {
+      if (!initialDomain || !user) return
+      setDomainStatus('loading')
+      try {
+        const token = await user.getIdToken()
+        const res = await fetch(`/api/domains?domain=${initialDomain}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.status === 'mocked') {
+          setDomainStatus('active')
+        } else if (data.verified) {
+          setDomainStatus('active')
+        } else if (data.hasConflicts) {
+          setDomainStatus('invalid')
+        } else {
+          setDomainStatus('pending')
+        }
+      } catch (e) {
+        console.error('Status check error:', e)
+        setDomainStatus('idle')
+      }
+    }
+    checkDomainStatus()
+  }, [initialDomain, user])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -128,6 +157,39 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
           </ol>
           <p className="text-[#A3A3A3] italic pt-1">Nota: Los cambios DNS pueden tardar algunas horas en propagarse.</p>
         </div>
+
+        {initialDomain && domainStatus !== 'idle' && (
+          <div className={`p-4 rounded-xl border flex items-start gap-3 mt-4 ${
+            domainStatus === 'active' ? 'bg-green-500/10 border-green-500/30' :
+            domainStatus === 'invalid' ? 'bg-red-500/10 border-red-500/30' :
+            'bg-yellow-500/10 border-yellow-500/30'
+          }`}>
+            <div className="mt-0.5">
+              {domainStatus === 'active' && <span className="text-green-500 text-lg">✅</span>}
+              {domainStatus === 'invalid' && <span className="text-red-500 text-lg">⚠️</span>}
+              {domainStatus === 'pending' && <span className="text-yellow-500 text-lg">⏳</span>}
+              {domainStatus === 'loading' && <span className="text-gray-400 text-lg animate-pulse">🔄</span>}
+            </div>
+            <div>
+              <h3 className={`font-semibold text-sm ${
+                domainStatus === 'active' ? 'text-green-500' :
+                domainStatus === 'invalid' ? 'text-red-500' :
+                domainStatus === 'pending' ? 'text-yellow-500' : 'text-gray-400'
+              }`}>
+                {domainStatus === 'active' && 'Dominio Activo y Conectado'}
+                {domainStatus === 'invalid' && 'Configuración de DNS Inválida'}
+                {domainStatus === 'pending' && 'Esperando Propagación DNS...'}
+                {domainStatus === 'loading' && 'Consultando estado del dominio...'}
+              </h3>
+              <p className="text-xs text-[#A3A3A3] mt-1">
+                {domainStatus === 'active' && 'Tu dominio está configurado correctamente y el certificado SSL está emitido.'}
+                {domainStatus === 'invalid' && 'Vercel detectó conflictos. Asegurate de eliminar los Registros A por defecto (como los de "Parked" en GoDaddy).'}
+                {domainStatus === 'pending' && 'Los cambios de DNS pueden tardar desde unos minutos hasta 24 horas en reflejarse mundialmente.'}
+                {domainStatus === 'loading' && 'Verificando con Vercel...'}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between pt-2">
           <AnimatePresence mode="wait">

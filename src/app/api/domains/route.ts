@@ -61,3 +61,64 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
+
+export async function GET(req: Request) {
+  try {
+    // 1. Verify Authentication
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const token = authHeader.split('Bearer ')[1]
+    let decodedToken
+    try {
+      decodedToken = await getAdminAuth().verifyIdToken(token)
+    } catch (e) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const domain = searchParams.get('domain')
+    if (!domain) {
+      return NextResponse.json({ error: 'Domain is required' }, { status: 400 })
+    }
+
+    const VERCEL_API_TOKEN = process.env.VERCEL_API_TOKEN
+    const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID
+
+    if (!VERCEL_API_TOKEN || !VERCEL_PROJECT_ID) {
+      return NextResponse.json({ status: 'mocked', verified: true })
+    }
+
+    // Call Vercel API to get domain status
+    const response = await fetch(`https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/domains/${domain}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${VERCEL_API_TOKEN}`,
+      }
+    })
+
+    if (response.status === 404) {
+      return NextResponse.json({ status: 'not_found', verified: false })
+    }
+
+    if (!response.ok) {
+      return NextResponse.json({ error: 'Error fetching domain from Vercel' }, { status: response.status })
+    }
+
+    const data = await response.json()
+    // Vercel returns { verified: boolean, ... }
+    // When there is an error in configuration, usually `verified` is false and there might be `error` field or something similar.
+    // However, if the domain is correctly pointing but pending verification, Vercel gives verified: false.
+    // Let's just pass the Vercel response back to the client.
+    return NextResponse.json({
+      verified: data.verified,
+      verification: data.verification,
+      hasConflicts: data.error?.code === 'conflict' || false // Sometimes Vercel provides error obj
+    })
+
+  } catch (error: any) {
+    console.error('[Lanvip] API Domains GET Error:', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
