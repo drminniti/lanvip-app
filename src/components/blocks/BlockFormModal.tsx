@@ -8,7 +8,7 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { usePaywall } from '@/context/PaywallContext'
 import { optimizeImage } from '@/lib/imageOptimization'
 import { getFirebaseStorage } from '@/lib/firebase'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { useAuth } from '@/context/AuthContext'
 
 
@@ -56,7 +56,7 @@ const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon
 
 /** The block types the user can choose in step 1 */
 const BLOCK_TYPES: {
-  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify'
+  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify' | 'image_gallery'
   emoji:    string
   label:    string
   subtitle: string
@@ -578,7 +578,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   // Image Gallery fields
   const [galleryImages, setGalleryImages] = useState<{ id: string; url: string }[]>(initialData?.content.galleryImages ?? [])
   const [galleryFiles, setGalleryFiles] = useState<File[]>([])
+  const [deletedGalleryImages, setDeletedGalleryImages] = useState<{ id: string; url: string }[]>([])
   const [uploadingGallery, setUploadingGallery] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -608,6 +610,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setDisplayMode(initialData.content.displayMode ?? 'player')
       setGalleryImages(initialData.content.galleryImages ?? [])
       setGalleryFiles([])
+      setDeletedGalleryImages([])
+      setUploadProgress(0)
       setError('')
     } else {
       setStep('type'); setBlockType('link'); setPlatform('instagram')
@@ -618,6 +622,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setDisplayMode('player')
       setGalleryImages([])
       setGalleryFiles([])
+      setDeletedGalleryImages([])
+      setUploadProgress(0)
       setError('')
       setShowLabelWarning(false)
     }
@@ -645,6 +651,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setLinkedinType('personal')
       setGalleryImages([])
       setGalleryFiles([])
+      setDeletedGalleryImages([])
+      setUploadProgress(0)
     }
     setError('')
     setShowLabelWarning(false)
@@ -782,28 +790,42 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         finalEmbedId = parsedSpotify.id
         finalEmbedType = parsedSpotify.type
       }
-    } else if (blockType === 'image_gallery' && galleryFiles.length > 0) {
+    } else if (blockType === 'image_gallery') {
       setUploadingGallery(true)
       setSaving(true)
+      const storage = getFirebaseStorage()
+      
       try {
-        const storage = getFirebaseStorage()
+        // Delete removed images from storage
+        for (const img of deletedGalleryImages) {
+          try {
+            await deleteObject(ref(storage, img.url))
+          } catch (e) {
+            console.error('Error al eliminar la imagen vieja', e)
+          }
+        }
+
         const newUrls: { id: string; url: string }[] = [...galleryImages]
         
-        for (const file of galleryFiles) {
-          const optimizedBlob = await optimizeImage(file, { maxWidth: 1920, maxHeight: 1920, quality: 0.8 })
-          const id = crypto.randomUUID()
-          const storageRef = ref(storage, `users/${user?.uid}/gallery/${id}.webp`)
-          const snapshot = await uploadBytes(storageRef, optimizedBlob, { contentType: 'image/webp' })
-          const uploadedUrl = await getDownloadURL(snapshot.ref)
-          newUrls.push({ id, url: uploadedUrl })
+        if (galleryFiles.length > 0) {
+          for (let i = 0; i < galleryFiles.length; i++) {
+            const file = galleryFiles[i]
+            const optimizedBlob = await optimizeImage(file, { maxWidth: 1920, maxHeight: 1920, quality: 0.8 })
+            const id = crypto.randomUUID()
+            const storageRef = ref(storage, `users/${user?.uid}/gallery/${id}.webp`)
+            const snapshot = await uploadBytes(storageRef, optimizedBlob, { contentType: 'image/webp' })
+            const uploadedUrl = await getDownloadURL(snapshot.ref)
+            newUrls.push({ id, url: uploadedUrl })
+            setUploadProgress(Math.round(((i + 1) / galleryFiles.length) * 100))
+          }
         }
         
         finalGalleryImages = newUrls
-      } catch (err) {
-        console.error('Error uploading gallery:', err)
-        setError('Ocurrió un error al procesar las imágenes. Intenta nuevamente.')
-        setUploadingGallery(false)
+      } catch (err: any) {
         setSaving(false)
+        setUploadingGallery(false)
+        setUploadProgress(0)
+        setError('Error al procesar la galería: ' + err.message)
         return
       }
     }
@@ -1396,7 +1418,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                         >
                           <span className="text-xl">📸</span>
                           <p className="text-xs leading-relaxed" style={{ color: '#fbcfe8' }}>
-                            Sube hasta 10 imágenes. Se optimizarán automáticamente en tu dispositivo.
+                            Sube hasta 5 imágenes. Se optimizarán automáticamente en tu dispositivo.
                           </p>
                         </div>
                         <div className="space-y-1">
@@ -1406,7 +1428,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             type="text"
                             value={title}
                             onChange={e => setTitle(e.target.value)}
-                            placeholder="Dejar vacío para 'Galería VIP'"
+                            placeholder="Dejar vacío para mostrar solo imágenes"
                             className="input-dark"
                             maxLength={60}
                           />
@@ -1420,8 +1442,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             onChange={e => {
                               if (e.target.files) {
                                 const newFiles = Array.from(e.target.files)
-                                if (galleryImages.length + galleryFiles.length + newFiles.length > 10) {
-                                  setError('Máximo 10 imágenes por galería.')
+                                if (galleryImages.length + galleryFiles.length + newFiles.length > 5) {
+                                  setError('Máximo 5 imágenes por galería.')
                                   return
                                 }
                                 setGalleryFiles([...galleryFiles, ...newFiles])
@@ -1450,6 +1472,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                                         }} className="p-1 text-white hover:text-[#D4AF37]">←</button>
                                       )}
                                       <button type="button" onClick={() => {
+                                        const removedImage = galleryImages[idx]
+                                        setDeletedGalleryImages([...deletedGalleryImages, removedImage])
                                         setGalleryImages(galleryImages.filter((_, i) => i !== idx))
                                       }} className="p-1 text-red-500 hover:text-red-400">✕</button>
                                       {idx < galleryImages.length - 1 && (
@@ -1530,18 +1554,34 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                     {/* Error */}
                     {error && <p className="text-sm" style={{ color: '#EF4444' }}>{error}</p>}
 
-                    {/* Submit */}
+                    {/* Progress Bar & Submit */}
+                    {uploadingGallery && uploadProgress > 0 && (
+                      <div className="space-y-1 mt-2">
+                        <div className="flex justify-between text-xs text-white/70">
+                          <span>Optimizando y subiendo fotos...</span>
+                          <span>{uploadProgress}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div
+                            className="h-full bg-[#D4AF37]"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
                     <motion.button
                       id="btn-save-block"
                       type="submit"
                       disabled={saving}
                       whileTap={{ scale: 0.97 }}
-                      className="btn-accent w-full"
+                      className="btn-accent w-full mt-4"
                     >
                       {saving ? (
                         <>
                           <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                          {uploadingGallery ? 'Optimizando imágenes…' : 'Guardando…'}
+                          {uploadingGallery ? 'Procesando…' : 'Guardando…'}
                         </>
                       ) : isEditMode ? 'Guardar cambios' : 'Agregar bloque'}
                     </motion.button>

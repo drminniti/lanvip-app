@@ -20,7 +20,7 @@ interface BlockCardProps {
   block:    Block
   accent:   string
   onToggle: (block: Block) => void
-  onDelete: (blockId: string) => void
+  onDelete: (block: Block) => void
   onEdit?:  (block: Block) => void
 }
 
@@ -42,7 +42,7 @@ export function BlockCard({ block, accent, onToggle, onDelete, onEdit }: BlockCa
   function handleDelete() {
     if (!confirmDelete) { setConfirmDelete(true); return }
     setBusy(true)
-    try { onDelete(block.id) } finally { setBusy(false) }
+    try { onDelete(block) } finally { setBusy(false) }
   }
 
   const iconAccent = block.type === 'spotify'

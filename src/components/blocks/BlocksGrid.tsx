@@ -19,6 +19,9 @@ import {
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
 import { updateBlock, deleteBlock, reorderBlocks } from '@/lib/blocks'
+import { getFirebaseStorage } from "@/lib/firebase"
+import { ref, deleteObject } from "firebase/storage"
+
 import { BlockCard } from './BlockCard'
 import type { Block } from '@/types'
 
@@ -68,8 +71,20 @@ export function BlocksGrid({ blocks: liveBlocks, accent, onEdit }: BlocksGridPro
     updateBlock(block.id, { isActive: !block.isActive }).catch(console.error)
   }
 
-  function handleDelete(blockId: string) {
-    deleteBlock(blockId).catch(console.error)
+  async function handleDelete(block: Block) {
+    if (block.type === 'image_gallery' && block.content.galleryImages) {
+      try {
+        const storage = getFirebaseStorage()
+        await Promise.all(
+          block.content.galleryImages.map(img =>
+            deleteObject(ref(storage, img.url)).catch(e => console.error('Error deleting image:', e))
+          )
+        )
+      } catch (err) {
+        console.error('Error in batch image deletion:', err)
+      }
+    }
+    deleteBlock(block.id).catch(console.error)
   }
 
   if (liveBlocks.length === 0) {
