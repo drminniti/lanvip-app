@@ -57,7 +57,8 @@ service cloud.firestore {
           'subscriptionEndsAt', 
           'subscriptionId', 
           'isSubscriptionCancelled', 
-          'processedPayments'
+          'processedPayments',
+          'customDomain'
         ])) ||
         (isAdmin() && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || isSuperAdmin()))
       );

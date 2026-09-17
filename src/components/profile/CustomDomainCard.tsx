@@ -79,37 +79,32 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
   const confirmSave = async () => {
     setShowConfirmModal(false)
     if (!user?.uid) return
-    const sanitizedDomain = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '')
+    const sanitizedDomain = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '').replace(/^www\./, '')
     
     setLoading(true)
     setStatusMsg(null)
     
     try {
-      // 1. Save in Firestore
-      await updateUserProfile(user.uid, {
-        customDomain: sanitizedDomain
+      if (!sanitizedDomain) throw new Error('Dominio inválido.')
+
+      const token = await user.getIdToken()
+      const res = await fetch('/api/domains', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ domain: sanitizedDomain })
       })
       
-      // 2. Call Vercel API
-      if (sanitizedDomain) {
-        const token = await user.getIdToken()
-        const res = await fetch('/api/domains', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ domain: sanitizedDomain })
-        })
-        
-        if (!res.ok) {
-          const errorData = await res.json()
-          throw new Error(errorData.error || 'Error al conectar el dominio en Vercel')
-        }
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || 'Error al conectar el dominio en Vercel')
       }
       
-      setStatusMsg({ type: 'ok', text: '¡Enviado a Vercel! La propagación de DNS (y emisión de SSL) puede tardar unos minutos o hasta horas en completarse.' })
+      setStatusMsg({ type: 'ok', text: '¡Dominio conectado! La propagación de DNS (y emisión de SSL) puede tardar unos minutos o hasta 24 horas.' })
       setDomain(sanitizedDomain)
+      setIsEditing(false) // Lock it back since we successfully modified it
     } catch (err: any) {
       console.error('[Lanvip] custom domain save error:', err)
       setStatusMsg({ type: 'err', text: err.message || 'Error al guardar el dominio.' })
