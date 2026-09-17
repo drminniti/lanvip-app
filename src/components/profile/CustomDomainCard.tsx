@@ -62,14 +62,18 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
         }
       }
       
-      setStatusMsg({ type: 'ok', text: '¡Dominio guardado correctamente!' })
+      setStatusMsg({ type: 'ok', text: '¡Enviado a Vercel! La propagación de DNS (y emisión de SSL) puede tardar unos minutos o hasta horas en completarse.' })
       setDomain(sanitizedDomain)
     } catch (err: any) {
       console.error('[Lanvip] custom domain save error:', err)
       setStatusMsg({ type: 'err', text: err.message || 'Error al guardar el dominio.' })
     } finally {
       setLoading(false)
-      setTimeout(() => setStatusMsg(null), 5000)
+      // We do not clear the success message so the user can read the DNS warning.
+      // If error, we can clear it or leave it. Let's clear errors only.
+      setTimeout(() => {
+        setStatusMsg((prev) => prev?.type === 'err' ? null : prev)
+      }, 5000)
     }
   }
 
@@ -128,17 +132,21 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
         <div className="flex items-center justify-between pt-2">
           <AnimatePresence mode="wait">
             {statusMsg && (
-              <motion.span
+              <motion.div
                 key={statusMsg.text}
                 initial={{ opacity: 0, x: -5 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
-                className={`text-xs ${statusMsg.type === 'ok' ? 'text-green-500' : 'text-red-500'}`}
+                className={`text-xs p-3 rounded-lg border ${
+                  statusMsg.type === 'ok' 
+                    ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                    : 'bg-red-500/10 border-red-500/30 text-red-400'
+                } max-w-sm`}
               >
                 {statusMsg.text}
-              </motion.span>
+              </motion.div>
             )}
-            {!statusMsg && <span />}
+            {!statusMsg && <div />}
           </AnimatePresence>
 
           <button
