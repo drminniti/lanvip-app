@@ -100,13 +100,31 @@ Los bloques especiales transforman la Micro-Landing de un directorio de enlaces 
 
 ---
 
+### `image_gallery` — Galería de Imágenes VIP ⭐ NEW
+
+**Propósito:** Exhibir un portfolio visual en la landing mediante un mosaico dinámico y visualización ampliada (Lightbox) con cero costo de infraestructura.
+
+| Campo | Tipo | Req | Descripción |
+|-------|------|-----|-------------|
+| `title` | string | — | Título de la galería (default: 'Galería VIP') |
+| `galleryImages` | array | ✅ | Arreglo de imágenes `{ id: string, url: string }` |
+
+**Restricciones de Arquitectura:**
+- **Zero Cost Optimization:** La conversión a WebP y el rescalado (máximo 1920px) ocurre **localmente** en el dispositivo del usuario antes de subir a Firebase Storage (`src/lib/imageOptimization.ts`).
+- **Static Delivery:** Las imágenes se sirven directamente desde Firebase sin utilizar la optimización de Next.js (`<img src="...">` nativo).
+
+**Interacción:** 
+- Renderiza en `col-span-2` con diseño masonry (`columns-2`).
+- Al hacer clic abre Lightbox modal con Framer Motion (pantalla completa, navegación).
+
+---
+
 ## Tipos Futuros (Hoja de Ruta)
 
 | Tipo | Descripción | Estado |
 |------|-------------|--------|
 | `youtube` | Embed de YouTube (usa `embedId` y opciones de autoplay) | ✅ Implementado |
 | `spotify` | Embed de Spotify universal VIP (usa `embedId` y `embedType`) | ✅ Implementado |
-| `image` | Imagen full-width con caption | 📋 Planificado |
 | `text`  | Bloque de texto libre / quote | 📋 Planificado |
 
 ---
@@ -146,6 +164,8 @@ blocks/{blockId}
     email?:    string
     company?:  string
     jobTitle?: string
+    // image_gallery only
+    galleryImages?: { id: string; url: string }[]
   }
   isFeatured:  boolean     // col-span-2 cuando true
   isActive:    boolean     // oculta el bloque en la landing si false
