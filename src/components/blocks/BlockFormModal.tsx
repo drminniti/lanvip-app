@@ -6,6 +6,10 @@ import type { BlockType, BlockWidth, Block } from '@/types'
 import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook, FaPhone, FaLink, FaSpotify } from 'react-icons/fa6'
 import { useSubscription } from '@/hooks/useSubscription'
 import { usePaywall } from '@/context/PaywallContext'
+import { optimizeImage } from '@/lib/imageOptimization'
+import { getFirebaseStorage } from '@/lib/firebase'
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { useAuth } from '@/hooks/useAuth'
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -32,6 +36,8 @@ export interface BlockFormData {
   embedId?:  string
   embedType?: string
   displayMode?: 'player' | 'button'
+  // image-gallery only
+  galleryImages?: { id: string; url: string }[]
 }
 
 export type SocialPlatform = 'instagram' | 'linkedin' | 'x' | 'whatsapp' | 'youtube' | 'tiktok' | 'facebook'
@@ -128,6 +134,14 @@ const BLOCK_TYPES: {
     subtitle: 'Botón de contacto',
     bg:       'rgba(59,130,246,0.08)',
     border:   'rgba(59,130,246,0.20)',
+  },
+  {
+    id:       'image_gallery',
+    emoji:    '📸',
+    label:    'Galería VIP',
+    subtitle: 'Mosaico de imágenes',
+    bg:       'rgba(236,72,153,0.08)',
+    border:   'rgba(236,72,153,0.20)',
   },
 ]
 
@@ -453,11 +467,12 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const isEditMode = Boolean(initialData)
   const { isVip } = useSubscription()
   const { openUpgradeModal } = usePaywall()
+  const { user } = useAuth()
 
   // Derive initial block type — clamp to the supported UI types
-  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify'
+  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify' | 'image_gallery'
   function toUIType(t?: BlockType): UIBlockType {
-    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube' || t === 'email' || t === 'spotify') return t
+    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube' || t === 'email' || t === 'spotify' || t === 'image_gallery') return t
     return 'link'
   }
 
@@ -492,6 +507,11 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const [autoplay, setAutoplay] = useState(initialData?.content.autoplay ?? false)
   const [displayMode, setDisplayMode] = useState<'player' | 'button'>(initialData?.content.displayMode ?? 'player')
   const [showLabelWarning, setShowLabelWarning] = useState(false)
+  
+  // Image Gallery fields
+  const [galleryImages, setGalleryImages] = useState<{ id: string; url: string }[]>(initialData?.content.galleryImages ?? [])
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([])
+  const [uploadingGallery, setUploadingGallery] = useState(false)
 
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
@@ -519,6 +539,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setJobTitle(initialData.content.jobTitle ?? '')
       setAutoplay(initialData.content.autoplay ?? false)
       setDisplayMode(initialData.content.displayMode ?? 'player')
+      setGalleryImages(initialData.content.galleryImages ?? [])
+      setGalleryFiles([])
       setError('')
     } else {
       setStep('type'); setBlockType('link'); setPlatform('instagram')
@@ -527,6 +549,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
       setAutoplay(false)
       setDisplayMode('player')
+      setGalleryImages([])
+      setGalleryFiles([])
       setError('')
       setShowLabelWarning(false)
     }
@@ -552,6 +576,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setAutoplay(false)
       setDisplayMode('player')
       setLinkedinType('personal')
+      setGalleryImages([])
+      setGalleryFiles([])
     }
     setError('')
     setShowLabelWarning(false)
@@ -653,6 +679,15 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         setError('Por favor ingresa un correo válido.')
         return
       }
+    } else if (blockType === 'image_gallery') {
+      resolvedUrl = ''
+      resolvedIcon = '📸'
+      if (!resolvedTitle) resolvedTitle = 'Galería VIP'
+      
+      if (!isEditMode && galleryFiles.length === 0) {
+        setError('Debes añadir al menos una imagen a la galería.')
+        return
+      }
     } else {
       resolvedUrl = url.trim()
     }
@@ -660,7 +695,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     // Structural blocks don't need a URL or a mandatory title
     const isStructural = blockType === 'divider' || blockType === 'section_title'
     if (!resolvedTitle && !isStructural) { setError('El título es obligatorio.'); return }
-    if (!resolvedUrl && !isStructural && blockType !== 'vcard' && blockType !== 'email') { setError('La URL es obligatoria.'); return }
+    if (!resolvedUrl && !isStructural && blockType !== 'vcard' && blockType !== 'email' && blockType !== 'image_gallery') { setError('La URL es obligatoria.'); return }
 
     // Auto-format URLs: prepend https:// if missing
     let formattedUrl = resolvedUrl.trim()
@@ -670,6 +705,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
 
     let finalEmbedId: string | undefined = undefined
     let finalEmbedType: string | undefined = undefined
+    let finalGalleryImages = galleryImages
     
     if (blockType === 'youtube') {
       finalEmbedId = parseYouTubeId(formattedUrl) || undefined
@@ -679,7 +715,33 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         finalEmbedId = parsedSpotify.id
         finalEmbedType = parsedSpotify.type
       }
+    } else if (blockType === 'image_gallery' && galleryFiles.length > 0) {
+      setUploadingGallery(true)
+      setSaving(true)
+      try {
+        const storage = getFirebaseStorage()
+        const newUrls: { id: string; url: string }[] = [...galleryImages]
+        
+        for (const file of galleryFiles) {
+          const optimizedBlob = await optimizeImage(file, { maxWidth: 1920, maxHeight: 1920, quality: 0.8 })
+          const id = crypto.randomUUID()
+          const storageRef = ref(storage, `users/${user?.uid}/gallery/${id}.webp`)
+          const snapshot = await uploadBytes(storageRef, optimizedBlob, { contentType: 'image/webp' })
+          const uploadedUrl = await getDownloadURL(snapshot.ref)
+          newUrls.push({ id, url: uploadedUrl })
+        }
+        
+        finalGalleryImages = newUrls
+      } catch (err) {
+        console.error('Error uploading gallery:', err)
+        setError('Ocurrió un error al procesar las imágenes. Intenta nuevamente.')
+        setUploadingGallery(false)
+        setSaving(false)
+        return
+      }
     }
+
+    setSaving(true)
 
     onSubmit({
       type:        blockType,
@@ -698,9 +760,13 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       embedType:   finalEmbedType,
       autoplay:    blockType === 'youtube' ? autoplay : undefined,
       displayMode: (blockType === 'youtube' || blockType === 'spotify') ? displayMode : undefined,
+      galleryImages: blockType === 'image_gallery' ? finalGalleryImages : undefined,
     }).catch(err => {
       console.error('Error guardando bloque:', err)
       // En una app más grande mostraríamos un Toast de error acá
+    }).finally(() => {
+      setSaving(false)
+      setUploadingGallery(false)
     })
 
     // Cerramos instantáneamente (Optimistic UX)
@@ -1254,6 +1320,64 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                       </div>
                     )}
 
+                    {/* ── IMAGE GALLERY ──────────────────────────────────── */}
+                    {blockType === 'image_gallery' && (
+                      <div className="space-y-4">
+                        <div
+                          className="flex items-center gap-3 py-2 px-3 rounded-xl"
+                          style={{ background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.20)' }}
+                        >
+                          <span className="text-xl">📸</span>
+                          <p className="text-xs leading-relaxed" style={{ color: '#fbcfe8' }}>
+                            Sube hasta 10 imágenes. Se optimizarán automáticamente en tu dispositivo.
+                          </p>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Título de la galería (opcional)</label>
+                          <input
+                            id="block-title"
+                            type="text"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder="Dejar vacío para 'Galería VIP'"
+                            className="input-dark"
+                            maxLength={60}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="label-dark">Seleccionar imágenes *</label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={e => {
+                              if (e.target.files) {
+                                const newFiles = Array.from(e.target.files)
+                                if (galleryImages.length + galleryFiles.length + newFiles.length > 10) {
+                                  setError('Máximo 10 imágenes por galería.')
+                                  return
+                                }
+                                setGalleryFiles([...galleryFiles, ...newFiles])
+                                setError('')
+                              }
+                            }}
+                            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[rgba(255,255,255,0.1)] file:text-white hover:file:bg-[rgba(255,255,255,0.2)]"
+                            disabled={uploadingGallery}
+                          />
+                          {galleryImages.length > 0 && (
+                            <p className="text-xs mt-2" style={{ color: '#888' }}>
+                              Imágenes ya guardadas: {galleryImages.length}
+                            </p>
+                          )}
+                          {galleryFiles.length > 0 && (
+                            <p className="text-xs mt-1" style={{ color: '#D4AF37' }}>
+                              Imágenes nuevas listas para subir: {galleryFiles.length}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* ── Width + Featured (link/social/vcard/calendly/youtube only) ─ */}
                     {blockType !== 'divider' && blockType !== 'section_title' && (
                       <>
@@ -1285,7 +1409,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                       {saving ? (
                         <>
                           <span className="w-4 h-4 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                          Guardando…
+                          {uploadingGallery ? 'Optimizando imágenes…' : 'Guardando…'}
                         </>
                       ) : isEditMode ? 'Guardar cambios' : 'Agregar bloque'}
                     </motion.button>
