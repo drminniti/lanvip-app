@@ -111,7 +111,7 @@ export function BlockCard({ block, accent, onToggle, onDelete, onEdit }: BlockCa
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="text-sm font-semibold truncate" style={{ color: '#F5F5F5' }}>
-            {block.content.title}
+            {block.content.title || (block.type === 'image_gallery' ? 'Galería VIP' : '')}
           </p>
         </div>
         {(block.content.url || block.content.email) && (

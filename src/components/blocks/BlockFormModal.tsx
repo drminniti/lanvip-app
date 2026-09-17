@@ -241,6 +241,20 @@ function handleFromUrl(platform: SocialPlatform, url: string): string {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+function FilePreviewImage({ file, className, alt }: { file: File, className?: string, alt?: string }) {
+  const [url, setUrl] = useState<string>('')
+  
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file)
+    setUrl(objectUrl)
+    return () => URL.revokeObjectURL(objectUrl)
+  }, [file])
+
+  if (!url) return null
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={url} className={className} alt={alt} />
+}
+
 function EmojiPicker({ value, onChange }: { value: string; onChange: (e: string) => void }) {
   const [open, setOpen] = useState(false)
   return (
@@ -1476,7 +1490,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                               </p>
                               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                 {galleryImages.map((img, idx) => (
-                                  <div key={img.id} className="relative w-20 h-20 flex-none rounded-lg overflow-hidden group">
+                                  <div key={img.id} className="relative w-20 h-20 flex-none rounded-lg overflow-hidden group bg-white/5">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src={img.url} className="w-full h-full object-cover" alt="saved" />
                                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-0.5">
@@ -1513,8 +1527,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                                 {galleryFiles.map((file, idx) => (
                                   <div key={idx} className="relative w-20 h-20 flex-none rounded-lg overflow-hidden group bg-white/5">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="new" />
+                                    <FilePreviewImage file={file} className="w-full h-full object-cover" alt="new" />
                                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-0.5">
                                       {idx > 0 && (
                                         <button type="button" onClick={() => {
