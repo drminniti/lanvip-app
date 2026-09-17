@@ -80,45 +80,36 @@ export function ImageGalleryBlock({ block, accent }: ImageGalleryBlockProps) {
     <motion.button
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ 
+        scale: 1.02,
+        boxShadow: isFeatured ? `0 0 24px ${accent}66` : 'none'
+      }}
       whileTap={{ scale: 0.96 }}
       onClick={() => setSelectedImageIndex(0)}
-      className="w-full bento-tile flex items-center gap-3 px-4 py-4"
+      className="w-full bento-tile flex items-center justify-between gap-3 px-4 py-4"
       style={{ 
         textDecoration: 'none', 
-        borderColor: `${tileColor}35`,
-        boxShadow: isFeatured ? `0 0 12px ${accent}26` : 'none',
-        background: 'rgba(255,255,255,0.02)',
-        borderRadius: '16px',
-        borderWidth: '1px',
-        borderStyle: 'solid',
+        borderColor: isFeatured ? `${accent}73` : `${tileColor}28`,
         textAlign: 'left',
-        position: 'relative',
-        overflow: 'hidden'
       }}
     >
-      <motion.span
-        aria-hidden="true"
-        initial={{ opacity: isFeatured ? 0.55 : 0 }}
-        whileHover={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-        style={{
-          position: 'absolute', top: '-20%', right: '-10%',
-          width: '65%', height: '140%',
-          background: `radial-gradient(circle, ${tileColor}28 0%, transparent 70%)`,
-          filter: 'blur(18px)', pointerEvents: 'none', zIndex: 0,
-        }}
-      />
-      <span className="text-xl flex-shrink-0 leading-none" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
-        📸
-      </span>
-      {block.content.title && (
+      <div className="flex items-center gap-3 overflow-hidden">
+        <span className="text-xl flex-shrink-0 leading-none flex items-center justify-center" aria-hidden="true" style={{ position: 'relative', zIndex: 1 }}>
+          📸
+        </span>
         <div className="flex-1 min-w-0" style={{ position: 'relative', zIndex: 1 }}>
           <p className="text-sm font-semibold leading-tight truncate" style={{ color: 'var(--theme-text, #F0F0F0)' }}>
-            {block.content.title}
+            {block.content.title || 'Ver galería'}
           </p>
         </div>
-      )}
+      </div>
+      <svg
+        className="w-3.5 h-3.5 flex-shrink-0 opacity-40"
+        fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+        aria-hidden="true" style={{ color: tileColor, position: 'relative', zIndex: 1 }}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+      </svg>
     </motion.button>
   )
 
