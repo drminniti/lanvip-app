@@ -6,6 +6,8 @@ import type { UserProfile, Block }   from '@/types'
 
 type Params = { username: string }
 
+export const dynamic = 'force-dynamic'
+
 // ─── Serialization helpers ────────────────────────────────────────────────────
 // Firestore Timestamp objects have toJSON() methods and cannot be passed
 // from Server Components to Client Components. We convert them to ISO strings.
