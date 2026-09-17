@@ -849,7 +849,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       embedId:     finalEmbedId,
       embedType:   finalEmbedType,
       autoplay:    blockType === 'youtube' ? autoplay : undefined,
-      displayMode: (blockType === 'youtube' || blockType === 'spotify') ? displayMode : undefined,
+      displayMode: (blockType === 'youtube' || blockType === 'spotify' || blockType === 'image_gallery') ? displayMode : undefined,
       galleryImages: blockType === 'image_gallery' ? finalGalleryImages : undefined,
     }).catch(err => {
       console.error('Error guardando bloque:', err)
