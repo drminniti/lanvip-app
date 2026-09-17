@@ -9,7 +9,7 @@ import { usePaywall } from '@/context/PaywallContext'
 import { optimizeImage } from '@/lib/imageOptimization'
 import { getFirebaseStorage } from '@/lib/firebase'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/context/AuthContext'
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
