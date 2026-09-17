@@ -757,7 +757,6 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     } else if (blockType === 'image_gallery') {
       resolvedUrl = ''
       resolvedIcon = '📸'
-      if (!resolvedTitle) resolvedTitle = 'Galería VIP'
       
       if (!isEditMode && galleryFiles.length === 0) {
         setError('Debes añadir al menos una imagen a la galería.')
@@ -769,7 +768,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
 
     // Structural blocks don't need a URL or a mandatory title
     const isStructural = blockType === 'divider' || blockType === 'section_title'
-    if (!resolvedTitle && !isStructural) { setError('El título es obligatorio.'); return }
+    const isGallery = blockType === 'image_gallery'
+    
+    if (!resolvedTitle && !isStructural && !isGallery) { setError('El título es obligatorio.'); return }
     if (!resolvedUrl && !isStructural && blockType !== 'vcard' && blockType !== 'email' && blockType !== 'image_gallery') { setError('La URL es obligatoria.'); return }
 
     // Auto-format URLs: prepend https:// if missing
