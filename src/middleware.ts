@@ -14,7 +14,7 @@ export const config = {
   ],
 }
 
-export function proxy(req: NextRequest) {
+export default function middleware(req: NextRequest) {
   const url = req.nextUrl
   
   // Get hostname of request (e.g. damian.com, localhost:3000)
