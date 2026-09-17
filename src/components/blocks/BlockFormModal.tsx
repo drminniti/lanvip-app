@@ -1365,14 +1365,72 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             disabled={uploadingGallery}
                           />
                           {galleryImages.length > 0 && (
-                            <p className="text-xs mt-2" style={{ color: '#888' }}>
-                              Imágenes ya guardadas: {galleryImages.length}
-                            </p>
+                            <div className="mt-3 space-y-2">
+                              <p className="text-xs" style={{ color: '#888' }}>
+                                Imágenes guardadas ({galleryImages.length})
+                              </p>
+                              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                {galleryImages.map((img, idx) => (
+                                  <div key={img.id} className="relative w-20 h-20 flex-none rounded-lg overflow-hidden group">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={img.url} className="w-full h-full object-cover" alt="saved" />
+                                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-0.5">
+                                      {idx > 0 && (
+                                        <button type="button" onClick={() => {
+                                          const newArr = [...galleryImages];
+                                          [newArr[idx-1], newArr[idx]] = [newArr[idx], newArr[idx-1]];
+                                          setGalleryImages(newArr);
+                                        }} className="p-1 text-white hover:text-[#D4AF37]">←</button>
+                                      )}
+                                      <button type="button" onClick={() => {
+                                        setGalleryImages(galleryImages.filter((_, i) => i !== idx))
+                                      }} className="p-1 text-red-500 hover:text-red-400">✕</button>
+                                      {idx < galleryImages.length - 1 && (
+                                        <button type="button" onClick={() => {
+                                          const newArr = [...galleryImages];
+                                          [newArr[idx], newArr[idx+1]] = [newArr[idx+1], newArr[idx]];
+                                          setGalleryImages(newArr);
+                                        }} className="p-1 text-white hover:text-[#D4AF37]">→</button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
                           {galleryFiles.length > 0 && (
-                            <p className="text-xs mt-1" style={{ color: '#D4AF37' }}>
-                              Imágenes nuevas listas para subir: {galleryFiles.length}
-                            </p>
+                            <div className="mt-3 space-y-2">
+                              <p className="text-xs" style={{ color: '#D4AF37' }}>
+                                Imágenes nuevas listas para subir ({galleryFiles.length})
+                              </p>
+                              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                {galleryFiles.map((file, idx) => (
+                                  <div key={idx} className="relative w-20 h-20 flex-none rounded-lg overflow-hidden group bg-white/5">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={URL.createObjectURL(file)} className="w-full h-full object-cover" alt="new" />
+                                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-0.5">
+                                      {idx > 0 && (
+                                        <button type="button" onClick={() => {
+                                          const newArr = [...galleryFiles];
+                                          [newArr[idx-1], newArr[idx]] = [newArr[idx], newArr[idx-1]];
+                                          setGalleryFiles(newArr);
+                                        }} className="p-1 text-white hover:text-[#D4AF37]">←</button>
+                                      )}
+                                      <button type="button" onClick={() => {
+                                        setGalleryFiles(galleryFiles.filter((_, i) => i !== idx))
+                                      }} className="p-1 text-red-500 hover:text-red-400">✕</button>
+                                      {idx < galleryFiles.length - 1 && (
+                                        <button type="button" onClick={() => {
+                                          const newArr = [...galleryFiles];
+                                          [newArr[idx], newArr[idx+1]] = [newArr[idx+1], newArr[idx]];
+                                          setGalleryFiles(newArr);
+                                        }} className="p-1 text-white hover:text-[#D4AF37]">→</button>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
