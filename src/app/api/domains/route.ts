@@ -46,12 +46,22 @@ export async function POST(req: Request) {
     // 400 means it might already exist or is invalid. Vercel returns `error: { code: '...' }`
     if (!response.ok) {
       if (data.error?.code === 'domain_already_in_use' || data.error?.code === 'forbidden') {
-        // Technically it might be in another project, but we can't easily claim it if someone else verified it.
-        return NextResponse.json({ error: 'El dominio ya está en uso o no se puede verificar.' }, { status: 400 })
+        // Let's check if it actually belongs to OUR project already
+        const checkRes = await fetch(`https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/domains/${domain}`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${VERCEL_API_TOKEN}` }
+        })
+        
+        if (checkRes.ok) {
+          // It's already in our project! This is totally fine, just return success.
+          return NextResponse.json({ success: true, alreadyExists: true })
+        }
+        
+        // If it's not in our project, then it truly is taken by someone else
+        return NextResponse.json({ error: 'El dominio ya está en uso en otro proyecto o no se puede verificar.' }, { status: 400 })
       }
       console.error('[Lanvip] Vercel API error:', data.error)
-      // If it already exists in THIS project, Vercel sometimes returns an error or just ignores.
-      // We assume it's fine if the error isn't fatal.
+      return NextResponse.json({ error: data.error?.message || 'Error al conectar en Vercel' }, { status: 400 })
     }
 
     return NextResponse.json({ success: true, data })
