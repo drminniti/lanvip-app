@@ -815,8 +815,10 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         for (const img of deletedGalleryImages) {
           try {
             await deleteObject(ref(storage, img.url))
-          } catch (e) {
-            console.error('Error al eliminar la imagen vieja', e)
+          } catch (e: any) {
+            if (e.code !== 'storage/object-not-found') {
+              console.error('Error al eliminar la imagen vieja', e)
+            }
           }
         }
 

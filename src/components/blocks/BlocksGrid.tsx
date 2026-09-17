@@ -77,7 +77,11 @@ export function BlocksGrid({ blocks: liveBlocks, accent, onEdit }: BlocksGridPro
         const storage = getFirebaseStorage()
         await Promise.all(
           block.content.galleryImages.map(img =>
-            deleteObject(ref(storage, img.url)).catch(e => console.error('Error deleting image:', e))
+            deleteObject(ref(storage, img.url)).catch((e: any) => {
+              if (e.code !== 'storage/object-not-found') {
+                console.error('Error deleting image:', e)
+              }
+            })
           )
         )
       } catch (err) {
