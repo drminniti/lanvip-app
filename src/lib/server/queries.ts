@@ -21,6 +21,22 @@ export async function getPublicProfileByUsername(
 }
 
 /**
+ * Looks up a user profile by their custom domain.
+ * Used by the SSR public route /_domain/[domain] — no auth required.
+ * Returns null if no user with that custom domain exists.
+ */
+export async function getPublicProfileByCustomDomain(
+  domain: string,
+): Promise<UserProfile | null> {
+  const db = getAdminDb()
+  const usersCol = db.collection('users')
+  const snap = await usersCol.where('customDomain', '==', domain).limit(1).get()
+
+  if (snap.empty) return null
+  return snap.docs[0].data() as UserProfile
+}
+
+/**
  * One-shot fetch of all active blocks for a user, ordered by `order` asc.
  * Used by the public SSR route /[username] — no subscription needed.
  * 

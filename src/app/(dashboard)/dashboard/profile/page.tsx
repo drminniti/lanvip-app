@@ -9,6 +9,7 @@ import { updateUserProfile, checkUsernameAvailable, changeUsernameTransaction } 
 import { ThemePicker } from '@/components/profile/ThemePicker'
 import { LandingPreview } from '@/components/profile/LandingPreview'
 import { AvatarUploader } from '@/components/profile/AvatarUploader'
+import { CustomDomainCard } from '@/components/profile/CustomDomainCard'
 import type { VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
 import { useSubscription } from '@/hooks/useSubscription'
