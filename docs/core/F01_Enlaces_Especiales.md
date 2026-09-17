@@ -114,7 +114,7 @@ Los bloques especiales transforman la Micro-Landing de un directorio de enlaces 
 - **Static Delivery:** Las imágenes se sirven directamente desde Firebase sin utilizar la optimización de Next.js (`<img src="...">` nativo).
 
 **Interacción:** 
-- Renderiza en `col-span-2` con diseño masonry (`columns-2`).
+- Renderiza en `col-span-2` con scroll horizontal (`overflow-x-auto snap-x`).
 - Al hacer clic abre Lightbox modal con Framer Motion (pantalla completa, navegación).
 
 ---
