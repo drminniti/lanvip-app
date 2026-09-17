@@ -126,28 +126,15 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
   return (
     <>
       <form onSubmit={handleSave} className="glass-card p-6 space-y-4 relative overflow-hidden mt-6">
-      {!isVip && (
-        <div 
-          className="absolute inset-0 bg-black/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-black/60"
-          onClick={openUpgradeModal}
-        >
-          <div className="flex items-center gap-2 bg-black/60 px-4 py-2 rounded-full border border-[#D4AF37]/30 shadow-lg">
-            <svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <span className="text-xs font-bold text-[#D4AF37] tracking-widest uppercase mt-px">VIP Exclusivo</span>
-          </div>
-        </div>
-      )}
-
+      
       <div 
         className="flex justify-between items-start cursor-pointer group" 
-        onClick={() => isVip && setIsExpanded(!isExpanded)}
+        onClick={() => setIsExpanded(!isExpanded)}
       >
         <div>
           <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: '#F5F5F5' }}>
             Dominio Personalizado
-            {isVip && <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">VIP</span>}
+            <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">VIP</span>
           </h2>
           <p className="text-xs mt-1" style={{ color: '#A3A3A3' }}>
             {initialDomain ? `Conectado a: ${initialDomain}` : 'Usa tu propia URL (ej. damian.com) en lugar de lanvip.app/tu-usuario'}
@@ -156,7 +143,7 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
         <button 
           type="button" 
           className="text-[#A3A3A3] group-hover:text-white transition-colors"
-          onClick={(e) => { e.stopPropagation(); isVip && setIsExpanded(!isExpanded) }}
+          onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded) }}
         >
           <svg 
             className={`w-5 h-5 transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} 
@@ -175,8 +162,27 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden"
+            className="overflow-hidden relative"
           >
+            {!isVip && (
+              <div 
+                className="absolute inset-0 bg-black/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-black/60 rounded-xl"
+                onClick={openUpgradeModal}
+              >
+                <div className="flex flex-col items-center gap-2 bg-[#111]/90 px-6 py-4 rounded-2xl border border-[#D4AF37]/30 shadow-2xl text-center max-w-[80%]">
+                  <div className="bg-[#D4AF37]/20 p-2 rounded-full mb-1">
+                    <svg className="w-6 h-6 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-bold text-white tracking-wide">Mejorá tu plan para conectar un dominio personalizado</span>
+                  <span className="text-xs text-[#A3A3A3]">Dale un aspecto mucho más profesional a tu perfil y compartilo con tu propia URL.</span>
+                  <button type="button" className="mt-2 text-xs font-bold text-black bg-[#D4AF37] hover:bg-[#F2CD5C] px-4 py-1.5 rounded-full transition-colors">
+                    Actualizar a VIP
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="space-y-3 pt-4 border-t border-white/5 mt-4">
               <div className="space-y-1">
                 <label htmlFor="custom-domain" className="label-dark flex justify-between items-center">
