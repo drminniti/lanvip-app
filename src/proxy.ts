@@ -1,35 +1,43 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-/**
- * Next.js 16 Proxy (replaces legacy middleware.ts).
- * Protects /dashboard routes via a lightweight __session cookie check.
- * The definitive auth verification is done server-side in each layout.
- */
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  const session = request.cookies.get('__session')?.value
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+  ],
+}
 
-  // ── Protect /dashboard and /onboarding: require session ──────────────────
-  const isProtected =
-    pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding')
+export function proxy(req: NextRequest) {
+  const url = req.nextUrl
+  
+  // Get hostname of request (e.g. damian.com, localhost:3000)
+  let hostname = req.headers.get('host') || ''
+  
+  // Remove port if exists (for local testing mostly, though in production Vercel doesn't append ports)
+  hostname = hostname.split(':')[0]
 
-  if (isProtected && !session) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
+  const allowedDomains = [
+    'localhost',
+    'lanvip.app',
+    'www.lanvip.app',
+    'lanvip-app.vercel.app'
+  ]
 
-  // ── Redirect authenticated users away from auth pages ────────────────────
-  if ((pathname === '/login' || pathname === '/register') && session) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  // If the hostname is a Vercel preview URL, we allow it (ends with .vercel.app)
+  const isVercelDomain = hostname.endsWith('.vercel.app')
+
+  // If the hostname is NOT one of our allowed core domains, it's a custom domain!
+  if (!allowedDomains.includes(hostname) && !isVercelDomain) {
+    // Rewrite to our dynamic route _domain/[domain]/[path]
+    return NextResponse.rewrite(new URL(`/_domain/${hostname}${url.pathname}`, req.url))
   }
 
   return NextResponse.next()
-}
-
-export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
 }
