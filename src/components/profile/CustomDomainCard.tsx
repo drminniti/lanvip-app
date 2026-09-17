@@ -19,6 +19,7 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
   const [loading, setLoading] = useState(false)
   const [statusMsg, setStatusMsg] = useState<{ type: 'ok' | 'err', text: string } | null>(null)
   const [domainStatus, setDomainStatus] = useState<'idle' | 'loading' | 'active' | 'pending' | 'invalid'>('idle')
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   // Sync state if initialDomain updates from parent
   useEffect(() => {
@@ -70,16 +71,13 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
       return
     }
 
-    // Confirmación de seguridad
-    let confirmMsg = `¿Estás seguro de que quieres conectar el dominio "${sanitizedDomain}"?\n\nPor favor, verifica que esté escrito correctamente para evitar problemas de conexión.`
-    if (initialDomain && initialDomain !== sanitizedDomain) {
-      confirmMsg = `Actualmente tienes conectado el dominio "${initialDomain}".\n\n¿Estás seguro de que quieres cambiarlo a "${sanitizedDomain}"?\n\n⚠️ IMPORTANTE: Tu dominio anterior dejará de funcionar en tu perfil de Lanvip y deberás configurarlo nuevamente si deseas volver atrás.`
-    }
+    setShowConfirmModal(true)
+  }
 
-    if (!window.confirm(confirmMsg)) {
-      return
-    }
-
+  const confirmSave = async () => {
+    setShowConfirmModal(false)
+    const sanitizedDomain = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '')
+    
     setLoading(true)
     setStatusMsg(null)
     
@@ -123,7 +121,8 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
   }
 
   return (
-    <form onSubmit={handleSave} className="glass-card p-6 space-y-4 relative overflow-hidden mt-6">
+    <>
+      <form onSubmit={handleSave} className="glass-card p-6 space-y-4 relative overflow-hidden mt-6">
       {!isVip && (
         <div 
           className="absolute inset-0 bg-black/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-black/60"
@@ -237,5 +236,54 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
         </div>
       </div>
     </form>
+
+    <AnimatePresence>
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-[#111] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl relative"
+          >
+            <h3 className="text-lg font-bold text-white mb-2">
+              Confirmar Dominio
+            </h3>
+            <p className="text-[#A3A3A3] text-sm mb-6">
+              {initialDomain && initialDomain !== domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '') ? (
+                <>
+                  Actualmente tienes conectado el dominio <strong>{initialDomain}</strong>.<br/><br/>
+                  ¿Estás seguro de que quieres cambiarlo a <strong className="text-white">{domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '')}</strong>?<br/><br/>
+                  <span className="text-red-400">⚠️ IMPORTANTE: Tu dominio anterior dejará de funcionar en tu perfil de Lanvip y deberás configurarlo nuevamente si deseas volver atrás.</span>
+                </>
+              ) : (
+                <>
+                  ¿Estás seguro de que quieres conectar el dominio <strong className="text-white">{domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '')}</strong>?<br/><br/>
+                  Por favor, verifica que esté escrito correctamente para evitar problemas de conexión.
+                </>
+              )}
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmSave}
+                className="btn-primary-dark px-6 py-2 text-sm"
+              >
+                Conectar
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+    </>
   )
 }
