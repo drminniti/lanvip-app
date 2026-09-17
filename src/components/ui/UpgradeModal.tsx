@@ -91,6 +91,7 @@ export function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
             <div className="bg-white/5 rounded-2xl p-5 mb-6 border border-white/10">
               <h3 className="text-white font-medium mb-3">Tu plan VIP incluye:</h3>
               <ul className="space-y-2 text-sm text-[#A3A3A3]">
+                <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Desbloqueo de Bloques VIP (Galería, Video)</li>
                 <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Eliminar marca de agua</li>
                 <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Acceso a Temas Premium</li>
                 <li className="flex items-center gap-2"><svg className="w-4 h-4 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg> Analíticas Avanzadas</li>
