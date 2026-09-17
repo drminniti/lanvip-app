@@ -11,6 +11,7 @@ import { sanitizeUrl } from '@/lib/url'
 import { LanvipLogo } from '@/components/ui/LanvipLogo'
 import type { UserProfile, Block, SpanSize } from '@/types'
 import { FaInstagram, FaLinkedin, FaXTwitter, FaWhatsapp, FaYoutube, FaTiktok, FaFacebook, FaSpotify } from 'react-icons/fa6'
+import { ImageGalleryBlock } from './blocks/ImageGalleryBlock'
 
 // ─── Social brand colors ──────────────────────────────────────────────────────
 const SOCIAL_COLORS: Record<string, string> = {
@@ -950,6 +951,14 @@ function Content({ profile, blocks, isCustomTheme, accent, theme, isVipActive }:
                       {block.content.title}
                     </p>
                   </motion.div>
+                )
+              }
+
+              if (block.type === 'image_gallery') {
+                return (
+                  <div key={block.id} className="col-span-2">
+                    <ImageGalleryBlock block={block} theme={theme} />
+                  </div>
                 )
               }
 
