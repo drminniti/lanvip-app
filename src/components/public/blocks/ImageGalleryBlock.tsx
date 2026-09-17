@@ -144,11 +144,11 @@ export function ImageGalleryBlock({ block, accent }: ImageGalleryBlockProps) {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full max-h-[85vh] p-4 relative z-30"
+              className="w-full h-full max-h-[85%] p-4 relative z-30"
             >
-              <div className="w-full h-full flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide items-center px-4 md:px-12">
+              <div className="w-full h-full flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide items-center px-[5%] sm:px-[10%]">
                 {images.map((img) => (
-                  <div key={img.id} className="flex-none w-[85vw] h-full max-h-full snap-center flex items-center justify-center">
+                  <div key={img.id} className="flex-none w-[90%] sm:w-[80%] h-full max-h-full snap-center flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                       src={img.url}
