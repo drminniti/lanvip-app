@@ -811,7 +811,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         if (galleryFiles.length > 0) {
           for (let i = 0; i < galleryFiles.length; i++) {
             const file = galleryFiles[i]
-            const optimizedBlob = await optimizeImage(file, { maxWidth: 1920, maxHeight: 1920, quality: 0.8 })
+            const optimizedBlob = await optimizeImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.75 })
             const id = crypto.randomUUID()
             const storageRef = ref(storage, `users/${user?.uid}/gallery/${id}.webp`)
             const snapshot = await uploadBytes(storageRef, optimizedBlob, { contentType: 'image/webp' })
