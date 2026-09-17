@@ -421,6 +421,73 @@ function YouTubeDisplaySelector({
   )
 }
 
+function ImageGalleryDisplaySelector({
+  displayMode,
+  setDisplayMode,
+  blockWidth,
+  setBlockWidth,
+}: {
+  displayMode: 'player' | 'button'
+  setDisplayMode: (v: 'player' | 'button') => void
+  blockWidth: BlockWidth
+  setBlockWidth: (v: BlockWidth) => void
+}) {
+  const isCarousel = displayMode === 'player'
+  const isButtonFull = displayMode === 'button' && blockWidth === 'full'
+  const isButtonHalf = displayMode === 'button' && blockWidth === 'half'
+
+  return (
+    <div className="space-y-2">
+      <label className="label-dark">Ancho en la grilla</label>
+      <div className="grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          onClick={() => { setDisplayMode('player'); setBlockWidth('full') }}
+          className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
+          style={{
+            background: isCarousel ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.03)',
+            border:     isCarousel ? '1.5px solid rgba(212,175,55,0.3)' : '1.5px solid transparent',
+          }}
+        >
+          <div className="w-full">
+            <div className="h-5 rounded w-full" style={{ background: isCarousel ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.08)' }} />
+          </div>
+          <span className="text-xs font-medium" style={{ color: isCarousel ? '#D4AF37' : '#666' }}>Carrousel</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setDisplayMode('button'); setBlockWidth('full') }}
+          className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
+          style={{
+            background: isButtonFull ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+            border:     isButtonFull ? '1.5px solid rgba(255,255,255,0.20)' : '1.5px solid transparent',
+          }}
+        >
+          <div className="w-full">
+            <div className="h-5 rounded w-full" style={{ background: isButtonFull ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)' }} />
+          </div>
+          <span className="text-xs font-medium" style={{ color: isButtonFull ? '#F5F5F5' : '#666' }}>Completo</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setDisplayMode('button'); setBlockWidth('half') }}
+          className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all"
+          style={{
+            background: isButtonHalf ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+            border:     isButtonHalf ? '1.5px solid rgba(255,255,255,0.20)' : '1.5px solid transparent',
+          }}
+        >
+          <div className="w-full flex gap-1">
+            <div className="h-5 rounded flex-1" style={{ background: isButtonHalf ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)' }} />
+            <div className="h-5 rounded flex-1" style={{ background: 'rgba(255,255,255,0.05)' }} />
+          </div>
+          <span className="text-xs font-medium" style={{ color: isButtonHalf ? '#F5F5F5' : '#666' }}>Mitad</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // FeaturedToggle — independent from width; controls gold glassmorphism glow
 function FeaturedToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -1441,6 +1508,13 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                       <>
                         {(blockType === 'youtube' || blockType === 'spotify') ? (
                           <YouTubeDisplaySelector 
+                            displayMode={displayMode}
+                            setDisplayMode={setDisplayMode}
+                            blockWidth={blockWidth}
+                            setBlockWidth={setBlockWidth}
+                          />
+                        ) : blockType === 'image_gallery' ? (
+                          <ImageGalleryDisplaySelector
                             displayMode={displayMode}
                             setDisplayMode={setDisplayMode}
                             blockWidth={blockWidth}

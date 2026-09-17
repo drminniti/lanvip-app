@@ -956,7 +956,7 @@ function Content({ profile, blocks, isCustomTheme, accent, theme, isVipActive }:
 
               if (block.type === 'image_gallery') {
                 return (
-                  <div key={block.id} className="col-span-2">
+                  <div key={block.id} className={block.width === 'half' ? 'col-span-1' : 'col-span-2'}>
                     <ImageGalleryBlock block={block} accent={accent} />
                   </div>
                 )
