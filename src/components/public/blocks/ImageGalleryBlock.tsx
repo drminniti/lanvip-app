@@ -2,18 +2,15 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { Block, ThemeSettings } from '@/types'
-import { matchThemeId, getThemeById } from '@/lib/themes'
+import type { Block } from '@/types'
 
 interface ImageGalleryBlockProps {
   block: Block
-  theme: ThemeSettings
+  accent: string
 }
 
-export function ImageGalleryBlock({ block, theme }: ImageGalleryBlockProps) {
+export function ImageGalleryBlock({ block, accent }: ImageGalleryBlockProps) {
   const images = block.content.galleryImages || []
-  const themeDetails = getThemeById(matchThemeId(theme))
-  const accent = themeDetails?.accent || '#D4AF37'
   
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
 
