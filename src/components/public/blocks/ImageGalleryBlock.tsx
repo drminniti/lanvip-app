@@ -36,11 +36,17 @@ export function ImageGalleryBlock({ block, accent }: ImageGalleryBlockProps) {
         {images.length === 0 ? (
           <p className="text-xs text-center" style={{ color: '#888' }}>No hay imágenes en esta galería.</p>
         ) : (
-          <div className="w-full columns-2 gap-2 space-y-2">
+          <div 
+            className="w-full flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 scrollbar-hide"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none' 
+            }}
+          >
             {images.map((img, index) => (
               <div 
                 key={img.id} 
-                className="relative w-full overflow-hidden rounded-xl cursor-pointer break-inside-avoid shadow-sm"
+                className="relative flex-none w-[85%] sm:w-[280px] aspect-[4/3] overflow-hidden rounded-xl cursor-pointer shadow-sm snap-center"
                 onClick={() => setSelectedImageIndex(index)}
               >
                 <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all z-10 pointer-events-none" />
@@ -48,7 +54,7 @@ export function ImageGalleryBlock({ block, accent }: ImageGalleryBlockProps) {
                 <img 
                   src={img.url} 
                   alt={`Gallery image ${index + 1}`}
-                  className="w-full h-auto object-cover hover:scale-105 transition-transform duration-500 ease-out"
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 ease-out"
                   loading="lazy"
                 />
               </div>
