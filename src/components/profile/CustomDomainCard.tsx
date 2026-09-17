@@ -76,6 +76,7 @@ export function CustomDomainCard({ initialDomain = '', isVip }: CustomDomainCard
 
   const confirmSave = async () => {
     setShowConfirmModal(false)
+    if (!user?.uid) return
     const sanitizedDomain = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/+$/, '')
     
     setLoading(true)
