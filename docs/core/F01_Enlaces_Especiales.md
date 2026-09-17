@@ -14,7 +14,7 @@ Los bloques especiales transforman la Micro-Landing de un directorio de enlaces 
 
 ## Tipos de Bloque Soportados
 
-### `link` — Enlace estándar
+### `link` — Enlace estándar [Plan: Free]
 
 **Propósito:** Cualquier URL pública con título e ícono personalizable.
 
@@ -30,7 +30,7 @@ Los bloques especiales transforman la Micro-Landing de un directorio de enlaces 
 
 ---
 
-### `social` — Red Social
+### `social` — Red Social [Plan: Free]
 
 **Propósito:** Perfil en plataforma social con generación automática de URL.
 
@@ -52,7 +52,7 @@ Los bloques especiales transforman la Micro-Landing de un directorio de enlaces 
 
 ---
 
-### `vcard` — Tarjeta de Contacto VIP ⭐ NEW
+### `vcard` — Tarjeta de Contacto VIP [Plan: Free]
 
 **Propósito:** Permite al visitante descargar los datos de contacto del usuario como archivo `.vcf` (estándar universal compatible con iOS, Android y Outlook).
 
@@ -78,7 +78,7 @@ Los bloques especiales transforman la Micro-Landing de un directorio de enlaces 
 
 ---
 
-### `calendly` — Agendar Reunión ⭐ NEW
+### `calendly` — Agendar Reunión [Plan: VIP]
 
 **Propósito:** Botón de alta conversión que lleva al visitante directamente a la página de reserva de Calendly del usuario.
 
@@ -100,7 +100,7 @@ Los bloques especiales transforman la Micro-Landing de un directorio de enlaces 
 
 ---
 
-### `image_gallery` — Galería de Imágenes VIP ⭐ NEW
+### `image_gallery` — Galería de Imágenes VIP [Plan: VIP]
 
 **Propósito:** Exhibir un portfolio visual en la landing mediante un mosaico dinámico y visualización ampliada (Lightbox) con cero costo de infraestructura.
 

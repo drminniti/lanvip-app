@@ -63,6 +63,7 @@ const BLOCK_TYPES: {
   bg:       string
   border:   string
 }[] = [
+  // --- FREE ---
   {
     id:       'link',
     emoji:    '🔗',
@@ -80,6 +81,14 @@ const BLOCK_TYPES: {
     border:   'rgba(59,130,246,0.20)',
   },
   {
+    id:       'email',
+    emoji:    '📧',
+    label:    'Email',
+    subtitle: 'Botón de contacto',
+    bg:       'rgba(59,130,246,0.08)',
+    border:   'rgba(59,130,246,0.20)',
+  },
+  {
     id:       'vcard',
     emoji:    '👤',
     label:    'Tarjeta VIP',
@@ -87,14 +96,8 @@ const BLOCK_TYPES: {
     bg:       'rgba(34,197,94,0.08)',
     border:   'rgba(34,197,94,0.20)',
   },
-  {
-    id:       'calendly',
-    emoji:    '📅',
-    label:    'Calendly',
-    subtitle: 'Agendar reuniones',
-    bg:       'rgba(0,105,255,0.08)',
-    border:   'rgba(0,105,255,0.20)',
-  },
+  
+  // --- VIP ---
   {
     id:       'divider',
     emoji:    '―',
@@ -110,6 +113,14 @@ const BLOCK_TYPES: {
     subtitle: 'Encabezado de grupo',
     bg:       'rgba(168,85,247,0.08)',
     border:   'rgba(168,85,247,0.20)',
+  },
+  {
+    id:       'image_gallery',
+    emoji:    '📸',
+    label:    'Galería VIP',
+    subtitle: 'Mosaico de imágenes',
+    bg:       'rgba(236,72,153,0.08)',
+    border:   'rgba(236,72,153,0.20)',
   },
   {
     id:       'youtube',
@@ -128,20 +139,12 @@ const BLOCK_TYPES: {
     border:   'rgba(29,185,84,0.20)',
   },
   {
-    id:       'email',
-    emoji:    '📧',
-    label:    'Email',
-    subtitle: 'Botón de contacto',
-    bg:       'rgba(59,130,246,0.08)',
-    border:   'rgba(59,130,246,0.20)',
-  },
-  {
-    id:       'image_gallery',
-    emoji:    '📸',
-    label:    'Galería VIP',
-    subtitle: 'Mosaico de imágenes',
-    bg:       'rgba(236,72,153,0.08)',
-    border:   'rgba(236,72,153,0.20)',
+    id:       'calendly',
+    emoji:    '📅',
+    label:    'Calendly',
+    subtitle: 'Agendar reuniones',
+    bg:       'rgba(0,105,255,0.08)',
+    border:   'rgba(0,105,255,0.20)',
   },
 ]
 
@@ -973,7 +976,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                     className="grid grid-cols-2 gap-3"
                   >
                     {BLOCK_TYPES.map(bt => {
-                      const isPremium = bt.id === 'youtube' || bt.id === 'spotify'
+                      const isPremium = ['divider', 'section_title', 'image_gallery', 'youtube', 'spotify', 'calendly'].includes(bt.id)
                       const isLocked = isPremium && !isVip
 
                       return (
