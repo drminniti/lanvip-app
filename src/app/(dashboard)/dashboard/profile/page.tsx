@@ -384,6 +384,8 @@ export default function ProfilePage() {
             </motion.button>
           </form>
 
+          <CustomDomainCard initialDomain={profile.customDomain} isVip={isVip} />
+
           {/* Theme Picker — saves instantly */}
           <div className="glass-card p-6">
             <h2 className="text-sm font-semibold mb-4" style={{ color: '#F5F5F5' }}>
