@@ -811,7 +811,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         if (galleryFiles.length > 0) {
           for (let i = 0; i < galleryFiles.length; i++) {
             const file = galleryFiles[i]
-            const optimizedBlob = await optimizeImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.75 })
+            // The files in galleryFiles are already optimized to WebP by the onChange handler!
+            const optimizedBlob = file
             const id = crypto.randomUUID()
             const storageRef = ref(storage, `users/${user?.uid}/gallery/${id}.webp`)
             const snapshot = await uploadBytes(storageRef, optimizedBlob, { contentType: 'image/webp' })
@@ -1440,19 +1441,33 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             type="file"
                             accept="image/*"
                             multiple
-                            onChange={e => {
-                              if (e.target.files) {
+                            onChange={async e => {
+                              if (e.target.files && e.target.files.length > 0) {
                                 const newFiles = Array.from(e.target.files)
                                 if (galleryImages.length + galleryFiles.length + newFiles.length > 5) {
                                   setError('Máximo 5 imágenes por galería.')
                                   return
                                 }
-                                setGalleryFiles([...galleryFiles, ...newFiles])
                                 setError('')
+                                setUploadingGallery(true)
+                                try {
+                                  const optimizedNewFiles: File[] = []
+                                  for (const file of newFiles) {
+                                    const blob = await optimizeImage(file, { maxWidth: 1200, maxHeight: 1200, quality: 0.75 })
+                                    const webpFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", { type: 'image/webp' })
+                                    optimizedNewFiles.push(webpFile)
+                                  }
+                                  setGalleryFiles(prev => [...prev, ...optimizedNewFiles])
+                                } catch (err: any) {
+                                  setError('Error al procesar imagen: ' + err.message)
+                                } finally {
+                                  setUploadingGallery(false)
+                                  e.target.value = ''
+                                }
                               }
                             }}
-                            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[rgba(255,255,255,0.1)] file:text-white hover:file:bg-[rgba(255,255,255,0.2)]"
-                            disabled={uploadingGallery}
+                            className="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-[rgba(255,255,255,0.1)] file:text-white hover:file:bg-[rgba(255,255,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={uploadingGallery || saving}
                           />
                           {galleryImages.length > 0 && (
                             <div className="mt-3 space-y-2">
