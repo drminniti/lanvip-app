@@ -35,8 +35,8 @@ export function proxy(req: NextRequest) {
 
   // If the hostname is NOT one of our allowed core domains, it's a custom domain!
   if (!allowedDomains.includes(hostname) && !isVercelDomain) {
-    // Rewrite to our dynamic route _domain/[domain]/[path]
-    return NextResponse.rewrite(new URL(`/_domain/${hostname}${url.pathname}`, req.url))
+    // Rewrite to our dynamic route domain/[domain]/[path]
+    return NextResponse.rewrite(new URL(`/domain/${hostname}${url.pathname}`, req.url))
   }
 
   return NextResponse.next()

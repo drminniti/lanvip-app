@@ -100,7 +100,7 @@ export default async function CustomDomainPublicPage({
   const { domain } = await params
 
   const profile = await getPublicProfileByCustomDomain(domain)
-  if (!profile) return <div style={{ color: 'white', padding: '50px' }}><h1>DEBUG INFO</h1><p>params.domain = "{domain}"</p><p>Decoded: "{decodeURIComponent(domain)}"</p><p>Profile is null for this domain.</p></div>
+  if (!profile) notFound()
 
   const blocks = await getActiveBlocksByUserId(profile.uid)
 
