@@ -126,7 +126,7 @@ export function ImageGalleryBlock({ block, accent }: ImageGalleryBlockProps) {
     <>
       {isButtonMode ? buttonView : carouselView}
 
-      {/* Lightbox Modal */}
+      {/* Horizontal Scroll Modal */}
       <AnimatePresence>
         {selectedImageIndex !== null && (
           <motion.div
@@ -137,10 +137,7 @@ export function ImageGalleryBlock({ block, accent }: ImageGalleryBlockProps) {
             className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center"
           >
             {/* Toolbar */}
-            <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50">
-              <span className="text-sm font-medium" style={{ color: '#888' }}>
-                {selectedImageIndex + 1} / {images.length}
-              </span>
+            <div className="absolute top-0 right-0 p-4 flex justify-end items-center z-50">
               <button 
                 onClick={() => setSelectedImageIndex(null)}
                 className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
@@ -150,39 +147,26 @@ export function ImageGalleryBlock({ block, accent }: ImageGalleryBlockProps) {
               </button>
             </div>
 
-            {/* Navigation Areas */}
-            <div 
-              className="absolute left-0 top-1/2 bottom-0 w-1/3 z-40 cursor-w-resize flex items-center px-4"
-              onClick={() => setSelectedImageIndex((prev) => prev !== null ? (prev === 0 ? images.length - 1 : prev - 1) : null)}
-            >
-              <div className="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur opacity-0 hover:opacity-100 transition-opacity">
-                ←
-              </div>
-            </div>
-            <div 
-              className="absolute right-0 top-1/2 bottom-0 w-1/3 z-40 cursor-e-resize flex items-center justify-end px-4"
-              onClick={() => setSelectedImageIndex((prev) => prev !== null ? (prev === images.length - 1 ? 0 : prev + 1) : null)}
-            >
-              <div className="w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur opacity-0 hover:opacity-100 transition-opacity">
-                →
-              </div>
-            </div>
-
-            {/* Main Image */}
+            {/* Horizontal Scroll Area */}
             <motion.div
-              key={selectedImageIndex}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="w-full h-full max-w-5xl max-h-[85vh] p-4 flex items-center justify-center relative z-30 pointer-events-none"
+              className="w-full h-full max-h-[85vh] p-4 relative z-30"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
-                src={images[selectedImageIndex].url}
-                alt="Imagen ampliada"
-                className="max-w-full max-h-full object-contain pointer-events-auto rounded-lg shadow-2xl"
-              />
+              <div className="w-full h-full flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide items-center px-4 md:px-12">
+                {images.map((img) => (
+                  <div key={img.id} className="flex-none w-[85vw] h-full max-h-full snap-center flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={img.url}
+                      alt="Imagen ampliada"
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                    />
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         )}
