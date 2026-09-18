@@ -109,14 +109,6 @@ const BLOCK_TYPES: {
     border:   'rgba(255,255,255,0.10)',
   },
   {
-    id:       'section_title',
-    emoji:    '§',
-    label:    'Sección',
-    subtitle: 'Encabezado de grupo',
-    bg:       'rgba(168,85,247,0.08)',
-    border:   'rgba(168,85,247,0.20)',
-  },
-  {
     id:       'image_gallery',
     emoji:    '📸',
     label:    'Galería VIP',
