@@ -150,7 +150,7 @@ const BLOCK_TYPES: {
   },
   {
     id:       'donation',
-    emoji:    '☕️',
+    emoji:    '💰',
     label:    'Apoyos y Pagos',
     subtitle: 'Recibe apoyos',
     bg:       'rgba(212,175,55,0.08)',
