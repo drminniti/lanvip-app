@@ -463,6 +463,11 @@ export default function ProfilePage() {
                   )}
 
                   <div className="px-6 pb-6 pt-2 border-t border-white/5 space-y-4 mt-2">
+                    <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-4 text-xs">
+                      <p className="text-[#A3A3A3]">
+                        <span className="font-medium text-[#F5F5F5]">Aclaración:</span> Google y WhatsApp pueden tardar varios días en reflejar los cambios tras guardar.
+                      </p>
+                    </div>
                     <div className="space-y-1">
                       <label htmlFor="prof-seo-title" className="label-dark">Meta Título</label>
                       <input
