@@ -625,7 +625,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       const resolvedHandle = uit === 'social' ? handleFromUrl(pt, initialData.content.url ?? '') : ''
       setHandle(resolvedHandle)
       setLinkedinType(pt === 'linkedin' && resolvedHandle.startsWith('company/') ? 'company' : 'personal')
-      setUrl((uit === 'link' || uit === 'calendly' || uit === 'youtube' || uit === 'spotify') ? (initialData.content.url ?? '') : '')
+      setUrl((uit === 'link' || uit === 'calendly' || uit === 'youtube' || uit === 'spotify' || uit === 'donation') ? (initialData.content.url ?? '') : '')
       setIcon(initialData.content.icon ?? '🔗')
       setDescription(initialData.content.description ?? '')
       setIsFeatured(initialData.isFeatured ?? false)
@@ -649,6 +649,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setPhone(''); setEmail(''); setCompany(''); setJobTitle('')
       setAutoplay(false)
       setDisplayMode('player')
+      setDonationPlatform('cafecito')
       setGalleryImages([])
       setGalleryFiles([])
       setDeletedGalleryImages([])
