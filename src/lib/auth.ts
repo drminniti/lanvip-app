@@ -176,6 +176,7 @@ export interface UpdateProfileData {
   avatarUrl?:      string
   themeSettings?:  ThemeSettings
   customDomain?:   string
+  faviconUrl?:     string
 }
 
 const RESERVED_USERNAMES = [

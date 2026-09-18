@@ -10,6 +10,7 @@ import { ThemePicker } from '@/components/profile/ThemePicker'
 import { LandingPreview } from '@/components/profile/LandingPreview'
 import { AvatarUploader } from '@/components/profile/AvatarUploader'
 import { CustomDomainCard } from '@/components/profile/CustomDomainCard'
+import { FaviconUploader } from '@/components/profile/FaviconUploader'
 import type { VipTheme } from '@/lib/themes'
 import type { ThemeSettings } from '@/types'
 import { useSubscription } from '@/hooks/useSubscription'
@@ -385,6 +386,40 @@ export default function ProfilePage() {
           </form>
 
           <CustomDomainCard initialDomain={profile.customDomain} isVip={isVip} />
+
+          {/* Favicon Uploader */}
+          <div className="glass-card p-6 mt-6">
+            <h2 className="text-sm font-semibold mb-4 flex items-center gap-2" style={{ color: '#F5F5F5' }}>
+              Favicon Personalizado
+              {!isVip && <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">VIP</span>}
+            </h2>
+            
+            {isVip ? (
+              <FaviconUploader
+                currentUrl={profile.faviconUrl}
+                onUploadSuccess={url => updateUserProfile(user!.uid, { faviconUrl: url })}
+                onRemoveSuccess={() => updateUserProfile(user!.uid, { faviconUrl: '' })}
+              />
+            ) : (
+              <div 
+                className="relative bg-black/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-black/60 rounded-xl p-8 border border-white/5"
+                onClick={openUpgradeModal}
+              >
+                <div className="flex flex-col items-center gap-2 text-center max-w-[80%]">
+                  <div className="bg-[#D4AF37]/20 p-2 rounded-full mb-1">
+                    <svg className="w-6 h-6 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <span className="text-sm font-bold text-white tracking-wide">Destacá en las pestañas del navegador</span>
+                  <span className="text-xs text-[#A3A3A3]">Actualizá a VIP para subir tu propio ícono (Favicon) y hacer que tu página se sienta como tu propia app.</span>
+                  <button type="button" className="mt-2 text-xs font-bold text-black bg-[#D4AF37] hover:bg-[#F2CD5C] px-4 py-1.5 rounded-full transition-colors">
+                    Actualizar a VIP
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Theme Picker — saves instantly */}
           <div className="glass-card p-6">

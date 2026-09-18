@@ -67,6 +67,7 @@ export async function generateMetadata({
   return {
     title,
     description,
+    ...(profile.faviconUrl ? { icons: { icon: profile.faviconUrl } } : {}),
     openGraph: {
       title,
       description,

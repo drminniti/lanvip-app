@@ -57,6 +57,7 @@ export interface UserProfile {
   organizationId: string | null
   isNfcEnabled: boolean
   customDomain?: string // Sprint 5 VIP feature: User's custom domain (e.g. 'midominio.com')
+  faviconUrl?: string // Sprint 5 VIP feature: Custom favicon URL
 
   // ── Admin & Seguridad ──
   role?: UserRole                 // Por defecto asume 'user' si no existe

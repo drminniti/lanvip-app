@@ -37,4 +37,33 @@ export async function removeUserAvatar(userId: string): Promise<void> {
     'avatarUrl': ''
   })
 }
+export async function uploadUserFavicon(userId: string, file: File, cropPixels?: { x: number; y: number; width: number; height: number }): Promise<string> {
+  const optimizedBlob = await optimizeImage(file, { maxWidth: 64, maxHeight: 64, quality: 1, cropPixels }) // smaller size for favicons
+  
+  const storage = getFirebaseStorage()
+  const faviconRef = ref(storage, `users/${userId}/favicon.webp`)
+  
+  await uploadBytes(faviconRef, optimizedBlob, {
+    contentType: optimizedBlob.type || 'image/webp',
+    cacheControl: CACHE_CONTROL
+  })
+  
+  const downloadUrl = await getDownloadURL(faviconRef)
+  
+  // Update Firestore profile
+  const db = getFirebaseDb()
+  const userRef = doc(db, 'users', userId)
+  await updateDoc(userRef, {
+    'faviconUrl': downloadUrl
+  })
+  
+  return downloadUrl
+}
 
+export async function removeUserFavicon(userId: string): Promise<void> {
+  const db = getFirebaseDb()
+  const userRef = doc(db, 'users', userId)
+  await updateDoc(userRef, {
+    'faviconUrl': ''
+  })
+}
