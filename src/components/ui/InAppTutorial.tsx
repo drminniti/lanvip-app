@@ -15,19 +15,48 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
   const driverObj = useRef<ReturnType<typeof driver> | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [savedStepIndex, setSavedStepIndex] = useState(0)
 
-  useEffect(() => {
-    setMounted(true)
-    console.log('[Lanvip] InAppTutorial mounted with uid:', uid)
-    
-    // Only initialize if not already done to prevent duplicate drivers
-    if (driverObj.current) {
-      console.log('[Lanvip] InAppTutorial already initialized')
-      return
+  const steps = [
+    {
+      popover: {
+        title: '¡Bienvenido a Lanvip!',
+        description: 'Vamos a dar un paseo rápido para que aprendas a crear tu nueva Micro-Landing VIP. Prometemos que será breve.',
+        side: 'top',
+        align: 'center'
+      }
+    },
+    {
+      element: typeof window !== 'undefined' && window.innerWidth < 768 ? '#mobile-nav-perfil' : '#nav-perfil',
+      popover: {
+        title: 'Configurá tu Perfil',
+        description: 'Acá podés cambiar tu nombre de usuario, subir tu foto de perfil, agregar una biografía y conectar tu Dominio Personalizado.',
+        side: 'top',
+        align: 'center'
+      }
+    },
+    {
+      element: typeof window !== 'undefined' && window.innerWidth < 768 ? '#mobile-nav-bloques' : '#nav-bloques',
+      popover: {
+        title: 'Armá tu Landing',
+        description: 'En esta sección podrás agregar todos tus links, redes sociales, videos y reorganizarlos como más te guste.',
+        side: 'top',
+        align: 'center'
+      }
+    },
+    {
+      element: typeof window !== 'undefined' && window.innerWidth < 768 ? '#btn-view-public-profile-mobile' : '#btn-view-public-profile-sidebar',
+      popover: {
+        title: 'Previsualizá tu éxito',
+        description: 'Hacé clic acá en cualquier momento para ver cómo queda tu perfil en vivo. ¡Asegurate de que se vea increíble!',
+        side: 'top',
+        align: 'center'
+      }
     }
+  ]
 
-    console.log('[Lanvip] Initializing driver.js...')
-    driverObj.current = driver({
+  const initDriver = (startIndex = 0) => {
+    return driver({
       showProgress: true,
       allowClose: true,
       nextBtnText: 'Siguiente &rarr;',
@@ -38,75 +67,65 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
       onDestroyStarted: () => {
         if (!driverObj.current?.hasNextStep()) {
           driverObj.current?.destroy()
-          // Mark tutorial as seen in Firebase
+          driverObj.current = null
           updateUserProfile(uid, { hasSeenTutorial: true }).catch(err => {
             console.error('[Lanvip] Failed to save tutorial completion:', err)
           })
         } else {
-          // Show custom modal instead of native confirm
+          // Save the current step before destroying
+          // @ts-ignore driver.js doesn't expose getActiveIndex in its typedefs sometimes, but it exists
+          const currentIndex = driverObj.current?.getState?.().activeIndex ?? startIndex
+          setSavedStepIndex(currentIndex)
+          
+          // Completely destroy driver to release click traps
+          driverObj.current?.destroy()
+          driverObj.current = null
+          
+          // Show our React modal
           setShowCancelModal(true)
         }
       },
-      steps: [
-        {
-          popover: {
-            title: '¡Bienvenido a Lanvip!',
-            description: 'Vamos a dar un paseo rápido para que aprendas a crear tu nueva Micro-Landing VIP. Prometemos que será breve.',
-            side: 'top',
-            align: 'center'
-          }
-        },
-        {
-          element: window.innerWidth < 768 ? '#mobile-nav-perfil' : '#nav-perfil',
-          popover: {
-            title: 'Configurá tu Perfil',
-            description: 'Acá podés cambiar tu nombre de usuario, subir tu foto de perfil, agregar una biografía y conectar tu Dominio Personalizado.',
-            side: 'top',
-            align: 'center'
-          }
-        },
-        {
-          element: window.innerWidth < 768 ? '#mobile-nav-bloques' : '#nav-bloques',
-          popover: {
-            title: 'Armá tu Landing',
-            description: 'En esta sección podrás agregar todos tus links, redes sociales, videos y reorganizarlos como más te guste.',
-            side: 'top',
-            align: 'center'
-          }
-        },
-        {
-          element: window.innerWidth < 768 ? '#btn-view-public-profile-mobile' : '#btn-view-public-profile-sidebar',
-          popover: {
-            title: 'Previsualizá tu éxito',
-            description: 'Hacé clic acá en cualquier momento para ver cómo queda tu perfil en vivo. ¡Asegurate de que se vea increíble!',
-            side: 'top',
-            align: 'center'
-          }
-        }
-      ]
+      // @ts-ignore steps type issue with driver.js when dynamic
+      steps: steps
     })
+  }
+
+  useEffect(() => {
+    setMounted(true)
+    
+    // Only initialize if not already done
+    if (driverObj.current) return
+
+    driverObj.current = initDriver(0)
 
     const timer = setTimeout(() => {
-      console.log('[Lanvip] Driving tutorial...')
-      driverObj.current?.drive()
+      driverObj.current?.drive(0)
     }, 500)
 
     return () => {
-      console.log('[Lanvip] Unmounting tutorial...')
       clearTimeout(timer)
       if (driverObj.current) {
         driverObj.current.destroy()
         driverObj.current = null
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid])
 
   function handleSkipTutorial() {
     setShowCancelModal(false)
-    driverObj.current?.destroy()
     updateUserProfile(uid, { hasSeenTutorial: true }).catch(err => {
       console.error('[Lanvip] Failed to save tutorial completion:', err)
     })
+  }
+
+  function handleContinueTutorial() {
+    setShowCancelModal(false)
+    // Re-initialize driver from the saved step
+    driverObj.current = initDriver(savedStepIndex)
+    setTimeout(() => {
+      driverObj.current?.drive(savedStepIndex)
+    }, 100)
   }
 
   const modalContent = (
@@ -119,7 +138,7 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            onClick={() => setShowCancelModal(false)}
+            onClick={handleContinueTutorial}
           />
           
           {/* Modal Content */}
@@ -148,7 +167,7 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
             
             <div className="flex flex-col gap-3">
               <button
-                onClick={() => setShowCancelModal(false)}
+                onClick={handleContinueTutorial}
                 className="w-full py-3 px-4 bg-[#D4AF37] hover:bg-[#F5D989] text-black font-medium rounded-xl transition-colors"
               >
                 Continuar tutorial
