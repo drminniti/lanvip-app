@@ -151,7 +151,7 @@ const BLOCK_TYPES: {
   {
     id:       'donation',
     emoji:    '☕️',
-    label:    'Donaciones',
+    label:    'Apoyos y Pagos',
     subtitle: 'Recibe apoyos',
     bg:       'rgba(212,175,55,0.08)',
     border:   'rgba(212,175,55,0.30)',
@@ -732,6 +732,29 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     setPlatform(newPlatformId)
   }
 
+  function handleDonationChange(newPlat: 'cafecito' | 'mercadopago' | 'paypal') {
+    const defaultTitles = {
+      cafecito: 'Invitame un Cafecito',
+      mercadopago: 'Aportar con MercadoPago',
+      paypal: 'Donar vía PayPal'
+    }
+    const defaultIcons = {
+      cafecito: '☕️',
+      mercadopago: '🤝',
+      paypal: '💸'
+    }
+    
+    if (title.trim() === '' || title.trim() === defaultTitles[donationPlatform as keyof typeof defaultTitles]) {
+      setTitle(defaultTitles[newPlat])
+    }
+    
+    if (!icon || icon === defaultIcons[donationPlatform as keyof typeof defaultIcons]) {
+      setIcon(defaultIcons[newPlat])
+    }
+
+    setDonationPlatform(newPlat)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
@@ -917,7 +940,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       if (blockType === 'youtube')       return 'Editar video'
       if (blockType === 'spotify')       return 'Editar Spotify'
       if (blockType === 'image_gallery') return 'Editar Galería VIP'
-      if (blockType === 'donation')      return 'Editar Donación'
+      if (blockType === 'donation')      return 'Editar Apoyos'
       return 'Editar enlace'
     }
     if (step === 'type') return 'Nuevo bloque'
@@ -930,7 +953,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     if (blockType === 'youtube')       return 'YouTube'
     if (blockType === 'spotify')       return 'Spotify'
     if (blockType === 'image_gallery') return 'Galería VIP'
-    if (blockType === 'donation')      return 'Donación'
+    if (blockType === 'donation')      return 'Apoyos y Pagos'
     return 'Enlace'
   }
 
@@ -1598,12 +1621,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                               <button
                                 key={plat}
                                 type="button"
-                                onClick={() => {
-                                  setDonationPlatform(plat)
-                                  if (plat === 'cafecito') { setIcon('☕️'); setTitle('Invitame un Cafecito') }
-                                  if (plat === 'mercadopago') { setIcon('🤝'); setTitle('Aportar con MercadoPago') }
-                                  if (plat === 'paypal') { setIcon('💸'); setTitle('Donar vía PayPal') }
-                                }}
+                                onClick={() => handleDonationChange(plat)}
                                 className={`flex-1 py-2 px-3 rounded-xl border text-sm transition-all ${donationPlatform === plat ? 'bg-white/10 border-white/20' : 'bg-transparent border-white/5 hover:bg-white/5'}`}
                               >
                                 {plat === 'cafecito' && 'Cafecito'}
@@ -1620,7 +1638,11 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                             type="url"
                             value={url}
                             onChange={e => setUrl(e.target.value)}
-                            placeholder={donationPlatform === 'cafecito' ? "Ej: https://cafecito.app/tuusuario" : "Ej: https://link.mercadopago.com.ar/..."}
+                            placeholder={
+                              donationPlatform === 'cafecito' ? "Ej: https://cafecito.app/tuusuario" :
+                              donationPlatform === 'mercadopago' ? "Ej: https://link.mercadopago.com.ar/..." :
+                              "Ej: https://paypal.me/tuusuario"
+                            }
                             className="input-dark"
                             required
                           />
