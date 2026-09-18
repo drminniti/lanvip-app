@@ -591,7 +591,7 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  <div className="px-6 pb-6 pt-2 border-t border-white/5 space-y-4 mt-2">
+                  <div className={`px-6 pb-6 pt-2 border-t border-white/5 space-y-4 mt-2 ${!isVip ? 'min-h-[200px]' : ''}`}>
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-sm font-semibold text-white">Activar Protección</h3>
