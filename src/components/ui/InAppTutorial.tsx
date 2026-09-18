@@ -30,7 +30,7 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
       element: typeof window !== 'undefined' && window.innerWidth < 768 ? '#mobile-nav-perfil' : '#nav-perfil',
       popover: {
         title: 'Configurá tu Perfil',
-        description: 'Acá podés cambiar tu nombre de usuario, subir tu foto de perfil, agregar una biografía, configurar tu SEO y conectar tu Dominio Personalizado.',
+        description: 'Acá podés cambiar tu nombre de usuario, subir tu foto de perfil, agregar una biografía, configurar tu SEO, proteger con contraseña y conectar tu Dominio Personalizado.',
         side: 'top',
         align: 'center'
       }
