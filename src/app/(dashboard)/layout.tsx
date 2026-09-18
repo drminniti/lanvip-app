@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useUserProfile } from '@/hooks/useUserProfile'
 import { DashboardContext } from '@/context/DashboardContext'
 import { PaywallProvider } from '@/context/PaywallContext'
+import { InAppTutorial } from '@/components/ui/InAppTutorial'
 
 /**
  * Dashboard layout guard: checks hasCompletedOnboarding after mount.
@@ -51,6 +52,9 @@ export default function DashboardLayout({
   return (
     <DashboardContext.Provider value={{ profile, loading: authLoading || profileLoading, error }}>
       <PaywallProvider>
+        {user && profile && profile.hasSeenTutorial === false && (
+          <InAppTutorial uid={user.uid} />
+        )}
         <div className="flex min-h-screen" style={{ background: '#0A0A0A' }}>
           <DashboardNav />
           <main className="flex-1">

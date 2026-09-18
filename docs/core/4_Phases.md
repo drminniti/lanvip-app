@@ -64,3 +64,13 @@
 2. Armar gráficos/tarjetas simples de métricas en el Dashboard.
 3. **Reemplazar reglas Firestore de desarrollo** con reglas de producción granulares (ver `2_Architecture.md §4`).
 4. Configurar variables de entorno en Vercel y hacer deploy final.
+
+---
+
+### Fase 6: MVP Launch / Go To Market
+1. **Onboarding / Tutorial Interactivo**: Recorrido de los módulos principales mediante `driver.js` para guiar a los nuevos usuarios.
+2. **Generar QR descargable (FREE)**.
+3. **Bloque Link de Pagos (VIP)**: Cafecito, MercadoPago, PayPal.
+4. **Customización SEO y Seguridad**: Títulos meta y protección por contraseña.
+5. **Estilos de Perfil**: Header types y Avatar shapes.
+6. **Landing Comercial (Marketing Site)**.

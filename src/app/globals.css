@@ -212,3 +212,57 @@
 ::-webkit-scrollbar       { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.30); border-radius: 999px; }
+
+/* ── Driver.js Tutorial Theme ─────────────────────────────────────────────── */
+.lanvip-driver-popover {
+  background-color: #111111 !important;
+  color: #F5F5F5 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+  font-family: inherit !important;
+}
+.lanvip-driver-popover .driver-popover-title {
+  color: #D4AF37 !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  margin-bottom: 8px !important;
+}
+.lanvip-driver-popover .driver-popover-description {
+  color: #A3A3A3 !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+}
+.lanvip-driver-popover .driver-popover-footer button {
+  background-color: rgba(212, 175, 55, 0.1) !important;
+  color: #D4AF37 !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 6px 12px !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+.lanvip-driver-popover .driver-popover-footer button:hover {
+  background-color: rgba(212, 175, 55, 0.2) !important;
+  border-color: rgba(212, 175, 55, 0.5) !important;
+}
+.lanvip-driver-popover .driver-popover-footer .driver-popover-next-btn {
+  background-color: #D4AF37 !important;
+  color: #000 !important;
+}
+.lanvip-driver-popover .driver-popover-footer .driver-popover-next-btn:hover {
+  background-color: #F5D989 !important;
+}
+.lanvip-driver-popover .driver-popover-progress-text {
+  color: #666 !important;
+  font-size: 0.8rem !important;
+}
+/* Ensure the close button (X) looks good */
+.lanvip-driver-popover .driver-popover-close-btn {
+  color: #A3A3A3 !important;
+}
+.lanvip-driver-popover .driver-popover-close-btn:hover {
+  color: #FFF !important;
+}

@@ -51,6 +51,7 @@ export interface UserProfile {
    * email/password users who chose their username at registration.
    */
   hasCompletedOnboarding: boolean
+  hasSeenTutorial?: boolean
 
   // Business Model – Future-proofing fields (docs/core/5_Business_Model.md)
   plan: Plan

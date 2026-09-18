@@ -70,6 +70,7 @@ async function createUserDocument(
         organizationId:          null,
         isNfcEnabled:            false,
         hasCompletedOnboarding:  withExplicitUsername,
+        hasSeenTutorial:         false,
         createdAt:               serverTimestamp(),
       }
       await setDoc(userRef, newUser)
@@ -177,6 +178,7 @@ export interface UpdateProfileData {
   themeSettings?:  ThemeSettings
   customDomain?:   string
   faviconUrl?:     string
+  hasSeenTutorial?: boolean
 }
 
 const RESERVED_USERNAMES = [
