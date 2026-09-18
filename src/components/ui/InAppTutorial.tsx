@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
 import { updateUserProfile } from '@/lib/auth'
@@ -13,8 +14,10 @@ interface InAppTutorialProps {
 export function InAppTutorial({ uid }: InAppTutorialProps) {
   const driverObj = useRef<ReturnType<typeof driver> | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     console.log('[Lanvip] InAppTutorial mounted with uid:', uid)
     
     // Only initialize if not already done to prevent duplicate drivers
@@ -106,16 +109,16 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
     })
   }
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {showCancelModal && (
-        <div className="fixed inset-0 z-[10000001] flex items-center justify-center p-4">
+        <div className="fixed inset-0 flex items-center justify-center p-4" style={{ zIndex: 2147483647 }}>
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setShowCancelModal(false)}
           />
           
@@ -162,4 +165,7 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
       )}
     </AnimatePresence>
   )
+
+  if (!mounted) return null
+  return createPortal(modalContent, document.body)
 }
