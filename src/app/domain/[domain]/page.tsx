@@ -55,13 +55,17 @@ export async function generateMetadata({
     return { title: 'Perfil no encontrado | Lanvip' }
   }
 
-  const title = profile.plan === 'vip' 
-    ? { absolute: profile.displayName } 
-    : profile.displayName
-  const ogImageTitle = profile.displayName // Only the name for the OG image
-  const description = profile.bio
-    ? profile.bio
-    : `Mirá la Micro-Landing VIP de ${profile.displayName} en Lanvip.`
+  const isVip = profile.plan === 'vip'
+  
+  const seoTitle = (isVip && profile.seoTitle) ? profile.seoTitle : profile.displayName
+  const title = isVip ? { absolute: seoTitle } : seoTitle
+
+  const ogImageTitle = seoTitle // Only the name or seo title for the OG image
+  
+  let description = profile.bio || `Mirá la Micro-Landing VIP de ${profile.displayName} en Lanvip.`
+  if (isVip && profile.seoDescription) {
+    description = profile.seoDescription
+  }
     
   // Dynamic OG Image using the new endpoint
   const ogImageUrl = `https://lanvip.app/api/og?title=${encodeURIComponent(ogImageTitle)}${profile.avatarUrl ? `&image=${encodeURIComponent(profile.avatarUrl)}` : ''}`
