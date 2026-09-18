@@ -95,11 +95,9 @@ export function FaviconUploader({ currentUrl, isVip, onUploadSuccess, onRemoveSu
             <div>
               <h2 className="text-sm font-semibold flex items-center gap-2" style={{ color: '#F5F5F5' }}>
                 Favicon Personalizado
-                {!isVip && (
-                  <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
-                    VIP
-                  </span>
-                )}
+                <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
+                  VIP
+                </span>
               </h2>
               <p className="text-xs text-[#A3A3A3] mt-1">
                 Cambiá el ícono que aparece en la pestaña del navegador.
