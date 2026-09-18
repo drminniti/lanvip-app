@@ -55,7 +55,9 @@ export async function generateMetadata({
     return { title: 'Perfil no encontrado | Lanvip' }
   }
 
-  const title       = `${profile.displayName} | Lanvip`
+  const title = profile.plan === 'vip' 
+    ? { absolute: profile.displayName } 
+    : profile.displayName
   const ogImageTitle = profile.displayName // Only the name for the OG image
   const description = profile.bio
     ? profile.bio
