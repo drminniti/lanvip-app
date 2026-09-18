@@ -512,18 +512,29 @@ function BentoTile({
         animate={{ 
           opacity: 1, 
           y: 0,
-          boxShadow: `0 8px 32px ${bgColor}40`
+          boxShadow: block.isFeatured ? `0 0 24px ${bgColor}80` : `0 8px 32px ${bgColor}40`
         }}
         transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: 1.02, boxShadow: `0 0 32px ${bgColor}99` }}
         whileTap={{ scale: 0.98 }}
         className={`${colClass} w-full p-4 rounded-[20px] transition-shadow hover:shadow-xl relative overflow-hidden`}
         style={{
           background: bgColor,
           color: textColor,
+          border: block.isFeatured ? `2px solid rgba(255,255,255,0.4)` : 'none'
         }}
       >
         <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
+        {block.isFeatured && (
+          <span
+            aria-hidden="true"
+            style={{
+              position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
+              boxShadow: `inset 0 0 20px rgba(255,255,255,0.2)`,
+              pointerEvents: 'none', zIndex: 1,
+            }}
+          />
+        )}
         <div className="flex items-center justify-between gap-3 relative z-10">
           <div className="flex items-center gap-3">
             <span className="text-2xl">{block.content.icon || '💰'}</span>

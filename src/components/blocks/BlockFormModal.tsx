@@ -753,6 +753,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setIcon(defaultIcons[newPlat])
     }
 
+    if (newPlat !== donationPlatform) {
+      setUrl('')
+    }
     setDonationPlatform(newPlat)
   }
 
