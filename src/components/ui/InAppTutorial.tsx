@@ -43,30 +43,30 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
           }
         },
         {
-          element: '#nav-perfil',
+          element: window.innerWidth < 768 ? '#mobile-nav-perfil' : '#nav-perfil',
           popover: {
             title: 'Configurá tu Perfil',
             description: 'Acá podés cambiar tu nombre de usuario, subir tu foto de perfil, agregar una biografía y conectar tu Dominio Personalizado.',
-            side: 'right',
-            align: 'start'
+            side: 'top',
+            align: 'center'
           }
         },
         {
-          element: '#nav-bloques',
+          element: window.innerWidth < 768 ? '#mobile-nav-bloques' : '#nav-bloques',
           popover: {
             title: 'Armá tu Landing',
             description: 'En esta sección podrás agregar todos tus links, redes sociales, videos y reorganizarlos como más te guste.',
-            side: 'right',
-            align: 'start'
+            side: 'top',
+            align: 'center'
           }
         },
         {
-          element: '#btn-view-public-profile-sidebar',
+          element: window.innerWidth < 768 ? '#btn-view-public-profile-mobile' : '#btn-view-public-profile-sidebar',
           popover: {
             title: 'Previsualizá tu éxito',
             description: 'Hacé clic acá en cualquier momento para ver cómo queda tu perfil en vivo. ¡Asegurate de que se vea increíble!',
-            side: 'right',
-            align: 'start'
+            side: 'top',
+            align: 'center'
           }
         }
       ]
