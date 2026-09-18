@@ -19,7 +19,9 @@ El agente debe estructurar la base de datos en Firestore para soportar esta lóg
 - `{ id, name, adminUid, brandingSettings: { forceLogo, forceColors }, activeLicenses, maxLicenses }`
 
 ### 3. Reglas de Negocio en la Interfaz (UI)
-- **Feature Flags (Muros de Pago visuales):** El panel de administración debe estar preparado para renderizar un candado 🔒 o una etiqueta "PRO" en funcionalidades premium (ej. Analíticas Avanzadas, Dominio Personalizado, SEO Personalizado). Al hacer tap, se debe mostrar un modal de "Próximamente / Upgrade" para validar la intención de pago de los early adopters.
+- **Feature Flags (Muros de Pago visuales):** El panel de administración debe estar preparado para renderizar un candado 🔒 o una etiqueta "PRO" en funcionalidades premium (ej. Analíticas Avanzadas, Dominio Personalizado, SEO Personalizado, Protección con Contraseña). Al hacer tap, se debe mostrar un modal de "Próximamente / Upgrade" para validar la intención de pago de los early adopters.
+- **Galería de Imágenes (Carrusel):** Bloque especial para portfolios.
+- **Protección con Contraseña**: Opción para restringir el acceso a la micro-landing mediante una clave.
 - **Onboarding:** El flujo de registro debe ser extremadamente simple para facilitar el "Onboarding Consultivo" manual que se hará con los primeros usuarios.
 
 ### 4. Seguridad de Rutas y Roles

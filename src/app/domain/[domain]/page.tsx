@@ -4,6 +4,9 @@ import { getPublicProfileByCustomDomain, getActiveBlocksByUserId } from '@/lib/s
 import { PublicLanding }             from '@/components/public/PublicLanding'
 import type { UserProfile, Block }   from '@/types'
 
+import { cookies } from 'next/headers'
+import { PasswordPrompt }              from '@/components/profile/PasswordPrompt'
+
 type Params = { domain: string }
 
 export const dynamic = 'force-dynamic'
@@ -23,6 +26,7 @@ function serializeProfile(p: UserProfile): Serialized<UserProfile> {
     subscriptionId,
     isSubscriptionCancelled,
     planNotification,
+    profilePassword, // STRIP PASSWORD
     ...rest 
   } = p as any; // Cast to any to safely extract even if fields are technically missing from types sometimes
 
@@ -108,6 +112,16 @@ export default async function CustomDomainPublicPage({
 
   const profile = await getPublicProfileByCustomDomain(domain)
   if (!profile) notFound()
+
+  // VIP Password Protection check
+  if (profile.plan === 'vip' && profile.isPasswordProtected) {
+    const cookieStore = await cookies()
+    const authCookie = cookieStore.get(`lanvip_auth_${profile.uid}`)
+    
+    if (!authCookie || authCookie.value !== profile.profilePassword) {
+      return <PasswordPrompt profileUid={profile.uid} />
+    }
+  }
 
   const blocks = await getActiveBlocksByUserId(profile.uid)
 

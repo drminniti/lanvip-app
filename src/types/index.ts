@@ -64,6 +64,10 @@ export interface UserProfile {
   seoDescription?: string
   faviconUrl?: string // Sprint 5 VIP feature: Custom favicon URL
 
+  // VIP Password Protection
+  isPasswordProtected?: boolean
+  profilePassword?: string
+
   // ── Admin & Seguridad ──
   role?: UserRole                 // Por defecto asume 'user' si no existe
   

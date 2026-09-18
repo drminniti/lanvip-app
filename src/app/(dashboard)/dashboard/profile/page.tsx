@@ -35,6 +35,11 @@ export default function ProfilePage() {
   const [seoTitle, setSeoTitle]             = useState('')
   const [seoDescription, setSeoDescription] = useState('')
 
+  // VIP Password Protection
+  const [isPasswordProtected, setIsPasswordProtected] = useState(false)
+  const [profilePassword, setProfilePassword]         = useState('')
+  const [isPasswordExpanded, setIsPasswordExpanded]   = useState(false)
+
   // Sprint 4: Visuals
   // background state removed to rely on live profile state as it's saved immediately
 
@@ -72,6 +77,8 @@ export default function ProfilePage() {
     setAvatarUrl(profile.avatarUrl || user?.photoURL || '')
     setSeoTitle(profile.seoTitle ?? '')
     setSeoDescription(profile.seoDescription ?? '')
+    setIsPasswordProtected(profile.isPasswordProtected ?? false)
+    setProfilePassword(profile.profilePassword ?? '')
     
     // Sprint 4 Visuals
     // (background is now handled purely via ThemePicker and BackgroundUploader saving directly)
@@ -195,6 +202,8 @@ export default function ProfilePage() {
         avatarUrl:   avatarUrl.trim(),
         seoTitle:    seoTitle.trim(),
         seoDescription: seoDescription.trim(),
+        isPasswordProtected,
+        profilePassword,
         themeSettings: profile!.themeSettings
       })
       setSaveMsg({ type: 'ok', text: '¡Perfil y apariencia actualizados!' })
@@ -505,6 +514,140 @@ export default function ProfilePage() {
                           className="btn-accent w-full text-sm py-2"
                         >
                           {saving ? 'Guardando...' : 'Guardar SEO'}
+                        </button>
+                        {saveMsg && (
+                          <p className="text-xs text-center mt-2 font-medium" style={{ color: saveMsg.type === 'ok' ? '#4CAF72' : '#EF4444' }}>
+                            {saveMsg.text}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </form>
+
+          <form onSubmit={handleSave} className="glass-card p-0 overflow-hidden relative mb-6">
+            <button
+              type="button"
+              onClick={() => setIsPasswordExpanded(!isPasswordExpanded)}
+              className="w-full p-6 flex items-start justify-between text-left hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex items-start gap-4">
+                <div className="bg-white/5 p-2.5 rounded-xl border border-white/10 hidden sm:block">
+                  <svg className="w-5 h-5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-sm font-semibold flex items-center gap-2 text-white">
+                    Protección con Contraseña
+                    <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
+                      VIP
+                    </span>
+                  </h2>
+                  <p className="text-xs text-[#A3A3A3] mt-1">
+                    Restringí el acceso a tu perfil solo a quienes tengan la clave.
+                  </p>
+                </div>
+              </div>
+              <motion.div
+                animate={{ rotate: isPasswordExpanded ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-neutral-400"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </motion.div>
+            </button>
+
+            <AnimatePresence>
+              {isPasswordExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden relative"
+                >
+                  {!isVip && (
+                    <div 
+                      className="absolute inset-0 bg-black/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-black/60 rounded-xl"
+                      onClick={openUpgradeModal}
+                    >
+                      <div className="flex flex-col items-center gap-2 bg-[#111]/90 px-6 py-4 rounded-2xl border border-[#D4AF37]/30 shadow-2xl text-center max-w-[80%]">
+                        <div className="bg-[#D4AF37]/20 p-2 rounded-full mb-1">
+                          <svg className="w-6 h-6 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-bold text-white tracking-wide">Mejorá tu plan para Proteger con Contraseña</span>
+                        <span className="text-xs text-[#A3A3A3]">Mantené tu contenido exclusivo y privado solo para tu comunidad VIP.</span>
+                        <button type="button" className="mt-2 text-xs font-bold text-black bg-[#D4AF37] hover:bg-[#F2CD5C] px-4 py-1.5 rounded-full transition-colors">
+                          Actualizar a VIP
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="px-6 pb-6 pt-2 border-t border-white/5 space-y-4 mt-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold text-white">Activar Protección</h3>
+                        <p className="text-xs text-[#A3A3A3] mt-1">Si está activo, pedirémos contraseña para ver tu perfil.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isVip) setIsPasswordProtected(!isPasswordProtected)
+                        }}
+                        disabled={!isVip}
+                        className={`relative w-12 h-6 rounded-full transition-colors flex items-center px-1 ${
+                          (isPasswordProtected && isVip) ? 'bg-[#D4AF37]' : 'bg-[#333]'
+                        }`}
+                      >
+                        <motion.div
+                          className="w-4 h-4 bg-white rounded-full shadow-md"
+                          animate={{ x: (isPasswordProtected && isVip) ? 24 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </button>
+                    </div>
+
+                    <AnimatePresence>
+                      {isPasswordProtected && isVip && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="space-y-1 overflow-hidden"
+                        >
+                          <label htmlFor="prof-password" className="label-dark">Contraseña de acceso</label>
+                          <input
+                            id="prof-password"
+                            type="text"
+                            value={profilePassword}
+                            onChange={e => setProfilePassword(e.target.value)}
+                            placeholder="Ej: miclavesecreta123"
+                            className="input-dark"
+                            maxLength={30}
+                          />
+                          <p className="text-xs text-right mt-1" style={{ color: '#555' }}>
+                            {profilePassword.length}/30 caracteres
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                    
+                    {isVip && (
+                      <div className="pt-2">
+                        <button
+                          type="submit"
+                          disabled={saving || usernameStatus === 'taken' || usernameStatus === 'checking'}
+                          className="btn-accent w-full text-sm py-2"
+                        >
+                          {saving ? 'Guardando...' : 'Guardar Contraseña'}
                         </button>
                         {saveMsg && (
                           <p className="text-xs text-center mt-2 font-medium" style={{ color: saveMsg.type === 'ok' ? '#4CAF72' : '#EF4444' }}>

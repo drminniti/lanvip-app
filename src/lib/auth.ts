@@ -181,6 +181,8 @@ export interface UpdateProfileData {
   hasSeenTutorial?: boolean
   seoTitle?:       string
   seoDescription?: string
+  isPasswordProtected?: boolean
+  profilePassword?: string
 }
 
 const RESERVED_USERNAMES = [
