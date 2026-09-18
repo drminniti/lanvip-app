@@ -83,6 +83,7 @@ export type BlockType =
   | 'spotify'
   | 'text'
   | 'music'
+  | 'donation' // VIP feature for donations
   // ── Structural blocks (no click action, always full-width) ───────────────
   | 'divider'       // subtle visual separator (line / space)
   | 'section_title' // plain text heading to group links
@@ -109,6 +110,9 @@ export interface BlockContent {
   embedType?: string  // for Spotify (track, album, playlist, episode, show)
   autoplay?: boolean  // for YouTube
   displayMode?: 'player' | 'button' // for YouTube
+  
+  // ── Donation specific fields ──────────────────────────────────────────────
+  donationPlatform?: 'cafecito' | 'mercadopago' | 'paypal'
 
   // ── vCard-specific fields ───────────────────────────────────────────────
   /** Full phone number, e.g. "+54 11 1234-5678" */

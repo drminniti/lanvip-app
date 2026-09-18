@@ -38,6 +38,8 @@ export interface BlockFormData {
   displayMode?: 'player' | 'button'
   // image-gallery only
   galleryImages?: { id: string; url: string }[]
+  // donation-only
+  donationPlatform?: 'cafecito' | 'mercadopago' | 'paypal'
 }
 
 export type SocialPlatform = 'instagram' | 'linkedin' | 'x' | 'whatsapp' | 'youtube' | 'tiktok' | 'facebook'
@@ -56,7 +58,7 @@ const SOCIAL_PLATFORMS: { id: SocialPlatform; label: string; color: string; icon
 
 /** The block types the user can choose in step 1 */
 const BLOCK_TYPES: {
-  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify' | 'image_gallery'
+  id:       'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify' | 'image_gallery' | 'donation'
   emoji:    string
   label:    string
   subtitle: string
@@ -145,6 +147,14 @@ const BLOCK_TYPES: {
     subtitle: 'Agendar reuniones',
     bg:       'rgba(0,105,255,0.08)',
     border:   'rgba(0,105,255,0.20)',
+  },
+  {
+    id:       'donation',
+    emoji:    '☕️',
+    label:    'Donaciones',
+    subtitle: 'Recibe apoyos',
+    bg:       'rgba(212,175,55,0.08)',
+    border:   'rgba(212,175,55,0.30)',
   },
 ]
 
@@ -554,9 +564,9 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const { user } = useAuth()
 
   // Derive initial block type — clamp to the supported UI types
-  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify' | 'image_gallery'
+  type UIBlockType = 'link' | 'social' | 'vcard' | 'calendly' | 'divider' | 'section_title' | 'youtube' | 'email' | 'spotify' | 'image_gallery' | 'donation'
   function toUIType(t?: BlockType): UIBlockType {
-    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube' || t === 'email' || t === 'spotify' || t === 'image_gallery') return t
+    if (t === 'social' || t === 'vcard' || t === 'calendly' || t === 'divider' || t === 'section_title' || t === 'youtube' || t === 'email' || t === 'spotify' || t === 'image_gallery' || t === 'donation') return t
     return 'link'
   }
 
@@ -590,6 +600,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
   const [jobTitle, setJobTitle] = useState(initialData?.content.jobTitle ?? '')
   const [autoplay, setAutoplay] = useState(initialData?.content.autoplay ?? false)
   const [displayMode, setDisplayMode] = useState<'player' | 'button'>(initialData?.content.displayMode ?? 'player')
+  const [donationPlatform, setDonationPlatform] = useState<'cafecito' | 'mercadopago' | 'paypal'>(initialData?.content.donationPlatform ?? 'cafecito')
   const [showLabelWarning, setShowLabelWarning] = useState(false)
   
   // Image Gallery fields
@@ -625,6 +636,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       setJobTitle(initialData.content.jobTitle ?? '')
       setAutoplay(initialData.content.autoplay ?? false)
       setDisplayMode(initialData.content.displayMode ?? 'player')
+      setDonationPlatform(initialData.content.donationPlatform ?? 'cafecito')
       setGalleryImages(initialData.content.galleryImages ?? [])
       setGalleryFiles([])
       setDeletedGalleryImages([])
@@ -691,6 +703,12 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     if (type === 'email')         setIcon('📧')
     if (type === 'divider')       { setIcon(''); setBlockWidth('full') }
     if (type === 'section_title') { setIcon(''); setBlockWidth('full') }
+    if (type === 'donation') {
+      setIcon('☕️')
+      setTitle('Invitame un Cafecito')
+      setDonationPlatform('cafecito')
+      setBlockWidth('full')
+    }
     setStep('details')
   }
 
@@ -779,6 +797,10 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
         setError('Debes añadir al menos una imagen a la galería.')
         return
       }
+    } else if (blockType === 'donation') {
+      resolvedUrl = url.trim()
+      resolvedIcon = icon || (donationPlatform === 'cafecito' ? '☕️' : donationPlatform === 'mercadopago' ? '🤝' : '💸')
+      if (!resolvedTitle) resolvedTitle = 'Invitame un Cafecito'
     } else {
       resolvedUrl = url.trim()
     }
@@ -871,6 +893,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       autoplay:    blockType === 'youtube' ? autoplay : undefined,
       displayMode: (blockType === 'youtube' || blockType === 'spotify' || blockType === 'image_gallery') ? displayMode : undefined,
       galleryImages: blockType === 'image_gallery' ? finalGalleryImages : undefined,
+      donationPlatform: blockType === 'donation' ? donationPlatform : undefined,
     }).catch(err => {
       console.error('Error guardando bloque:', err)
       // En una app más grande mostraríamos un Toast de error acá
@@ -893,6 +916,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       if (blockType === 'section_title') return 'Editar sección'
       if (blockType === 'youtube')       return 'Editar video'
       if (blockType === 'spotify')       return 'Editar Spotify'
+      if (blockType === 'image_gallery') return 'Editar Galería VIP'
+      if (blockType === 'donation')      return 'Editar Donación'
       return 'Editar enlace'
     }
     if (step === 'type') return 'Nuevo bloque'
@@ -904,6 +929,8 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     if (blockType === 'section_title') return 'Sección'
     if (blockType === 'youtube')       return 'YouTube'
     if (blockType === 'spotify')       return 'Spotify'
+    if (blockType === 'image_gallery') return 'Galería VIP'
+    if (blockType === 'donation')      return 'Donación'
     return 'Enlace'
   }
 
@@ -976,7 +1003,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                     className="grid grid-cols-2 gap-3"
                   >
                     {BLOCK_TYPES.map(bt => {
-                      const isPremium = ['divider', 'section_title', 'image_gallery', 'youtube', 'spotify', 'calendly'].includes(bt.id)
+                      const isPremium = ['divider', 'section_title', 'image_gallery', 'youtube', 'spotify', 'calendly', 'donation'].includes(bt.id)
                       const isLocked = isPremium && !isVip
 
                       return (
@@ -1557,6 +1584,72 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
                               </div>
                             </div>
                           )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── DONATION ───────────────────────────────────────── */}
+                    {blockType === 'donation' && (
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <label className="label-dark">Plataforma *</label>
+                          <div className="flex gap-2">
+                            {(['cafecito', 'mercadopago', 'paypal'] as const).map(plat => (
+                              <button
+                                key={plat}
+                                type="button"
+                                onClick={() => {
+                                  setDonationPlatform(plat)
+                                  if (plat === 'cafecito') { setIcon('☕️'); setTitle('Invitame un Cafecito') }
+                                  if (plat === 'mercadopago') { setIcon('🤝'); setTitle('Aportar con MercadoPago') }
+                                  if (plat === 'paypal') { setIcon('💸'); setTitle('Donar vía PayPal') }
+                                }}
+                                className={`flex-1 py-2 px-3 rounded-xl border text-sm transition-all ${donationPlatform === plat ? 'bg-white/10 border-white/20' : 'bg-transparent border-white/5 hover:bg-white/5'}`}
+                              >
+                                {plat === 'cafecito' && 'Cafecito'}
+                                {plat === 'mercadopago' && 'MercadoPago'}
+                                {plat === 'paypal' && 'PayPal'}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="label-dark">URL del link de pago / perfil *</label>
+                          <input
+                            type="url"
+                            value={url}
+                            onChange={e => setUrl(e.target.value)}
+                            placeholder={donationPlatform === 'cafecito' ? "Ej: https://cafecito.app/tuusuario" : "Ej: https://link.mercadopago.com.ar/..."}
+                            className="input-dark"
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="label-dark">Título *</label>
+                          <input
+                            type="text"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder="Ej: Invitame un Cafecito"
+                            className="input-dark"
+                            maxLength={40}
+                            required
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="label-dark">Descripción (opcional)</label>
+                          <textarea
+                            value={description}
+                            onChange={e => setDescription(e.target.value)}
+                            placeholder="Ej: Gracias por apoyar mi contenido"
+                            className="input-dark"
+                            style={{ resize: 'none', minHeight: '3rem' }}
+                            maxLength={80}
+                            rows={2}
+                          />
                         </div>
                       </div>
                     )}

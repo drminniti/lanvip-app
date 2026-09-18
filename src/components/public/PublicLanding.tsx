@@ -484,6 +484,71 @@ function BentoTile({
     )
   }
 
+  function DonationBlock({ block, index }: { block: Block; index: number }) {
+    const plat = block.content.donationPlatform
+    
+    // Brand colors
+    const bgColors = {
+      cafecito: '#FF8B00',
+      mercadopago: '#009EE3',
+      paypal: '#003087',
+    }
+    
+    const textColors = {
+      cafecito: '#FFFFFF',
+      mercadopago: '#FFFFFF',
+      paypal: '#FFFFFF',
+    }
+    
+    const bgColor = plat ? bgColors[plat] : '#D4AF37'
+    const textColor = plat ? textColors[plat] : '#000000'
+
+    return (
+      <motion.a
+        href={block.content.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ 
+          opacity: 1, 
+          y: 0,
+          boxShadow: `0 8px 32px ${bgColor}40`
+        }}
+        transition={{ delay: index * 0.07, type: 'spring', stiffness: 260, damping: 22 }}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className={`${colClass} w-full p-4 rounded-[20px] transition-shadow hover:shadow-xl relative overflow-hidden`}
+        style={{
+          background: bgColor,
+          color: textColor,
+        }}
+      >
+        <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
+        <div className="flex items-center justify-between gap-3 relative z-10">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{block.content.icon || '💸'}</span>
+            <div>
+              <h3 className="font-bold text-base leading-tight">{block.content.title}</h3>
+              {block.content.description && (
+                <p className="text-sm opacity-90 leading-tight mt-0.5">{block.content.description}</p>
+              )}
+            </div>
+          </div>
+          <svg
+            className="w-5 h-5 opacity-70"
+            fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </div>
+      </motion.a>
+    )
+  }
+
+  if (block.type === 'donation') {
+    return <DonationBlock block={block} index={index} />
+  }
+
   // ── Default tile (link / social) ──────────────────────────────────────────
   return (
     <motion.a
