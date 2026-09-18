@@ -45,6 +45,9 @@ export default function ProfilePage() {
   const [saving, setSaving]   = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
   const [showMobilePreview, setShowMobilePreview] = useState(false)
+  
+  // Local state for SEO container expansion
+  const [isSeoExpanded, setIsSeoExpanded] = useState(false)
 
   // Lock scroll when mobile preview is open
   useEffect(() => {
@@ -396,81 +399,119 @@ export default function ProfilePage() {
           </form>
 
           {/* ── SEO Personalizado ────────────────────────────────────────── */}
-          <form onSubmit={handleSave}>
-            <details className="card-dark group relative p-0 overflow-hidden">
-              <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-white/[0.02] transition-colors list-none [&::-webkit-details-marker]:hidden">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">🔍</span>
-                  <span className="font-semibold text-lg text-white">SEO y Posicionamiento</span>
-                  <span className="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-md bg-[#D4AF37]/20 text-[#D4AF37] uppercase tracking-wider">
-                    VIP
-                  </span>
+          <form onSubmit={handleSave} className="glass-card p-0 overflow-hidden relative mb-6">
+            <button
+              type="button"
+              onClick={() => setIsSeoExpanded(!isSeoExpanded)}
+              className="w-full p-6 flex items-start justify-between text-left hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex items-start gap-4">
+                <div className="bg-white/5 p-2.5 rounded-xl border border-white/10 hidden sm:block">
+                  <svg className="w-5 h-5 text-white/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                 </div>
-                <svg className="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div>
+                  <h2 className="text-sm font-semibold flex items-center gap-2 text-white">
+                    SEO y Posicionamiento
+                    <span className="text-[10px] font-bold text-[#D4AF37] tracking-widest uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded-full border border-[#D4AF37]/30">
+                      VIP
+                    </span>
+                  </h2>
+                  <p className="text-xs text-[#A3A3A3] mt-1">
+                    Mejorá cómo se ve tu perfil al compartirlo en WhatsApp o Google.
+                  </p>
+                </div>
+              </div>
+              <motion.div
+                animate={{ rotate: isSeoExpanded ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="text-neutral-400"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              </summary>
-              <div className="p-6 pt-0 space-y-4 border-t border-white/5 relative">
-                {!isVip && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center rounded-b-xl">
-                    <p className="text-sm text-white/90 mb-3 font-medium">Mejora cómo se ve tu perfil al compartirlo en WhatsApp o Google.</p>
-                    <button type="button" onClick={() => openUpgradeModal()} className="btn-accent text-sm px-4 py-2">
-                      Desbloquear SEO
-                    </button>
-                  </div>
-                )}
-                
-                <p className="text-sm text-[#A3A3A3] mt-2 mb-4 leading-relaxed">
-                  Controla exactamente cómo se ve tu perfil cuando lo envías por WhatsApp o cuando alguien te busca en Google.
-                </p>
+              </motion.div>
+            </button>
 
-                <div className="space-y-1">
-                  <label htmlFor="prof-seo-title" className="label-dark">Meta Título</label>
-                  <input
-                    id="prof-seo-title"
-                    type="text"
-                    value={seoTitle}
-                    onChange={e => setSeoTitle(e.target.value)}
-                    placeholder="Ej: Juan Pérez - Entrenador Personal"
-                    className="input-dark"
-                    maxLength={60}
-                    disabled={!isVip}
-                  />
-                  <p className="text-xs text-right" style={{ color: '#555' }}>{seoTitle.length}/60</p>
-                </div>
-                <div className="space-y-1">
-                  <label htmlFor="prof-seo-desc" className="label-dark">Meta Descripción</label>
-                  <textarea
-                    id="prof-seo-desc"
-                    rows={2}
-                    value={seoDescription}
-                    onChange={e => setSeoDescription(e.target.value)}
-                    placeholder="Ej: Te ayudo a conseguir tu mejor versión..."
-                    className="input-dark resize-none"
-                    maxLength={160}
-                    disabled={!isVip}
-                  />
-                  <p className="text-xs text-right" style={{ color: '#555' }}>{seoDescription.length}/160</p>
-                </div>
-                
-                {isVip && (
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={saving || usernameStatus === 'taken' || usernameStatus === 'checking'}
-                      className="btn-accent w-full text-sm py-3"
+            <AnimatePresence>
+              {isSeoExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden relative"
+                >
+                  {!isVip && (
+                    <div 
+                      className="absolute inset-0 bg-black/50 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-black/60 rounded-xl"
+                      onClick={openUpgradeModal}
                     >
-                      {saving ? 'Guardando...' : 'Guardar SEO'}
-                    </button>
-                    {saveMsg && (
-                      <p className="text-sm text-center mt-3 font-medium" style={{ color: saveMsg.type === 'ok' ? '#4CAF72' : '#EF4444' }}>
-                        {saveMsg.text}
-                      </p>
+                      <div className="flex flex-col items-center gap-2 bg-[#111]/90 px-6 py-4 rounded-2xl border border-[#D4AF37]/30 shadow-2xl text-center max-w-[80%]">
+                        <div className="bg-[#D4AF37]/20 p-2 rounded-full mb-1">
+                          <svg className="w-6 h-6 text-[#D4AF37]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-bold text-white tracking-wide">Mejorá tu plan para usar SEO Personalizado</span>
+                        <span className="text-xs text-[#A3A3A3]">Controlá exactamente qué título y descripción ven las personas cuando buscás tu perfil o lo enviás por WhatsApp.</span>
+                        <button type="button" className="mt-2 text-xs font-bold text-black bg-[#D4AF37] hover:bg-[#F2CD5C] px-4 py-1.5 rounded-full transition-colors">
+                          Actualizar a VIP
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="px-6 pb-6 pt-2 border-t border-white/5 space-y-4 mt-2">
+                    <div className="space-y-1">
+                      <label htmlFor="prof-seo-title" className="label-dark">Meta Título</label>
+                      <input
+                        id="prof-seo-title"
+                        type="text"
+                        value={seoTitle}
+                        onChange={e => setSeoTitle(e.target.value)}
+                        placeholder="Ej: Juan Pérez - Entrenador Personal"
+                        className="input-dark"
+                        maxLength={60}
+                        disabled={!isVip}
+                      />
+                      <p className="text-xs text-right" style={{ color: '#555' }}>{seoTitle.length}/60</p>
+                    </div>
+                    <div className="space-y-1">
+                      <label htmlFor="prof-seo-desc" className="label-dark">Meta Descripción</label>
+                      <textarea
+                        id="prof-seo-desc"
+                        rows={2}
+                        value={seoDescription}
+                        onChange={e => setSeoDescription(e.target.value)}
+                        placeholder="Ej: Te ayudo a conseguir tu mejor versión..."
+                        className="input-dark resize-none"
+                        maxLength={160}
+                        disabled={!isVip}
+                      />
+                      <p className="text-xs text-right" style={{ color: '#555' }}>{seoDescription.length}/160</p>
+                    </div>
+                    
+                    {isVip && (
+                      <div className="pt-2">
+                        <button
+                          type="submit"
+                          disabled={saving || usernameStatus === 'taken' || usernameStatus === 'checking'}
+                          className="btn-accent w-full text-sm py-2"
+                        >
+                          {saving ? 'Guardando...' : 'Guardar SEO'}
+                        </button>
+                        {saveMsg && (
+                          <p className="text-xs text-center mt-2 font-medium" style={{ color: saveMsg.type === 'ok' ? '#4CAF72' : '#EF4444' }}>
+                            {saveMsg.text}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            </details>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </form>
 
           <CustomDomainCard initialDomain={profile.customDomain} isVip={isVip} />
