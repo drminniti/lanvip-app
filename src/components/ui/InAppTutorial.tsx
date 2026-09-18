@@ -13,9 +13,15 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
   const driverObj = useRef<ReturnType<typeof driver> | null>(null)
 
   useEffect(() => {
+    console.log('[Lanvip] InAppTutorial mounted with uid:', uid)
+    
     // Only initialize if not already done to prevent duplicate drivers
-    if (driverObj.current) return
+    if (driverObj.current) {
+      console.log('[Lanvip] InAppTutorial already initialized')
+      return
+    }
 
+    console.log('[Lanvip] Initializing driver.js...')
     driverObj.current = driver({
       showProgress: true,
       allowClose: true,
@@ -72,12 +78,19 @@ export function InAppTutorial({ uid }: InAppTutorialProps) {
       ]
     })
 
-    // Slight delay to ensure DOM is fully painted
     const timer = setTimeout(() => {
+      console.log('[Lanvip] Driving tutorial...')
       driverObj.current?.drive()
     }, 500)
 
-    return () => clearTimeout(timer)
+    return () => {
+      console.log('[Lanvip] Unmounting tutorial...')
+      clearTimeout(timer)
+      if (driverObj.current) {
+        driverObj.current.destroy()
+        driverObj.current = null
+      }
+    }
   }, [uid])
 
   return null
