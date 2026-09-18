@@ -30,6 +30,10 @@ export default function ProfilePage() {
   const [username, setUsername]       = useState('')
   const [bio, setBio]                 = useState('')
   const [avatarUrl, setAvatarUrl]     = useState('')
+  
+  // VIP SEO fields
+  const [seoTitle, setSeoTitle]             = useState('')
+  const [seoDescription, setSeoDescription] = useState('')
 
   // Sprint 4: Visuals
   // background state removed to rely on live profile state as it's saved immediately
@@ -63,6 +67,8 @@ export default function ProfilePage() {
     setUsername(profile.username ?? '')
     setBio(profile.bio ?? '')
     setAvatarUrl(profile.avatarUrl || user?.photoURL || '')
+    setSeoTitle(profile.seoTitle ?? '')
+    setSeoDescription(profile.seoDescription ?? '')
     
     // Sprint 4 Visuals
     // (background is now handled purely via ThemePicker and BackgroundUploader saving directly)
@@ -184,6 +190,8 @@ export default function ProfilePage() {
         ...(username === profile?.username ? { username } : {}),
         bio:         bio.trim(),
         avatarUrl:   avatarUrl.trim(),
+        seoTitle:    seoTitle.trim(),
+        seoDescription: seoDescription.trim(),
         themeSettings: profile!.themeSettings
       })
       setSaveMsg({ type: 'ok', text: '¡Perfil y apariencia actualizados!' })
@@ -351,6 +359,62 @@ export default function ProfilePage() {
                 {bio.length}/160
               </p>
             </div>
+
+            {/* ── SEO Personalizado ────────────────────────────────────────── */}
+            <details className="group border border-white/5 bg-white/[0.02] rounded-xl overflow-hidden mt-4">
+              <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/[0.04] transition-colors list-none [&::-webkit-details-marker]:hidden">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">🔍</span>
+                  <span className="font-semibold text-sm">SEO y Posicionamiento</span>
+                  {!isVip && (
+                    <span className="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-md bg-[#D4AF37]/20 text-[#D4AF37] uppercase tracking-wider">
+                      VIP
+                    </span>
+                  )}
+                </div>
+                <svg className="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <div className="p-4 pt-0 space-y-4 border-t border-white/5 relative">
+                {!isVip && (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-4 text-center rounded-b-xl">
+                    <p className="text-sm text-white/90 mb-3 font-medium">Mejora cómo se ve tu perfil al compartirlo en WhatsApp o Google.</p>
+                    <button type="button" onClick={() => openUpgradeModal()} className="btn-accent text-xs px-4 py-2">
+                      Desbloquear SEO
+                    </button>
+                  </div>
+                )}
+                <div className="space-y-1 mt-2">
+                  <label htmlFor="prof-seo-title" className="label-dark">Meta Título</label>
+                  <input
+                    id="prof-seo-title"
+                    type="text"
+                    value={seoTitle}
+                    onChange={e => setSeoTitle(e.target.value)}
+                    placeholder="Ej: Juan Pérez - Entrenador Personal"
+                    className="input-dark"
+                    maxLength={60}
+                    disabled={!isVip}
+                  />
+                  <p className="text-xs text-right" style={{ color: '#555' }}>{seoTitle.length}/60</p>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="prof-seo-desc" className="label-dark">Meta Descripción</label>
+                  <textarea
+                    id="prof-seo-desc"
+                    rows={2}
+                    value={seoDescription}
+                    onChange={e => setSeoDescription(e.target.value)}
+                    placeholder="Ej: Te ayudo a conseguir tu mejor versión..."
+                    className="input-dark resize-none"
+                    maxLength={160}
+                    disabled={!isVip}
+                  />
+                  <p className="text-xs text-right" style={{ color: '#555' }}>{seoDescription.length}/160</p>
+                </div>
+              </div>
+            </details>
 
             {/* Save feedback */}
             <AnimatePresence>

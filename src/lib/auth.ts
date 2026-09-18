@@ -179,6 +179,8 @@ export interface UpdateProfileData {
   customDomain?:   string
   faviconUrl?:     string
   hasSeenTutorial?: boolean
+  seoTitle?:       string
+  seoDescription?: string
 }
 
 const RESERVED_USERNAMES = [
