@@ -644,10 +644,20 @@ export default function ProfilePage() {
                       <div className="pt-2">
                         <button
                           type="submit"
-                          disabled={saving || usernameStatus === 'taken' || usernameStatus === 'checking'}
+                          disabled={
+                            saving || 
+                            usernameStatus === 'taken' || 
+                            usernameStatus === 'checking' ||
+                            (isPasswordProtected && !profilePassword.trim()) ||
+                            (!isPasswordProtected && !profile?.isPasswordProtected)
+                          }
                           className="btn-accent w-full text-sm py-2"
                         >
-                          {saving ? 'Guardando...' : 'Guardar Contraseña'}
+                          {saving 
+                            ? 'Guardando...' 
+                            : isPasswordProtected 
+                              ? 'Guardar Contraseña' 
+                              : 'Guardar Cambios'}
                         </button>
                         {saveMsg && (
                           <p className="text-xs text-center mt-2 font-medium" style={{ color: saveMsg.type === 'ok' ? '#4CAF72' : '#EF4444' }}>

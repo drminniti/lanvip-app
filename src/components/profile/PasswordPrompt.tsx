@@ -28,6 +28,7 @@ export function PasswordPrompt({ profileUid }: PasswordPromptProps) {
         router.refresh() // Reload SSR page, which will now have the auth cookie
       } else {
         setError(res.message || 'Contraseña incorrecta')
+        setPassword('')
       }
     } catch (err) {
       console.error(err)
@@ -55,10 +56,7 @@ export function PasswordPrompt({ profileUid }: PasswordPromptProps) {
               </svg>
             </div>
             
-            <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">Perfil Protegido</h1>
-            <p className="text-[#A3A3A3] text-sm mb-8">
-              Este creador ha protegido su micro-landing VIP con una contraseña. Ingresala abajo para acceder.
-            </p>
+            <h1 className="text-2xl font-bold text-white mb-8 tracking-tight">Perfil Protegido</h1>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="text-left space-y-1">
