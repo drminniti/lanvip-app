@@ -526,7 +526,7 @@ function BentoTile({
         <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
         <div className="flex items-center justify-between gap-3 relative z-10">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{block.content.icon || '💸'}</span>
+            <span className="text-2xl">{block.content.icon || '💰'}</span>
             <div>
               <h3 className="font-bold text-base leading-tight">{block.content.title}</h3>
               {block.content.description && (

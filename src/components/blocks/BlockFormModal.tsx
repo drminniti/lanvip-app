@@ -741,7 +741,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
     const defaultIcons = {
       cafecito: '☕️',
       mercadopago: '🤝',
-      paypal: '💸'
+      paypal: '💰'
     }
     
     if (title.trim() === '' || title.trim() === defaultTitles[donationPlatform as keyof typeof defaultTitles]) {
@@ -822,7 +822,7 @@ export function BlockFormModal({ open, onClose, onSubmit, initialData }: BlockFo
       }
     } else if (blockType === 'donation') {
       resolvedUrl = url.trim()
-      resolvedIcon = icon || (donationPlatform === 'cafecito' ? '☕️' : donationPlatform === 'mercadopago' ? '🤝' : '💸')
+      resolvedIcon = icon || (donationPlatform === 'cafecito' ? '☕️' : donationPlatform === 'mercadopago' ? '🤝' : '💰')
       if (!resolvedTitle) resolvedTitle = 'Invitame un Cafecito'
     } else {
       resolvedUrl = url.trim()
