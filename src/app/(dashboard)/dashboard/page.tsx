@@ -46,6 +46,7 @@ function VipExpiredBanner({ onRenew }: { onRenew: () => void }) {
 }
 
 import { shareProfile } from '@/lib/share'
+import { QRModal } from '@/components/ui/QRModal'
 
 // ─── Live URL Hero Card ───────────────────────────────────────────────────────
 function LiveHeroCard({ username }: { username: string }) {
@@ -53,6 +54,7 @@ function LiveHeroCard({ username }: { username: string }) {
   const fullUrl     = `https://${publicUrl}`
   const [copied, setCopied] = useState(false)
   const [shared, setShared] = useState(false)
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false)
 
   async function handleCopy() {
     try {
@@ -86,195 +88,204 @@ function LiveHeroCard({ username }: { username: string }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.10, duration: 0.5 }}
-      className="glass-card relative overflow-hidden px-4 py-5 md:px-8 md:py-8"
-      style={{
-        background: 'rgba(212,175,55,0.03)',
-        backdropFilter: 'blur(20px)',
-        border:      '1px solid rgba(212,175,55,0.18)',
-        boxShadow:   '0 0 60px rgba(212,175,55,0.06)',
-      }}
-    >
-      {/* Background glow */}
-      <span
-        aria-hidden="true"
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.10, duration: 0.5 }}
+        className="glass-card relative overflow-hidden px-4 py-5 md:px-8 md:py-8"
         style={{
-          position:    'absolute',
-          top:         '-40%',
-          right:       '-10%',
-          width:       '55%',
-          height:      '200%',
-          background:  'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)',
-          filter:      'blur(32px)',
-          pointerEvents: 'none',
+          background: 'rgba(212,175,55,0.03)',
+          backdropFilter: 'blur(20px)',
+          border:      '1px solid rgba(212,175,55,0.18)',
+          boxShadow:   '0 0 60px rgba(212,175,55,0.06)',
         }}
-      />
-
-      <div className="relative z-10 space-y-4 md:space-y-5">
-        {/* Status pill */}
-        <div className="flex items-center gap-2">
-          <span
-            className="w-2 h-2 rounded-full animate-pulse"
-            style={{ background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}
-          />
-          <span className="text-xs font-medium tracking-wide uppercase" style={{ color: '#22c55e' }}>
-            En vivo
-          </span>
-        </div>
-
-        {/* Main heading */}
-        <div>
-          <h2 className="text-xl md:text-2xl font-bold" style={{ color: '#F5F5F5' }}>
-            Tu enlace está en vivo
-          </h2>
-          <p className="text-sm mt-1" style={{ color: '#A3A3A3' }}>
-            Compartí tu Micro-Landing VIP con el mundo.
-          </p>
-        </div>
-
-        {/* URL display + copy */}
-        <div
-          className="flex items-center gap-3 rounded-2xl px-4 py-3"
+      >
+        {/* Background glow */}
+        <span
+          aria-hidden="true"
           style={{
-            background: 'rgba(255,255,255,0.04)',
-            border:     '1px solid rgba(255,255,255,0.08)',
+            position:    'absolute',
+            top:         '-40%',
+            right:       '-10%',
+            width:       '55%',
+            height:      '200%',
+            background:  'radial-gradient(circle, rgba(212,175,55,0.12) 0%, transparent 70%)',
+            filter:      'blur(32px)',
+            pointerEvents: 'none',
           }}
-        >
-          {/* Chain link icon */}
-          <svg
-            className="w-4 h-4 flex-shrink-0"
-            fill="none"
-            stroke="#D4AF37"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-            />
-          </svg>
+        />
 
-          {/* URL text */}
+        <div className="relative z-10 space-y-4 md:space-y-5">
+          {/* Status pill */}
+          <div className="flex items-center gap-2">
+            <span
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{ background: '#22c55e', boxShadow: '0 0 8px #22c55e' }}
+            />
+            <span className="text-xs font-medium tracking-wide uppercase" style={{ color: '#22c55e' }}>
+              En vivo
+            </span>
+          </div>
+
+          {/* Main heading */}
+          <div>
+            <h2 className="text-xl md:text-2xl font-bold" style={{ color: '#F5F5F5' }}>
+              Tu enlace está en vivo
+            </h2>
+            <p className="text-sm mt-1" style={{ color: '#A3A3A3' }}>
+              Compartí tu Micro-Landing VIP con el mundo.
+            </p>
+          </div>
+
+          {/* URL display + action buttons */}
+          <div
+            className="flex flex-wrap items-center gap-3 rounded-2xl px-4 py-3"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <a
+              href={fullUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 min-w-0 text-[15px] sm:text-base font-medium truncate hover:underline transition-all"
+              style={{ color: '#D4AF37' }}
+            >
+              {publicUrl}
+            </a>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* QR button */}
+              <motion.button
+                onClick={() => setIsQRModalOpen(true)}
+                whileTap={{ scale: 0.94 }}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:bg-white/10"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                }}
+                aria-label="Generar código QR"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+                <span className="hidden sm:inline">QR</span>
+              </motion.button>
+
+              {/* Share button */}
+              <motion.button
+                id="btn-share-link"
+                onClick={handleShare}
+                whileTap={{ scale: 0.94 }}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:bg-white/10"
+                style={{
+                  background: shared ? 'rgba(34,197,94,0.18)' : 'rgba(255,255,255,0.08)',
+                  border:     shared ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(255,255,255,0.15)',
+                  color:      shared ? '#22c55e' : '#fff',
+                }}
+                aria-label="Compartir enlace"
+              >
+                <AnimatePresence mode="wait">
+                  {shared ? (
+                    <motion.span
+                      key="check"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-1"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="hidden sm:inline">Compartido</span>
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="share"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-1"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                      </svg>
+                      <span className="hidden sm:inline">Compartir</span>
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+
+              {/* Copy button */}
+              <motion.button
+                id="btn-copy-link"
+                onClick={handleCopy}
+                whileTap={{ scale: 0.94 }}
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:bg-opacity-80"
+                style={{
+                  background: copied ? 'rgba(34,197,94,0.18)' : 'rgba(212,175,55,0.15)',
+                  border:     copied ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(212,175,55,0.35)',
+                  color:      copied ? '#22c55e' : '#D4AF37',
+                }}
+                aria-label="Copiar enlace"
+              >
+                <AnimatePresence mode="wait">
+                  {copied ? (
+                    <motion.span
+                      key="check"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-1"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Copiado
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="copy"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-1"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copiar
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Open in new tab link */}
           <a
             href={fullUrl}
             target="_blank"
             rel="noopener noreferrer"
-            id="link-public-url"
-            className="flex-1 min-w-0 text-sm font-mono truncate transition-colors"
-            style={{ color: '#D4AF37', textDecoration: 'none' }}
+            id="link-open-landing"
+            className="inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-100"
+            style={{ color: '#555', textDecoration: 'none', opacity: 0.7 }}
           >
-            {publicUrl}
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            Ver mi landing
           </a>
-
-          {/* Share button */}
-          <motion.button
-            id="btn-share-link"
-            onClick={handleShare}
-            whileTap={{ scale: 0.94 }}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-            style={{
-              background: shared ? 'rgba(34,197,94,0.18)' : 'rgba(255,255,255,0.08)',
-              border:     shared ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(255,255,255,0.15)',
-              color:      shared ? '#22c55e' : '#fff',
-            }}
-            aria-label="Compartir enlace"
-          >
-            <AnimatePresence mode="wait">
-              {shared ? (
-                <motion.span
-                  key="check"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="hidden sm:inline">Compartido</span>
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="share"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                  </svg>
-                  <span className="hidden sm:inline">Compartir</span>
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-
-          {/* Copy button */}
-          <motion.button
-            id="btn-copy-link"
-            onClick={handleCopy}
-            whileTap={{ scale: 0.94 }}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
-            style={{
-              background: copied ? 'rgba(34,197,94,0.18)' : 'rgba(212,175,55,0.15)',
-              border:     copied ? '1px solid rgba(34,197,94,0.40)' : '1px solid rgba(212,175,55,0.35)',
-              color:      copied ? '#22c55e' : '#D4AF37',
-            }}
-            aria-label="Copiar enlace"
-          >
-            <AnimatePresence mode="wait">
-              {copied ? (
-                <motion.span
-                  key="check"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Copiado
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="copy"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  className="flex items-center gap-1"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  Copiar
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
         </div>
+      </motion.div>
 
-        {/* Open in new tab link */}
-        <a
-          href={fullUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          id="link-open-landing"
-          className="inline-flex items-center gap-1.5 text-xs transition-opacity hover:opacity-100"
-          style={{ color: '#555', textDecoration: 'none', opacity: 0.7 }}
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-          </svg>
-          Ver mi landing
-        </a>
-      </div>
-    </motion.div>
+      <QRModal 
+        isOpen={isQRModalOpen} 
+        onClose={() => setIsQRModalOpen(false)} 
+        url={fullUrl} 
+        username={username} 
+      />
+    </>
   )
 }
 
