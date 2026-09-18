@@ -366,11 +366,9 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-2">
                   <span className="text-lg">🔍</span>
                   <span className="font-semibold text-sm">SEO y Posicionamiento</span>
-                  {!isVip && (
-                    <span className="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-md bg-[#D4AF37]/20 text-[#D4AF37] uppercase tracking-wider">
-                      VIP
-                    </span>
-                  )}
+                  <span className="ml-2 px-2 py-0.5 text-[10px] font-bold rounded-md bg-[#D4AF37]/20 text-[#D4AF37] uppercase tracking-wider">
+                    VIP
+                  </span>
                 </div>
                 <svg className="w-5 h-5 text-white/40 group-open:rotate-180 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -385,7 +383,12 @@ export default function ProfilePage() {
                     </button>
                   </div>
                 )}
-                <div className="space-y-1 mt-2">
+                
+                <p className="text-xs text-[#A3A3A3] mt-2 mb-2 leading-relaxed">
+                  Controla exactamente cómo se ve tu perfil cuando lo envías por WhatsApp o cuando alguien te busca en Google.
+                </p>
+
+                <div className="space-y-1">
                   <label htmlFor="prof-seo-title" className="label-dark">Meta Título</label>
                   <input
                     id="prof-seo-title"
@@ -413,6 +416,23 @@ export default function ProfilePage() {
                   />
                   <p className="text-xs text-right" style={{ color: '#555' }}>{seoDescription.length}/160</p>
                 </div>
+                
+                {isVip && (
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={saving || usernameStatus === 'taken' || usernameStatus === 'checking'}
+                      className="btn-accent w-full text-sm py-2"
+                    >
+                      {saving ? 'Guardando...' : 'Guardar SEO'}
+                    </button>
+                    {saveMsg && (
+                      <p className="text-xs text-center mt-2 font-medium" style={{ color: saveMsg.type === 'ok' ? '#4CAF72' : '#EF4444' }}>
+                        {saveMsg.text}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </details>
 
